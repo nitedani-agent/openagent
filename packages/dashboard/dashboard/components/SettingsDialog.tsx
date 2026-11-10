@@ -407,12 +407,12 @@ function useOwnEntries(): Entry[] {
     },
     {
       id: 'agent',
-      title: 'Agent',
+      title: 'Coding agent',
       icon: Bot,
       body: (
         <Section>
           <SelectRow
-            label="Agent"
+            label="Coding agent"
             description="Which coding agent runs the work."
             value={driver}
             options={drivers}
@@ -421,7 +421,7 @@ function useOwnEntries(): Entry[] {
           />
           <SelectRow
             label="Model"
-            description="The models the agent lists. Its own default when none is picked."
+            description="The models the coding agent lists. Its own default when none is picked."
             value={model}
             options={modelOptions(drivers.find(d => d.value === driver), model)}
             onChange={value => updatePreferences({ model: value })}
@@ -433,8 +433,8 @@ function useOwnEntries(): Entry[] {
             onChange={next => updatePreferences({ nameRuns: next })}
           />
           <ToggleRow
-            label="Show what the agent thought"
-            description="Inside a run of steps, a row for each thought between them. Off, the panel is the steps the agent took and nothing else."
+            label="Show what the coding agent thought"
+            description="Inside a run of steps, a row for each thought between them. Off, the panel is the steps the coding agent took and nothing else."
             checked={preferences.showThinking ?? false}
             onChange={next => updatePreferences({ showThinking: next })}
           />
