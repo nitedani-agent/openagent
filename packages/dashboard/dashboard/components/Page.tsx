@@ -35,7 +35,13 @@ export function Page({
             <div className="min-w-0">
               <h1 className="text-lg font-semibold">
                 <span className="max-md:sr-only">{title}</span>
-                {count !== undefined && <span className="ml-2 text-sm font-normal tabular-nums text-muted-foreground max-md:ml-0">{count}</span>}
+                {/* A space, not only a margin, so a screen reader says the name and the count apart. */}
+                {count !== undefined && (
+                  <>
+                    {' '}
+                    <span className="ml-1 text-sm font-normal tabular-nums text-muted-foreground max-md:ml-0">{count}</span>
+                  </>
+                )}
               </h1>
               {description !== undefined && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
             </div>
