@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 import { onProjects } from '../rpc/projects.js'
 
 /** How often the liveness probe asks, healthy or not. */
@@ -44,3 +44,6 @@ export function useDaemonHealth(): boolean {
 
   return healthy
 }
+
+/** OpenAgent is not answering ({@link useDaemonHealth}): what would ask it, Start, Send and a run's next step, is off until it does. */
+export const DaemonDown = createContext(false)
