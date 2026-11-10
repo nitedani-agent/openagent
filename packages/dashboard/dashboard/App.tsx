@@ -393,6 +393,8 @@ export function App() {
     ? (agents.find(agent => agent.id === agentId) ??
       (agentsLoaded ? undefined : recentAgents.find(recent => recent.projectId === projectId && recent.agent.id === agentId)?.agent))
     : undefined
+  // A session with no record in a list that was read: it was deleted, or never was here.
+  const sessionGone = agentId !== null && !selectedAgent && agentsLoaded && agentId !== agentStart.id
   // The runs started for the selected one: rows in its chat.
   const subagents = useMemo(() => (agentId ? subagentsOf(agents, agentId) : []), [agents, agentId])
   // The project is off the list: read the list again and leave its page for the Overview of every
@@ -502,12 +504,12 @@ export function App() {
       // Not in the list: either the run we just started (its card lands a beat later) or a
       // list we have not read yet, where whether the agent runs is not known. Only a session that
       // is genuinely absent from a list we did read is gone.
-      if (justStarted || !agentsLoaded)
+      if (!sessionGone)
         return <AgentView {...agentPage} live={justStarted ? true : null} label={namesRuns ? startedTitle : (justStarted && agentStart.intent) || undefined} naming={justStarted && namesRuns && startedTitle === undefined} remoteLabel={justStarted ? agentStart.runsOn : undefined} />
       return (
         <NotFound
           title="This session is gone"
-          detail="There is no record of this session. Once its checkout is removed, a finished session is kept only when the project has a logs skill installed."
+          detail="There is no record of this session."
           actionLabel="Back to the project"
           onAction={() => selectAgent(null)}
         />
@@ -627,8 +629,9 @@ export function App() {
         <PanesProvider
           projectId={projectId}
           agentId={agentId}
-          // A session with no project has no files or changes of a project's to show beside it.
-          enabled={!pageSegment && !noProject}
+          // A session with no project has no files or changes of a project's to show beside it, and
+          // one that is gone has none at all.
+          enabled={!pageSegment && !noProject && !sessionGone}
           files={files}
           context={context}
           toggleContext={toggleContext}
