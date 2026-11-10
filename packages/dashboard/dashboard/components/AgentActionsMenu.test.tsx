@@ -351,7 +351,7 @@ describe('the menu of an agent\'s page', () => {
 describe('Remove project, in the project’s menu', () => {
   const openProjectMenu = () => fireEvent.click(screen.getByRole('button', { name: 'Project actions' }))
 
-  test('it asks first, says nothing in the folder is deleted and what stays, then removes the project and tells the page', async () => {
+  test('it asks first, says nothing in the folder is deleted and what stays, then removes the project, says so, and tells the page', async () => {
     sendRemoveProject.mockClear()
     sendRemoveProject.mockResolvedValue({ ok: true })
     const onProjectRemoved = vi.fn()
@@ -370,6 +370,10 @@ describe('Remove project, in the project’s menu', () => {
     expect(sendRemoveProject).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
     await waitFor(() => expect(sendRemoveProject).toHaveBeenCalledWith('p1', false))
+    await waitFor(() => expect(screen.getByText('Project removed')).toBeTruthy())
+    expect(screen.getByRole('alertdialog').textContent).toMatch(/nothing in the folder was deleted\. Add the folder again to bring the project back/)
+    expect(onProjectRemoved).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
     await waitFor(() => expect(onProjectRemoved).toHaveBeenCalledTimes(1))
   })
 
