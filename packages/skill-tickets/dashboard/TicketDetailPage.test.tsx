@@ -60,13 +60,13 @@ afterEach(() => {
 // One ticket's own page (#1144): the entire file, read by the same slug the list row and the
 // route carry, plus the actions on it the one-liner list no longer has room for.
 describe('TicketDetailPage (#1144)', () => {
-  test('reads the ticket by slug and renders its full content', async () => {
-    onTicket.mockResolvedValue(ticket({ priority: '8', planned: true }))
+  test('reads the ticket by slug and renders its text below the title, the title and the keys above it said once', async () => {
+    onTicket.mockResolvedValue(ticket({ priority: '8', planned: true, content: 'Priority: 8\n\n# Do the thing\n\n## TLDR\n\nThe thing is not done.\n\nMore detail below the fold.' }))
     render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
-    // The title heads the page, and the markdown body repeats it as its own `# ` heading — two
-    // matches for the bare text, so assert the page's own heading specifically.
-    expect(await screen.findByRole('heading', { name: 'Do the thing' })).toBeTruthy()
-    expect(screen.getByText('More detail below the fold.')).toBeTruthy()
+    expect(await screen.findByText('More detail below the fold.')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Do the thing' })).toBeTruthy()
+    expect(screen.getAllByText('Do the thing')).toHaveLength(1)
+    expect(screen.queryByText('Priority: 8', { selector: 'p' })).toBeNull()
     // A bare "8" would be cryptic on its own (#1265); the badge spells out what it rates.
     expect(screen.getByText('Priority: 8')).toBeTruthy()
     expect(screen.getByText('planned')).toBeTruthy()
