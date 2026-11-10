@@ -304,7 +304,9 @@ describe('the Automations page: its rows', () => {
     await waitFor(() => expect(within(queue).getByRole('alert').textContent).toBe('No answer in time. A run may have started all the same: if one did, the row says when it last ran.'))
     // A reason that ends with its own full stop gets no second one.
     now()
-    await waitFor(() => expect(within(queue).getByRole('alert').textContent).toBe('Nothing started. Not ready: `claude` is not logged in. Run `claude /login`, then start again.'))
+    await waitFor(() => expect(within(queue).getByRole('alert').textContent).toBe('Nothing started. Not ready: claude is not logged in. Run claude /login, then start again.'))
+    // What the command puts in backticks is set as code.
+    expect(within(queue).getByText('claude /login').tagName).toBe('CODE')
     // One that starts takes the failure away.
     now()
     await within(queue).findByText('Started a run.')
@@ -407,12 +409,21 @@ describe('the Automations page: its rows', () => {
     const other = screen.getByRole('region', { name: 'other' })
     expect(within(other).getByText('Scheduler off')).toBeTruthy()
     expect(within(other).queryByText(/: off/)).toBeNull()
-    expect(within(other).getByText('The scheduler is off in this project, so nothing here starts by itself. It starts with the dashboard once the project has run `npx @openagt/skill-scheduler@0.1 init`, or by hand with `npx @openagt/skill-scheduler@0.1 start`.')).toBeTruthy()
+    expect(within(other).getByText(/^The scheduler is off in this project, so nothing here starts by itself/)).toBeTruthy()
+    // The dashboard's own way first: the project's Skills page, whose tick starts it with the dashboard.
+    fireEvent.click(within(other).getByRole('button', { name: 'Skills page' }))
+    expect(host.openSettings).toHaveBeenCalledWith('skills')
+    // Then the two commands, each set as code with a button that copies it.
+    expect(within(other).getByText('npx @openagt/skill-scheduler@0.1 init').tagName).toBe('CODE')
+    expect(within(other).getByText('npx @openagt/skill-scheduler@0.1 start').tagName).toBe('CODE')
+    expect(within(other).getAllByRole('button', { name: 'Copy the command' })).toHaveLength(2)
     expect(within(gemstack).queryByText(/so nothing here starts/)).toBeNull()
     cleanup()
     const { host: stopped } = hostAnswering(() => ({ ok: true, output: { ...STATUS, running: false } }))
     show(stopped)
-    expect(await screen.findByText('The scheduler is on but its process is not running, so nothing here starts by itself. `npx @openagt/skill-scheduler@0.1 start`, run in the project, starts it.')).toBeTruthy()
+    expect(await screen.findByText(/^The scheduler is on but its process is not running, so nothing here starts by itself/)).toBeTruthy()
+    expect(screen.getByText('npx @openagt/skill-scheduler@0.1 start').tagName).toBe('CODE')
+    expect(screen.getAllByRole('button', { name: 'Copy the command' })).toHaveLength(1)
   })
 
   test('a row switched on while the scheduler is off, or not running, is not green: it says it does not start', async () => {
