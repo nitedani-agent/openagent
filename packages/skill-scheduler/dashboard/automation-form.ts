@@ -87,16 +87,24 @@ export function atRowsPace(opened: AutomationDraft, row: SchedulerCommand): Auto
  * for the form is then changed in that file.
  */
 export function draftProblem(draft: AutomationDraft, file?: string): string | undefined {
-  const name = draft.name.trim()
-  if (name === '') return draft.onThisMachine ? 'Give it a name, like answer-comments.' : 'Give it a name. It becomes the command, like /answer-comments.'
-  if (!isCommandName(name)) return 'A name is lower-case letters, digits and dashes, never three dashes in a row, like answer-comments.'
-  if (name.length > MAX_NAME) return `A name is ${MAX_NAME} characters at most.`
+  if (draft.name.trim() === '') return draft.onThisMachine ? 'Give it a name, like answer-comments.' : 'Give it a name. It becomes the command, like /answer-comments.'
+  const named = nameProblem(draft.name)
+  if (named) return named
   if (draft.prompt.trim() === '') return 'Write what the agent is told.'
   if (draft.prompt.trim().length > TEXT_MAX) return `What the agent is told is ${draft.prompt.trim().length} characters, and this form takes ${TEXT_MAX} at most. ${file === undefined ? 'Save a shorter one, then write the rest into the file.' : `Change it in its file, ${file}.`}`
   if (draft.when.trim().length > TEXT_MAX) return `The shell line is ${draft.when.trim().length} characters, and this form takes ${TEXT_MAX} at most.`
   if (draft.when.trim() !== '' && draft.waitsFor.trim().length > TEXT_MAX) return `What the line waits for is ${draft.waitsFor.trim().length} characters, and this form takes ${TEXT_MAX} at most.`
   if (draft.pace.kind === 'work' && draft.when.trim() === '') return 'Say when it runs: on a pace, by a shell line, or both.'
   return paceProblem(draft.pace)
+}
+
+/** Why a name typed cannot be an automation's, said under its field; nothing for one that can, or for none typed yet. */
+export function nameProblem(typed: string): string | undefined {
+  const name = typed.trim()
+  if (name === '') return undefined
+  if (!isCommandName(name)) return 'A name is lower-case letters, digits and dashes, never three dashes in a row, like answer-comments.'
+  if (name.length > MAX_NAME) return `A name is ${MAX_NAME} characters at most.`
+  return undefined
 }
 
 /**
