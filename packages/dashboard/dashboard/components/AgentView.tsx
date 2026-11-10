@@ -360,6 +360,7 @@ export function AgentView({
         <>
           {/* Where the work is and the next step, above the message box and its row. */}
           <AgentWorkBar
+            run={agentId}
             checkout={barCheckout}
             summary={
               ready &&

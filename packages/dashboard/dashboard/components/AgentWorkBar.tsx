@@ -13,6 +13,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip.js'
 // with a 10px corner and no border, and bar and box read as one block of controls under the
 // conversation rather than as two boxes.
 export function AgentWorkBar({
+  run,
   checkout,
   summary,
   actions,
@@ -20,6 +21,8 @@ export function AgentWorkBar({
   show,
   state,
 }: {
+  /** The run whose work it is: a bar put away stays away for it in this browser, across a reload. */
+  run: string
   /** The agent's checkout as the page read it: its branch and its pull request. */
   checkout: AgentWorktree | null
   /** What the branch holds, in a phrase. */
@@ -39,7 +42,9 @@ export function AgentWorkBar({
 }) {
   const branch = checkout?.branch
   const signature = state ?? `${branch ?? ''}|${checkout?.pr?.number ?? ''}|${checkout?.pr?.state ?? ''}`
-  const [hiddenAt, setHiddenAt] = useState<string | null>(null)
+  // Put away on this page, which a browser that keeps nothing still honours; else as this browser kept it.
+  const [hiddenHere, setHiddenHere] = useState<{ run: string; at: string } | null>(null)
+  const hiddenAt = hiddenHere?.run === run ? hiddenHere.at : keptHidden(run)
   if (branch === undefined || !show || hiddenAt === signature) return null
   return (
     <div className="mx-auto w-full max-w-3xl px-2 pt-2">
@@ -76,7 +81,10 @@ export function AgentWorkBar({
             type="button"
             aria-label="Hide this bar"
             title="Hide this bar"
-            onClick={() => setHiddenAt(signature)}
+            onClick={() => {
+              keepHidden(run, signature)
+              setHiddenHere({ run, at: signature })
+            }}
             className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
           >
             <X className="h-3.5 w-3.5" />
@@ -90,4 +98,23 @@ export function AgentWorkBar({
       </div>
     </div>
   )
+}
+
+/** localStorage key prefix of what each run's bar was put away at. */
+const HIDDEN_KEY = 'oa.work-bar-hidden:'
+
+function keptHidden(run: string): string | null {
+  try {
+    return globalThis.localStorage?.getItem(HIDDEN_KEY + run) ?? null
+  } catch {
+    return null
+  }
+}
+
+function keepHidden(run: string, signature: string): void {
+  try {
+    globalThis.localStorage?.setItem(HIDDEN_KEY + run, signature)
+  } catch {
+    // Kept for this page's life only.
+  }
 }
