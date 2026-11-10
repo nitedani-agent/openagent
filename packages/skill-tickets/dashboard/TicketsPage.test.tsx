@@ -5,6 +5,7 @@ import type { MountedModules } from '@openagt/dashboard/module/testing'
 import { workOnTicketPrompt } from '../src/module.js'
 import { fakeHost, renderWithHost, type Answers, type FakeHost } from './test-host.js'
 import { TicketsPage } from './TicketsPage.js'
+import { TicketDetailPage } from './TicketDetailPage.js'
 
 // The page reads every project's tickets with `tickets list --local` through the host, and its
 // sections read the last-import stamp with `tickets meta --local`. `onAllTickets` is what those
@@ -111,6 +112,23 @@ describe('TicketsPage (#1144)', () => {
     fireEvent.click(await screen.findByText('Do the thing'))
     // The module's own page for that ticket: where the dashboard's link convention sends a link to it.
     expect(host.openPage).toHaveBeenCalledWith('tickets', ['t.md'], 'p1')
+  })
+
+  test("a ticket's page opened from the list goes back to the list as it was, every project's or one's: the browser's Back", async () => {
+    onAllTickets.mockResolvedValue([{ projectId: 'p1', projectName: 'Alpha', tickets: [ticket()] }])
+    render()
+    fireEvent.click(await screen.findByText('Do the thing'))
+    cleanup()
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {})
+    try {
+      const page = fakeHost({ p1: { 'show t.md --local': { ok: true, ticket: { ...ticket(), content: '# Do the thing' } } } })
+      renderWithHost(<TicketDetailPage projectId="p1" slug="t.md" />, page, modules())
+      fireEvent.click(await screen.findByRole('button', { name: /tickets/i }))
+      expect(back).toHaveBeenCalledTimes(1)
+      expect(page.openPage).not.toHaveBeenCalled()
+    } finally {
+      back.mockRestore()
+    }
   })
 
   test('a project with no tickets still offers its own update, not a dead end', async () => {
