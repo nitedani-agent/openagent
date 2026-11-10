@@ -48,11 +48,11 @@ export function AgentWorkBar({
   if (branch === undefined || !show || hiddenAt === signature) return null
   return (
     <div className="mx-auto w-full max-w-3xl px-2 pt-2">
-      {/* One line; on a phone it is as many as its parts need, the next step on a line of its own.
-          In the dark theme the hover fill is the bar's own colour, so its buttons get Everforest's
+      {/* One line; in a narrow chat (a phone, a chat beside panes) it is as many as its parts need,
+          the next step on a line of its own. In the dark theme the hover fill is the bar's own colour, so its buttons get Everforest's
           next step up (both names: `bg-accent` reads the first, the Button's variants the second). */}
       <div role="group" aria-label="This agent's work" className="overflow-hidden rounded-[10px] bg-muted px-2 dark:[--accent:#374145] dark:[--color-accent:#374145] text-[13px]">
-        <div className="flex items-center md:h-10 md:gap-2 max-md:min-h-10 max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1 max-md:py-1.5">
+        <div className="flex items-center @lg:h-10 @lg:gap-2 @max-lg:min-h-10 @max-lg:flex-wrap @max-lg:gap-x-2 @max-lg:gap-y-1 @max-lg:py-1.5">
           {/* The branch is the one part that gives up width: it truncates and still reads. No icon
               beside it: the name says what it is, and the row is shorter without one. */}
           <span className="flex min-w-0 items-center text-muted-foreground">
@@ -74,7 +74,7 @@ export function AgentWorkBar({
               <TooltipContent>{checkout.pr.title}</TooltipContent>
             </Tooltip>
           )}
-          <div className="flex items-center gap-2 md:shrink-0 max-md:min-w-0 max-md:flex-wrap">{actions}</div>
+          <div className="flex items-center gap-2 @lg:shrink-0 @max-lg:min-w-0 @max-lg:flex-wrap">{actions}</div>
           {/* Put away by hand, as Claude Code's is. Nothing is undone by it: the work is where it
               was, and the bar says so again as soon as the work moves on. */}
           <button
