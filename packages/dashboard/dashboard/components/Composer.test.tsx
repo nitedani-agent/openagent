@@ -216,6 +216,22 @@ describe('Composer (#721)', () => {
     expect(editorText()).toBe(draft)
   })
 
+  test('what is typed is back when the box is drawn again, after a navigation or a reload, for that box alone, until it is sent', () => {
+    renderComposer({ draftKey: 'launcher:p1' })
+    fireEvent.change(screen.getByLabelText('prompt'), { target: { value: 'a long draft I care about' } })
+    cleanup()
+    renderComposer({ draftKey: 'p1:run-2' })
+    expect(editorText()).toBe('')
+    cleanup()
+    renderComposer({ draftKey: 'launcher:p1' })
+    expect(editorText()).toBe('a long draft I care about')
+    // Sent: the caller empties the box, and nothing is kept.
+    fireEvent.change(screen.getByLabelText('prompt'), { target: { value: '' } })
+    cleanup()
+    renderComposer({ draftKey: 'launcher:p1' })
+    expect(editorText()).toBe('')
+  })
+
   test('an in-session composer does not rehydrate a carried draft (#1066)', () => {
     sessionStorage.setItem('oa.pending-draft', 'not for here')
     renderComposer({ inAgent: true })
