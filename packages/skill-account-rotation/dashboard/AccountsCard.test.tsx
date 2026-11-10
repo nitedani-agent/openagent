@@ -145,7 +145,7 @@ describe('AccountsCard', () => {
     expect(await screen.findByText('No account yet. Runs need one to start.')).toBeTruthy()
     // One press an agent, in the card: not a second one at its title.
     expect(screen.queryByRole('button', { name: 'Add an account' })).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'Log in to Codex' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add a Codex account' }))
     const dialog = await screen.findByRole('dialog', { name: 'Add a Codex account' })
     expect(within(dialog).getByRole('textbox', { name: 'Whose account' })).toBeTruthy()
   })

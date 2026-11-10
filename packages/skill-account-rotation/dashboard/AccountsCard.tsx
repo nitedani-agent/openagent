@@ -572,7 +572,7 @@ export function AccountsCard({ accountWhere }: ModuleCardProps) {
             {AGENTS.map(agent => (
               <Button key={agent.id} size="sm" variant="outline" onClick={() => setNaming(agent.id)}>
                 <agent.Logo className="size-3.5" />
-                {agent.logIn}
+                Add a {agent.name} account
               </Button>
             ))}
           </div>
