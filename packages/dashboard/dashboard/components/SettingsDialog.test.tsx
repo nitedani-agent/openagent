@@ -217,6 +217,19 @@ describe('Settings on and off rows', () => {
     expect([checked(row('Human Queue')), checked(row('Browser'))]).toEqual([false, false])
   })
 
+  test('notifications the browser was not asked for yet: the Browser row reads off, and switching it on asks the browser', async () => {
+    const requestPermission = vi.fn(async () => 'default')
+    vi.stubGlobal('Notification', { permission: 'default', requestPermission })
+    prefsRead.mockResolvedValueOnce({ notifyBrowser: true })
+    refreshPreferences()
+    open('notifications')
+    const browser = row('Browser')
+    await waitFor(() => expect(checked(browser)).toBe(false))
+    fireEvent.click(browser)
+    expect(saves()).toEqual([{ notifyBrowser: true }])
+    expect(requestPermission).toHaveBeenCalled()
+  })
+
   test('notifications the browser blocked: the Browser row says so, reads off, and cannot be switched', async () => {
     vi.stubGlobal('Notification', { permission: 'denied' })
     prefsRead.mockResolvedValueOnce({ notifyBrowser: true })

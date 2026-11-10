@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { updatePreferences } from './preferences.js'
 
 // The browser's notification permission as a subscribable value (#627). It lives here rather than
 // in the notifications menu because the Onboarding checklist (#958) asks the same question, and a
@@ -11,6 +12,12 @@ export function useNotificationPermission(): NotificationPermission | 'unsupport
     () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission),
     () => 'unsupported',
   )
+}
+
+/** Browser notifications switched on or off by a press; switched on, the browser is asked for its permission where it was not yet, which it allows only during a press. */
+export function setBrowserNotifications(on: boolean): void {
+  updatePreferences({ notifyBrowser: on })
+  if (on && typeof Notification !== 'undefined' && Notification.permission === 'default') void Notification.requestPermission()
 }
 
 function subscribePermission(onChange: () => void): () => void {
