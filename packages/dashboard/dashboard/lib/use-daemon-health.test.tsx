@@ -37,6 +37,22 @@ describe('useDaemonHealth', () => {
     expect(screen.getByText('down')).toBeTruthy()
   })
 
+  test('a probe the daemon takes but does not answer counts as not answered after its time limit; the next answer brings it back, and the late one starts no second probe', async () => {
+    let answerLate = (): void => {}
+    onProjects.mockReturnValueOnce(new Promise(resolve => (answerLate = () => resolve([])))).mockResolvedValue([])
+    render(<Probe />)
+    await after(5000 + 29_999)
+    expect(screen.getByText('healthy')).toBeTruthy()
+    await after(1)
+    expect(screen.getByText('down')).toBeTruthy()
+    answerLate()
+    await after(5000)
+    expect(screen.getByText('healthy')).toBeTruthy()
+    expect(onProjects).toHaveBeenCalledTimes(2)
+    await after(5000)
+    expect(onProjects).toHaveBeenCalledTimes(3)
+  })
+
   test('no probe as the page opens, which asks the daemon plenty then, and none while the tab is not shown', async () => {
     onProjects.mockResolvedValue([])
     render(<Probe />)

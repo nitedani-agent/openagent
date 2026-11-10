@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 import { onProjects } from '../rpc/projects.js'
 
 /** How often the liveness probe asks, healthy or not. */
 const PROBE_MS = 5000
+/** A probe not answered by then counts as not answered: longer than the longest read that waits for a change (25 s), which the browser may queue the probe behind. */
+const LONGER_THAN_A_WAITING_READ_MS = 30_000
 
 // Is the daemon answering (#948)? A dead daemon is otherwise invisible: the live channel's
 // transport retries silently without a channel-level verdict until a server answers, and the
@@ -22,17 +24,16 @@ export function useDaemonHealth(): boolean {
         timer = setTimeout(probe, PROBE_MS)
         return
       }
+      const settle = (answered: boolean) => {
+        if (cancelled) return
+        clearTimeout(timer)
+        setHealthy(answered)
+        timer = setTimeout(probe, PROBE_MS)
+      }
+      timer = setTimeout(() => settle(false), LONGER_THAN_A_WAITING_READ_MS)
       onProjects().then(
-        () => {
-          if (cancelled) return
-          setHealthy(true)
-          timer = setTimeout(probe, PROBE_MS)
-        },
-        () => {
-          if (cancelled) return
-          setHealthy(false)
-          timer = setTimeout(probe, PROBE_MS)
-        },
+        () => settle(true),
+        () => settle(false),
       )
     }
     timer = setTimeout(probe, PROBE_MS)
@@ -44,3 +45,6 @@ export function useDaemonHealth(): boolean {
 
   return healthy
 }
+
+/** OpenAgent is not answering ({@link useDaemonHealth}): what would ask it, Start, Send, Stop, an answer and a run's next step, is off until it does. */
+export const DaemonDown = createContext(false)
