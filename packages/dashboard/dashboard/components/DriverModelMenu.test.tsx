@@ -79,7 +79,7 @@ describe('DriverModelMenu tree (#658)', () => {
   test('the trigger is named for assistive tech even with nothing but a logo on it (#1143)', () => {
     renderMenu({ model: '' })
     // The rendered text is a logo and a chevron; without an explicit name this button says nothing.
-    expect(screen.getByRole('button', { name: "Driver: Claude Code · Model: the CLI's own default" })).toBeTruthy()
+    expect(screen.getByRole('button', { name: "Coding agent: Claude Code · Model: the CLI's own default" })).toBeTruthy()
   })
 })
 
@@ -102,7 +102,7 @@ describe('the effort, in the model menu', () => {
     renderMenu({ effort: picked })
     const trigger = screen.getByRole('button')
     expect(trigger.textContent).toBe('OpusHigh')
-    expect(trigger.getAttribute('aria-label')).toBe('Driver: Claude Code · Model: Opus · Effort: High')
+    expect(trigger.getAttribute('aria-label')).toBe('Coding agent: Claude Code · Model: Opus · Effort: High')
     fireEvent.click(trigger)
     expect(screen.getByText('Effort')).toBeTruthy()
     const items = ['The agent’s default', 'Low', 'Medium', 'High'].map(name => screen.getByRole('menuitem', { name }))

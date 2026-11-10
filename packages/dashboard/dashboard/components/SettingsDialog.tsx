@@ -407,12 +407,12 @@ function useOwnEntries(): Entry[] {
     },
     {
       id: 'agent',
-      title: 'Agent',
+      title: 'Coding agent',
       icon: Bot,
       body: (
         <Section>
           <SelectRow
-            label="Agent"
+            label="Coding agent"
             description="Which coding agent runs the work."
             value={driver}
             options={drivers}

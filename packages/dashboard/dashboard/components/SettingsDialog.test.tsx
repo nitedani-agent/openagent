@@ -95,8 +95,8 @@ describe('Settings dropdowns (#1172)', () => {
       }
     }
     await usable(['Project', 'Theme', 'Colours', 'Primary colour', 'Font', 'Code font', 'File preview font', 'Editor'])
-    fireEvent.click(screen.getByRole('button', { name: 'Agent' }))
-    await usable(['Project', 'Agent', 'Model'])
+    fireEvent.click(screen.getByRole('button', { name: 'Coding agent' }))
+    await usable(['Project', 'Coding agent', 'Model'])
   })
 
   test('an editor list the daemon could not fill still leaves a usable Editor row', async () => {
@@ -120,7 +120,7 @@ describe('Settings dropdowns (#1172)', () => {
   })
 })
 
-describe('Settings › Agent', () => {
+describe('Settings › Coding agent', () => {
   test("the Model row offers the agent's own list, the start menu's, after the agent's own default", async () => {
     prefsRead.mockResolvedValueOnce({})
     refreshPreferences()
@@ -158,7 +158,7 @@ describe('Settings › Agent', () => {
     prefsRead.mockResolvedValueOnce({ driver: 'codex' })
     refreshPreferences()
     open('agent')
-    await waitFor(() => expect(showing(select('Agent'))).toBe('Codex'))
+    await waitFor(() => expect(showing(select('Coding agent'))).toBe('Codex'))
     await waitFor(async () =>
       expect(await offered(select('Model'))).toEqual([
         ["the CLI's own default", false],
@@ -172,10 +172,10 @@ describe('Settings › Agent', () => {
     refreshPreferences()
     open('agent')
     await waitFor(() => expect(showing(select('Model'))).toBe('Opus 5.5'))
-    expect(await choices(select('Agent'))).toEqual(['Claude Code', 'Codex'])
-    await pick(select('Agent'), 'Codex')
+    expect(await choices(select('Coding agent'))).toEqual(['Claude Code', 'Codex'])
+    await pick(select('Coding agent'), 'Codex')
     expect(saves()).toEqual([{ driver: 'codex', model: '' }])
-    expect(showing(select('Agent'))).toBe('Codex')
+    expect(showing(select('Coding agent'))).toBe('Codex')
     expect(showing(select('Model'))).toBe("the CLI's own default")
   })
 })
@@ -327,7 +327,7 @@ describe('the Settings list', () => {
 
   test("two groups: yours and this computer's, the computer's packages among them; then the picked project's packages", () => {
     show('', 'p1')
-    expect(entries('You and this computer')).toEqual(['Profile', 'Appearance', 'Notifications', 'Agent', 'Your agent data', 'Repos', 'Claude web', 'Devices'])
+    expect(entries('You and this computer')).toEqual(['Profile', 'Appearance', 'Notifications', 'Coding agent', 'Your agent data', 'Repos', 'Claude web', 'Devices'])
     // gemstack has orchestration and no scheduler; every project has its skills.
     expect(entries('Project')).toEqual(['Skills', 'Project agent data', 'Orchestration'])
     expect(showing(select('Project'))).toBe('gemstack')
