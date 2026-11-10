@@ -309,8 +309,17 @@ export const PromptEditor = forwardRef<PromptEditorHandle, PromptEditorProps>(fu
 
   // Switched off while a start is asked for, and on again after. That is no edit, so no change is
   // told: a form that drops its error at the next edit would drop the refusal the moment it landed.
+  // A box switched off loses the focus: one that had it takes it back, so a refused prompt is fixed
+  // and sent again from the keyboard.
+  const focusedWhenOff = useRef(false)
   useEffect(() => {
-    editor?.setEditable(!disabled, false)
+    if (!editor) return
+    if (disabled) focusedWhenOff.current = editor.isFocused
+    editor.setEditable(!disabled, false)
+    if (!disabled && focusedWhenOff.current) {
+      focusedWhenOff.current = false
+      editor.commands.focus('end')
+    }
   }, [editor, disabled])
 
   // Seed {@link PromptEditorProps.initialText} the moment the editor exists, and only ever once:

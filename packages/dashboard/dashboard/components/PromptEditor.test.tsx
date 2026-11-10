@@ -35,6 +35,19 @@ describe('Enter sends the prompt (#1510)', () => {
     expect(onChange).not.toHaveBeenCalled()
   })
 
+  test('a box switched off while it was typed in has the focus again once it is on: a refused start is fixed from the keyboard', async () => {
+    const editor = (disabled: boolean) => <PromptEditor onChange={vi.fn()} onSubmit={vi.fn()} projects={[]} commands={[]} disabled={disabled} />
+    const { rerender } = render(editor(false))
+    const box = await waitFor(() => document.querySelector('[role="textbox"]') as HTMLElement)
+    act(() => box.focus())
+    rerender(editor(true))
+    // The browser takes the focus from a box that is no longer editable.
+    act(() => box.blur())
+    expect(document.activeElement).toBe(document.body)
+    rerender(editor(false))
+    await waitFor(() => expect(document.activeElement).toBe(box))
+  })
+
   test('plain Enter submits; Shift+Enter and Alt+Enter do not', async () => {
     const { box, onSubmit } = await renderEditor()
     fireEvent.keyDown(box, { key: 'Enter' })
