@@ -32,7 +32,7 @@ export function TicketPageShell({
         {path && <span className="min-w-0 truncate text-xs text-muted-foreground">{path}</span>}
       </div>
       <ScrollArea className="min-h-0 flex-1">
-        <div className="mx-auto max-w-3xl p-6">{children}</div>
+        <div className="mx-auto max-w-3xl md:p-6 max-md:p-4">{children}</div>
       </ScrollArea>
     </div>
   )
