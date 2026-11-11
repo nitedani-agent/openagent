@@ -242,6 +242,25 @@ test('the event stream sends one SSE frame per event', async () => {
   }
 })
 
+test('the event stream of a run that has said nothing yet answers its headers at once, so the page can let it go', async () => {
+  let said = (): void => {}
+  async function* quiet() {
+    await new Promise<void>(resolve => (said = resolve))
+  }
+  const server = await mounted({ eventsSource: () => quiet() })
+  const page = new AbortController()
+  try {
+    const answered = fetch(`${server.url}/_rpc/events?projectId=p1&agentId=r1`, { signal: page.signal })
+    const res = await Promise.race([answered, new Promise<'no headers'>(resolve => setTimeout(() => resolve('no headers'), 1000))])
+    assert.notEqual(res, 'no headers')
+    assert.match((res as Response).headers.get('content-type') ?? '', /text\/event-stream/)
+  } finally {
+    page.abort()
+    said()
+    await server.close()
+  }
+})
+
 test("the changes stream tells the page each time a project's runs change on a saved machine, until the page goes", async () => {
   const dir = await mkdtemp(join(tmpdir(), 'openagent-changes-'))
   await addProject(dir, new Date().toISOString())

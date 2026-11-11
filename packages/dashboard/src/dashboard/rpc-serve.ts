@@ -120,6 +120,8 @@ async function serveEventStream(req: IncomingMessage, res: ServerResponse, url: 
     // What passes a device's request on to the daemon must not hold the lines back.
     'x-accel-buffering': 'no',
   })
+  // The first line may be a while away: the headers go now.
+  res.flushHeaders()
   let finished = false
   const stop = await RPC_EVENT_STREAM(
     projectId,
