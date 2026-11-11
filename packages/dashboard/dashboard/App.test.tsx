@@ -464,10 +464,28 @@ describe('the project select (#1513)', () => {
     expect(window.history.length).toBe(steps)
     // Closed, the page under it is as it was.
     fireEvent.click(screen.getByRole('button', { name: 'shut the dialog' }))
-    expect(url()).toBe('/site/logs')
+    await waitFor(() => expect(url()).toBe('/site/logs'))
     expect(screen.queryByText(/the settings dialog/)).toBeNull()
     fireEvent.click(await screen.findByText('site ran'))
     expect(url()).toBe('/site/3-s')
+  })
+
+  test('Settings opened over a page and closed leaves that page as its history entry was: Back goes on to the page before, not into Settings again', async () => {
+    answerTwo()
+    window.history.replaceState(null, '', '/site/overview')
+    render(<App />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Logs' }))
+    window.history.replaceState({ written: 'by the page' }, '')
+    fireEvent.click(screen.getByRole('button', { name: /settings$/i }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Settings' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'to Agent' }))
+    expect(url()).toBe('/site/logs?settings=agent')
+    fireEvent.click(screen.getByRole('button', { name: 'shut the dialog' }))
+    await waitFor(() => expect(url()).toBe('/site/logs'))
+    expect(window.history.state).toEqual({ written: 'by the page' })
+    window.history.back()
+    await waitFor(() => expect(url()).toBe('/site/overview'))
+    expect(screen.queryByText(/the settings dialog/)).toBeNull()
   })
 
   test("Settings opened by its address, on a first visit, waits for the projects: it opens on the address's project", async () => {
