@@ -7,6 +7,7 @@ import type { WorkspaceTicket } from './lib/types.js'
 import { UpdateTicketsButton } from './UpdateTicketsButton.js'
 import { priorityTone } from './lib/ticket-priority.js'
 import { ticketAge, ticketDay } from './lib/ticket-date.js'
+import { openFromList } from './lib/back-to-list.js'
 
 /** Captured once: `useLoaded` treats a fresh `{}` literal as a new value on every render. */
 const NO_META: TicketsMeta = {}
@@ -319,7 +320,10 @@ export function TicketsPanel({
   }
 
   const updateTickets = () => startSession(UPDATE_TICKETS_PROMPT, 'The update could not be started.')
-  const newTicket = () => host.openPage('tickets', [NEW_TICKET], projectId)
+  const newTicket = () => {
+    openFromList([NEW_TICKET])
+    host.openPage('tickets', [NEW_TICKET], projectId)
+  }
 
   if (tickets.length === 0 && hiddenByFilter > 0) {
     // Filtered to nothing, not genuinely empty (#1144/#1230): offering an import here would ask

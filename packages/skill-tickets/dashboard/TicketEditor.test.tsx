@@ -4,11 +4,13 @@ import { openMenu } from '../../dashboard/dashboard/test-utils.js'
 import { fakeHost, renderWithHost } from './test-host.js'
 import { NewTicketPage } from './NewTicketPage.js'
 import { TicketDetailPage } from './TicketDetailPage.js'
+import { TicketsPanel } from './TicketsPanel.js'
 
 afterEach(cleanup)
 
 const now = new Date()
 const TODAY = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+const ticketRow = { file: '2026-07-20_dark-mode.md', title: 'Dark mode', summary: '', date: '2026-07-20T00:00:00.000Z', planned: false }
 const type = (label: string, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } })
 
 describe('a ticket written by hand', () => {
@@ -23,7 +25,24 @@ describe('a ticket written by hand', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create ticket' }))
     const file = `${TODAY}_dark-mode-2.md`
     await waitFor(() => expect(host.act).toHaveBeenCalledWith('p1', ['put', file], undefined, 'Priority: 3\nTopics: [ui, ux]\n\n# Dark mode\n\nA toggle in the header.\n'))
-    await waitFor(() => expect(host.openPage).toHaveBeenCalledWith('tickets', [file], 'p1'))
+    // In the form's place in the history: Back from it goes where New ticket was pressed, not to an empty form.
+    await waitFor(() => expect(host.openPage).toHaveBeenCalledWith('tickets', [file], 'p1', { replace: true }))
+  })
+
+  test('opened from the list, Cancel goes back to the list as it was', async () => {
+    window.history.replaceState(null, '', '/p1/tickets?q=dark')
+    const list = fakeHost()
+    list.openPage.mockImplementation((segment: string, path?: string[], projectId?: string) => window.history.pushState(null, '', `/${[projectId, segment, ...(path ?? [])].join('/')}`))
+    renderWithHost(<TicketsPanel projectId="p1" tickets={[ticketRow]} loaded onOpen={() => {}} />, list)
+    fireEvent.click(screen.getByRole('button', { name: 'New ticket' }))
+    expect(window.location.pathname).toBe('/p1/tickets/new')
+    cleanup()
+    const host = fakeHost()
+    renderWithHost(<NewTicketPage projectId="p1" />, host)
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(window.location.pathname + window.location.search).toBe('/p1/tickets?q=dark'))
+    expect(host.openPage).not.toHaveBeenCalled()
+    window.history.replaceState(null, '')
   })
 
   test('no title, or a priority outside 0–10, is not saved', async () => {
