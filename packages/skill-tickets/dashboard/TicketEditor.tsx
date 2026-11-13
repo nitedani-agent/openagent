@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button, Input, Label, Textarea, useModuleHost } from '@openagt/dashboard/module'
 import { newTicketFile, topicsIn, writeTicketFile, type TicketFields } from '../src/ticket-file.js'
 import { listTickets, ticketsChanged } from './lib/list.js'
@@ -49,7 +49,11 @@ export function TicketEditor({
   const [error, setError] = useState<string | null>(null)
 
   const priorityOk = priority.trim() === '' || (/^\d+$/.test(priority.trim()) && Number(priority) <= 10)
-  const ready = title.trim() !== '' && priorityOk && !saving
+  const ready = priorityOk && !saving
+  // Pressed with no title: the field says so, and the caret goes there.
+  const [untitled, setUntitled] = useState(false)
+  const titleField = useRef<HTMLInputElement>(null)
+  const titleMissing = untitled && title.trim() === ''
 
   const save = async () => {
     setSaving(true)
@@ -80,7 +84,13 @@ export function TicketEditor({
       className="space-y-4"
       onSubmit={event => {
         event.preventDefault()
-        if (ready) void save()
+        if (!ready) return
+        if (title.trim() === '') {
+          setUntitled(true)
+          titleField.current?.focus()
+          return
+        }
+        void save()
       }}
     >
       {issueLabel && (
@@ -90,7 +100,21 @@ export function TicketEditor({
       )}
       <div className="space-y-1.5">
         <Label htmlFor="ticket-title">Title</Label>
-        <Input id="ticket-title" value={title} onChange={event => setTitle(event.target.value)} placeholder="What should be done, in a few words" autoFocus />
+        <Input
+          ref={titleField}
+          id="ticket-title"
+          value={title}
+          onChange={event => setTitle(event.target.value)}
+          placeholder="What should be done, in a few words"
+          autoFocus
+          aria-invalid={titleMissing}
+          aria-describedby={titleMissing ? 'ticket-title-error' : undefined}
+        />
+        {titleMissing && (
+          <p id="ticket-title-error" className="text-xs text-danger">
+            A ticket needs a title.
+          </p>
+        )}
       </div>
       <div className="flex gap-3 max-sm:flex-col">
         <div className="space-y-1.5 sm:w-32">

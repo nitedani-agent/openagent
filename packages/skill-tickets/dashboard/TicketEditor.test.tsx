@@ -49,8 +49,17 @@ describe('a ticket written by hand', () => {
     const host = fakeHost()
     renderWithHost(<NewTicketPage projectId="p1" />, host)
     const create = screen.getByRole('button', { name: 'Create ticket' }) as HTMLButtonElement
-    expect(create.disabled).toBe(true)
+    // Pressed with no title, it says why, and the caret is in Title.
+    expect(create.disabled).toBe(false)
+    screen.getByLabelText('Topics').focus()
+    fireEvent.click(create)
+    const title = screen.getByLabelText('Title')
+    expect(document.activeElement).toBe(title)
+    expect(title.getAttribute('aria-invalid')).toBe('true')
+    expect(document.getElementById(title.getAttribute('aria-describedby')!)?.textContent).toBe('A ticket needs a title.')
+    expect(host.act).not.toHaveBeenCalled()
     type('Title', 'Dark mode')
+    expect(screen.queryByText('A ticket needs a title.')).toBeNull()
     expect(create.disabled).toBe(false)
     type('Priority', '11')
     expect(create.disabled).toBe(true)
