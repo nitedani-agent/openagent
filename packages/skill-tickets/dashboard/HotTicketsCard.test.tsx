@@ -34,7 +34,9 @@ describe('HotTicketsCard', () => {
     expect(screen.queryByText('later')).toBeNull()
     // Held by no run of the project's: held for nobody, and who claimed it said on its mark.
     expect(screen.getByLabelText('No run holds it any more, claimed by someone')).toBeTruthy()
-    expect(screen.getByLabelText('Priority 9')).toBeTruthy()
+    // A priority reads as it does on Tickets: in the same words and the same tone.
+    expect(screen.getByLabelText('Priority 9').className).toContain('text-danger')
+    expect(screen.getByLabelText('Priority 7').className).toContain('text-warning')
     // The project said at each row's end, beside its fact when it has one.
     expect(screen.getAllByText(/alpha/)).toHaveLength(2)
     expect(screen.getByText(/beta/)).toBeTruthy()
@@ -171,7 +173,7 @@ describe('HotTicketsCard', () => {
     const run = vi.fn<LinkAction['run']>(async () => ({ ok: true as const }))
     render({ p1: { 'list --local': [ticket('urgent.md', { priority: '8' })] }, p2: { 'list --local': [] } }, {}, { ...NO_MODULES, linkActions: [{ label: 'Add to queue', doneLabel: 'Queued', run, package: '@x/queue', projects: ['p1'] }] })
     const press = await screen.findByRole('button', { name: 'Add to queue' })
-    const fact = screen.getByText(/^P8/)
+    const fact = screen.getByText(/^Priority 8/)
     expect(press.compareDocumentPosition(fact) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     // Laid over the title's end, from where the priority begins, at a wide width only.
     const over = press.closest('div')!
