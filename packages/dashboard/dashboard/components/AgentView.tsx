@@ -16,7 +16,7 @@ import { sendNow, withdrawMessage } from '../rpc/control.js'
 import type { WaitingMessage } from './EventList.js'
 import { AgentWorkBar } from './AgentWorkBar.js'
 import { useWorkBarAway } from '../lib/work-bar-away.js'
-import { keepWaiting, keptWaiting, onKeptWaiting } from '../lib/draft-handoff.js'
+import { keepSending, keepWaiting, keptSending, keptWaiting, onKeptWaiting } from '../lib/draft-handoff.js'
 import { AgentFeed } from './AgentFeed.js'
 import { IssueLinks } from './Markdown.js'
 import { OpenFile } from './ToolCalls.js'
@@ -89,7 +89,7 @@ export function AgentView({
   /** Whether the agent is still running; `null` while the daemon's list of agents has not been read, so it is not known yet. */
   live: boolean | null
   /** What the run's card says, off the runs poll: what the feed cannot carry (the details strip's facts, how the agent was set up, whether it is a subagent, whether its record is being saved). Absent until the card is listed. */
-  card?: (AgentDetailsCard & Pick<AgentMeta, 'status' | 'intent' | 'saving' | 'parent' | 'workspace' | 'branch' | 'base' | 'baseCommit' | 'host' | 'otherHost' | 'publish' | 'prBase' | 'gitAccount' | 'earlierPrs' | 'remoteKind' | 'repos' | 'agent' | 'skillsOn' | 'skillsOff' | 'projectSkills'> & Partial<Pick<AgentMeta, 'startedAt'>>) | undefined
+  card?: (AgentDetailsCard & Pick<AgentMeta, 'status' | 'intent' | 'saving' | 'parent' | 'workspace' | 'branch' | 'base' | 'baseCommit' | 'host' | 'otherHost' | 'publish' | 'prBase' | 'gitAccount' | 'earlierPrs' | 'remoteKind' | 'repos' | 'agent' | 'skillsOn' | 'skillsOff' | 'projectSkills'> & Partial<Pick<AgentMeta, 'startedAt' | 'endedAt'>>) | undefined
   /** What the launcher said about this run as it started it: shown until the run's record says it. */
   picks?: StartPicks | undefined
   /** The session's own name — the same label the rail shows (#1030). It leads the action bar as
@@ -198,7 +198,7 @@ export function AgentView({
 
   // The messages on their way to the agent, from the box under the chat to the feed above it.
   // The prompt this page started the run with is on its way only until the run has ended.
-  const { sending: shownSending, onSending, waiting, onQueued, editInBox, giveBack } = useMessagesOnTheirWay(projectId, agentId, shown, live === false && archived !== null && !feedLive, card?.status === 'stopped', live === false ? undefined : startedWith)
+  const { sending: shownSending, sentAt, onSending, waiting, onQueued, editInBox, giveBack } = useMessagesOnTheirWay(projectId, agentId, shown, live === false && archived !== null && !feedLive, card?.status === 'stopped', card?.endedAt, live === false ? undefined : startedWith)
   // A question answered from its card hands the focus on to the box, for what the person says next.
   const focusBox = useRef<(() => void) | null>(null)
   // A run writes its prompt line once its coding agent begins. Until then its prompt, off its card,
@@ -465,6 +465,7 @@ export function AgentView({
           focusNext={() => focusBox.current?.()}
           writing={feedLive ? writing : ''}
           {...(shownSending !== undefined ? { sending: shownSending } : {})}
+          {...(sentAt !== undefined ? { sendingAt: sentAt } : {})}
           working={feedLive || shownSending !== undefined}
           queued={waiting}
           waitingOn={!going && live === false && outcome?.ok !== false && !outcome?.waiting ? subagentsRunning : 0}
@@ -491,6 +492,8 @@ export function AgentView({
 
 /** A message sent to a working agent, with how many prompts its log held then: a later prompt of its text is it, read. */
 type Queued = QueuedMessage & { prompts: number }
+/** A message sent to continue an ended run: how many prompts the run had then, when its record said it ended then, and when it was sent. */
+type Sending = { text: string; prompts: number; endedAt: string | null; at: string }
 
 function onVisibilityChange(changed: () => void): () => void {
   document.addEventListener('visibilitychange', changed)
@@ -511,9 +514,13 @@ function useMessagesOnTheirWay(
   ended: boolean,
   /** Its record says it was stopped: what it had not read, it never will. A failed leg's process still sends its inbox as the next turn. */
   stopped: boolean,
+  /** When its record says it last ended. */
+  endedAt: string | undefined,
   startedWith: string | undefined,
 ): {
   sending: string | undefined
+  /** When that message was sent. */
+  sentAt: string | undefined
   onSending: (text: string | null) => void
   waiting: WaitingMessage[]
   onQueued: (message: QueuedMessage) => void
@@ -523,14 +530,19 @@ function useMessagesOnTheirWay(
   giveBack: MutableRefObject<((text: string) => void) | null>
 } {
   // The message just sent to an ended run, shown at the end of the feed until its own prompt line
-  // arrives: the continuation writes that line only once its checkout is back, seconds later.
-  const [sending, setSending] = useState<{ text: string; prompts: number } | null>(null)
-  useEffect(() => setSending(null), [agentId])
+  // arrives: the continuation writes that line only once its coding agent answers, seconds later.
+  // Kept per run in this browser, as the waiting ones are, so a reload shows it too.
+  const [sent, setSent] = useState(() => ({ run: agentId, message: keptSending<Sending>(agentId) }))
+  const sending = sent.run === agentId ? sent.message : keptSending<Sending>(agentId)
+  const setSending = useCallback((message: Sending | null) => setSent({ run: agentId, message }), [agentId])
+  useEffect(() => {
+    if (sent.run === agentId) keepSending(agentId, sent.message)
+  }, [sent, agentId])
   const prompts = shown.filter(e => e.kind === 'driver' && e.event.type === 'start').length
   useEffect(() => {
     if (sending && prompts > sending.prompts) setSending(null)
-  }, [sending, prompts])
-  const onSending = useCallback((text: string | null) => setSending(text === null ? null : { text, prompts }), [prompts])
+  }, [sending, prompts, setSending])
+  const onSending = useCallback((text: string | null) => setSending(text === null ? null : { text, prompts, endedAt: endedAt ?? null, at: new Date().toISOString() }), [prompts, endedAt, setSending])
   // The messages sent while the agent works that it has not read yet, each shown waiting until the
   // agent reads it: at its next step, where its `steered` line lands, or, sent for later or not
   // taken in time, as the prompt of its next turn. An agent that stopped working without reading
@@ -572,6 +584,18 @@ function useMessagesOnTheirWay(
     )
     return () => clearTimeout(timer)
   }, [queued.length, ended, stopped, onScreen, setQueued])
+  // A run whose record ended again since the message was sent, and whose feed shows no prompt of it
+  // five seconds on, as for the messages waiting above, never began on it: its words go back to the box.
+  // The record can end before this page reads the lines of the leg that began on it. Again, not
+  // later: the record's times are the daemon's clock, and this browser's may be another device's.
+  useEffect(() => {
+    if (!sending || endedAt === undefined || endedAt === sending.endedAt || !ended || !onScreen) return
+    const timer = setTimeout(() => {
+      giveBack.current?.(sending.text)
+      setSending(null)
+    }, QUEUED_UNREAD_MS)
+    return () => clearTimeout(timer)
+  }, [sending, endedAt, ended, onScreen, setSending])
   const onQueued = useCallback((message: QueuedMessage) => setQueued(was => [...was, { ...message, prompts }]), [setQueued, prompts])
   // Cancel and edit puts the message back in the box; the composer says how.
   const editInBox = useRef<((text: string) => void) | null>(null)
@@ -589,6 +613,7 @@ function useMessagesOnTheirWay(
     // Told apart from the prompts in the same draw that brings the prompt's line, not an effect
     // later: for that one frame the message was in the chat twice.
     sending: (sending && prompts <= sending.prompts ? sending.text : undefined) ?? (startedWith && prompts === 0 ? startedWith : undefined),
+    sentAt: sending && prompts <= sending.prompts ? sending.at : undefined,
     onSending,
     waiting,
     onQueued,

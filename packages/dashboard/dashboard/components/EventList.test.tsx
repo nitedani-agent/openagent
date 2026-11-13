@@ -1448,4 +1448,12 @@ describe('EventList a message just sent', () => {
     // 8 seconds from the send; from the prompt line it would be 2.
     expect(screen.getByTestId('live-line').textContent).toContain('8s')
   })
+
+  test('counts from when the message was sent, on a page opened after the send', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-04T10:01:30.000Z'))
+    render(<EventList events={done} working sending="and again" sendingAt="2026-11-04T10:01:00.000Z" stick={false} />)
+    act(() => void vi.advanceTimersByTime(1000))
+    expect(screen.getByTestId('live-line').textContent).toContain('31s')
+  })
 })

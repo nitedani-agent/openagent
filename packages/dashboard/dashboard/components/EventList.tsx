@@ -679,6 +679,7 @@ export function EventList({
   events: given,
   writing = '',
   sending,
+  sendingAt,
   working = false,
   queued = NONE_QUEUED,
   waitingOn = 0,
@@ -704,6 +705,8 @@ export function EventList({
   /** A message just sent to an ended agent: the last prompt row, until the prompt's own line
    *  arrives and takes the same row. Being a prompt, the scroller brings it into view. */
   sending?: string | undefined
+  /** When that message was sent, where this page did not see it go (a reload): its live line counts from then. */
+  sendingAt?: string | undefined
   /** The agent is working: while it writes nothing, a moving line closes the feed: the call going
    *  on now, else "Starting…" when the last row is a prompt and "Working…" after, so a quiet agent
    *  never looks stalled. */
@@ -769,7 +772,7 @@ export function EventList({
   // The message just sent, as the prompt line its run is about to write: dated when it was sent, so
   // the live line comes and counts from then, as Claude Code on the web's does the moment a message
   // is sent, not seconds later when the run writes its first line.
-  const sentAt = useMemo(() => (sending !== undefined ? new Date().toISOString() : undefined), [sending])
+  const sentAt = useMemo(() => (sending !== undefined ? (sendingAt ?? new Date().toISOString()) : undefined), [sending, sendingAt])
   // Its row holds no time, as one being sent shows none.
   const sent: OpenAgentEvent | undefined = sending !== undefined ? { kind: 'driver', event: { type: 'start', prompt: sending } } : undefined
   const kept: OpenAgentEvent[] = sent === undefined || answeredInPlace ? logged : [...logged, sent]
