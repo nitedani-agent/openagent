@@ -14,8 +14,8 @@ export interface TicketFields {
   kept: string[]
 }
 
-const PRIORITY = /^Priority:\s*(.*)$/
-const TOPICS = /^Topics:\s*(.*)$/
+const PRIORITY = /^Priority:\s*(.*)$/i
+const TOPICS = /^Topics:\s*(.*)$/i
 
 /** Read a ticket's file into its fields. A file with no `# ` title reads with an empty one and its whole text as the body. */
 export function readTicketFile(content: string): TicketFields {

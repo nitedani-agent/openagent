@@ -32,6 +32,13 @@ test('an edit changes only what was edited: the issue line stays', () => {
   assert.equal(edited, 'Topics: [install]\nIssue: [#2361](https://example.com/issues/2361)\n\n# Install on Windows\n\nShorter.\n')
 })
 
+test('a priority or topics line written in lowercase reads as the field, and is written back as one line', () => {
+  const fields = readTicketFile('priority: 8\ntopics: [ui]\n\n# Login page\n')
+  assert.equal(fields.priority, '8')
+  assert.deepEqual(fields.topics, ['ui'])
+  assert.equal(writeTicketFile({ ...fields, priority: '3' }), 'Priority: 3\nTopics: [ui]\n\n# Login page\n')
+})
+
 test('a new ticket with nothing above its title is its title and its text', () => {
   assert.equal(writeTicketFile({ priority: '', topics: [], title: ' Dark mode ', body: '', kept: [] }), '# Dark mode\n')
   assert.equal(writeTicketFile({ priority: '3', topics: [], title: 'Dark mode', body: 'A toggle.', kept: [] }), 'Priority: 3\n\n# Dark mode\n\nA toggle.\n')
