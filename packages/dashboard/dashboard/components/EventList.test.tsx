@@ -589,15 +589,23 @@ describe('EventList session line', () => {
     expect(screen.getByText('Initialized session')).toBeTruthy()
   })
 
+  test('a first call with nothing of its own to open still opens to the set-up it carries', () => {
+    const call: OpenAgentEvent = { kind: 'driver', event: { type: 'action', label: 'TodoWrite' } }
+    render(<EventList events={[prompt, call, said]} setup={setup} stick={false} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Updated todos' }))
+    expect(screen.getByRole('button', { name: 'Initialized session' })).toBeTruthy()
+  })
+
   test('as the first row of a box of steps, opened, its lines have no box of their own; alone, they do; the line of steps has no time', () => {
     const at = '2026-09-25T10:04:05.000Z'
     const call: OpenAgentEvent = { kind: 'driver', event: { type: 'action', label: 'Bash', detail: 'ls' }, at }
     const { unmount } = render(<EventList events={[prompt, call, said]} setup={setup} stick={false} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Ran a command' }))
+    // The first command is named, as every later one is: the set-up it carries opens with it.
+    fireEvent.click(screen.getByRole('button', { name: 'Ran ls' }))
     fireEvent.click(screen.getByRole('button', { name: 'Initialized session' }))
     const lines = screen.getByText('agent-1').closest('.flex-col') as HTMLElement
     expect(lines.className).not.toContain('border')
-    expect(screen.getByRole('button', { name: 'Ran a command' }).closest('[data-message-id]')!.querySelector('.tabular-nums')).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Ran ls' })[0]!.closest('[data-message-id]')!.querySelector('.tabular-nums')).toBeNull()
     unmount()
     render(<EventList events={[prompt, said]} setup={setup} stick={false} />)
     fireEvent.click(screen.getByRole('button', { name: 'Initialized session' }))
