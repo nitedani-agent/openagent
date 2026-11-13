@@ -43,6 +43,14 @@ describe('a session\'s box while a message goes', () => {
   })
 })
 
+describe('a message taken back to edit (edit)', () => {
+  test('goes after what is typed, which stays', async () => {
+    const { handle, editor } = await renderBox()
+    act(() => handle.edit('race one'))
+    expect(editor.storage.markdown.getMarkdown()).toBe('first draft words\n\nrace one')
+  })
+})
+
 describe('words handed back to the box (append)', () => {
   test.each([
     { from: 4, to: 4 },

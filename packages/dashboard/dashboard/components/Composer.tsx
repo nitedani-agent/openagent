@@ -54,7 +54,7 @@ const DRIVER_UI: Record<DriverName, { icon: DriverOption['icon'] }> = {
 export interface ComposerHandle {
   clear: () => void
   focus: () => void
-  /** Put `text` in the box to edit, in place of what is there, and focus it. */
+  /** Put `text` in the box to edit, after what is typed there, and focus it. */
   edit: (text: string) => void
   /** Put `text` in the box after what is typed there, the caret left where it is. */
   append: (text: string) => void
@@ -207,8 +207,11 @@ export const Composer = forwardRef<ComposerHandle, {
     },
     focus: () => editorRef.current?.focus(),
     edit: text => {
-      editorRef.current?.loadTemplate(text)
-      setPrompt(text)
+      if (prompt.trim() !== '') editorRef.current?.append(text)
+      else {
+        editorRef.current?.loadTemplate(text)
+        setPrompt(text)
+      }
       editorRef.current?.focus()
     },
     append: text => editorRef.current?.append(text),
