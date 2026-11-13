@@ -424,23 +424,26 @@ function Prompt({ text, at, waiting, attached, fresh = false }: { text: string; 
           )}
         </div>
         {waiting &&
-          (waiting.later || !waiting.onSendNow ? (
+          (waiting.later ? (
             <span className="pr-1 text-[11px] leading-6">Queued</span>
           ) : (
             <>
               <span className="pl-1 text-[11px] leading-6">Read at the agent's next step</span>
-              <button
-                type="button"
-                onClick={waiting.onSendNow}
-                disabled={down}
-                title="The agent reads it now; what it runs goes on in the background"
-                className="rounded-md px-1.5 text-[11px] leading-6 hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
-              >
-                Send now
-              </button>
+              {waiting.onSendNow && (
+                <button
+                  type="button"
+                  onClick={waiting.onSendNow}
+                  disabled={down || waiting.sendingNow}
+                  title="The agent reads the messages waiting now; what it runs goes on in the background"
+                  className="rounded-md px-1.5 text-[11px] leading-6 hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+                >
+                  {waiting.sendingNow ? 'Sending…' : 'Send now'}
+                </button>
+              )}
             </>
           ))}
       </div>
+      {waiting?.refused && <p role="alert" className="text-[11px] text-danger">{waiting.refused}</p>}
     </div>
   )
 }
@@ -449,8 +452,12 @@ function Prompt({ text, at, waiting, attached, fresh = false }: { text: string; 
 export interface Waiting {
   /** Sent for after the turn (⌘Enter): "Queued", no Send now. */
   later: boolean
-  /** Send now: the agent reads it at once. */
+  /** Send now: the agent reads it, and every message waiting with it, at once. */
   onSendNow?: (() => void) | undefined
+  /** Send now is on its way. */
+  sendingNow?: boolean | undefined
+  /** Why the run refused the last Send now. */
+  refused?: string | undefined
   /** Cancel and edit: it goes back into the box. */
   onEdit?: (() => void) | undefined
 }

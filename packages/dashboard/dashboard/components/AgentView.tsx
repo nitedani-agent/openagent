@@ -16,6 +16,7 @@ import { sendNow, withdrawMessage } from '../rpc/control.js'
 import type { WaitingMessage } from './EventList.js'
 import { AgentWorkBar } from './AgentWorkBar.js'
 import { useWorkBarAway } from '../lib/work-bar-away.js'
+import { useAction } from '../lib/use-action.js'
 import { keepSending, keepWaiting, keptSending, keptWaiting, onKeptWaiting } from '../lib/draft-handoff.js'
 import { AgentFeed } from './AgentFeed.js'
 import { IssueLinks } from './Markdown.js'
@@ -600,9 +601,12 @@ function useMessagesOnTheirWay(
   const onQueued = useCallback((message: QueuedMessage) => setQueued(was => [...was, { ...message, prompts }]), [setQueued, prompts])
   // Cancel and edit puts the message back in the box; the composer says how.
   const editInBox = useRef<((text: string) => void) | null>(null)
+  // Send now asks the run to read every message it has not yet: one press, under the last of them, which says how it went.
+  const now = useAction()
+  const sendsNow = [...unread].reverse().find(message => !message.later)?.id
   const waiting: WaitingMessage[] = unread.map(({ prompts: _prompts, ...message }) => ({
     ...message,
-    onSendNow: () => void sendNow(projectId, agentId),
+    ...(message.id === sendsNow ? { onSendNow: () => void now.run(() => sendNow(projectId, agentId), 'Could not send it now.'), sendingNow: now.busy, refused: now.error ?? undefined } : {}),
     onEdit: () => {
       setQueued(was => was.filter(other => other.id !== message.id))
       void withdrawMessage(projectId, agentId, message.id)

@@ -727,6 +727,21 @@ describe('a message sent while the agent works', () => {
     expect(queuedBoxes()).toHaveLength(0)
   })
 
+  test('Send now, which sends every waiting message, is under the last of them, says it is on its way and says why the run refused it', async () => {
+    let answer: (outcome: unknown) => void = () => {}
+    sendNow.mockReturnValueOnce(new Promise(resolve => (answer = resolve)))
+    render(view({ live: true, events: [start('go'), text] }))
+    fireEvent.click(screen.getByText('queue-one'))
+    fireEvent.click(screen.getByText('queue-one'))
+    const [first, last] = queuedBoxes()
+    expect(within(first!.parentElement!).queryByRole('button', { name: 'Send now' })).toBeNull()
+    expect(within(first!.parentElement!).getByText("Read at the agent's next step")).toBeTruthy()
+    fireEvent.click(within(last!.parentElement!).getByRole('button', { name: 'Send now' }))
+    expect((await within(last!.parentElement!).findByRole('button', { name: 'Sending…' })) as HTMLButtonElement).toHaveProperty('disabled', true)
+    act(() => answer({ ok: false, error: 'could not reach the machine' }))
+    expect((await screen.findByRole('alert')).textContent).toBe('could not reach the machine')
+  })
+
   test('it is still waiting after the page is left or reloaded, with Send now and Cancel and edit, until the agent reads it', () => {
     const before = [start('go'), text]
     render(view({ live: true, events: before }))
@@ -737,7 +752,7 @@ describe('a message sent while the agent works', () => {
     cleanup()
     const { rerender } = render(view({ live: true, events: before }))
     expect(queuedBoxes().map(n => n.textContent)).toEqual(['and then this', 'and then this'])
-    fireEvent.click(screen.getAllByRole('button', { name: 'Send now' })[1]!)
+    fireEvent.click(screen.getByRole('button', { name: 'Send now' }))
     expect(sendNow).toHaveBeenCalledWith('p1', 'run-1')
     fireEvent.click(screen.getAllByRole('button', { name: 'Cancel and edit message' })[0]!)
     expect(withdrawMessage).toHaveBeenCalledWith('p1', 'run-1', first)
