@@ -144,6 +144,7 @@ async function runForegroundDaemonCmd(args: CliArgs, io: CliIO): Promise<number>
     io.err(`could not start the dashboard (${err instanceof Error ? err.message : String(err)}).`)
     return 1
   }
+  io.out('◆ dashboard stopped.')
   return 0
 }
 
