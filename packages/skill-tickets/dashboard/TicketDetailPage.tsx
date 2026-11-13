@@ -5,7 +5,7 @@ import { readTicketFile } from '../src/ticket-file.js'
 import { TicketPageShell, TicketPageNote } from './TicketPageShell.js'
 import { TicketHeader } from './TicketHeader.js'
 import { TicketEditor } from './TicketEditor.js'
-import { useBackToList } from './lib/back-to-list.js'
+import { openTab, useBackToList } from './lib/back-to-list.js'
 import { useTicket } from './lib/use-ticket.js'
 
 /** The ticket whose page opens on its edit form: Edit ticket was chosen on its plan's tab. */
@@ -14,7 +14,7 @@ let editOnOpen: string | null = null
 /** Open ticket `file`'s page on its edit form, from its plan's tab: the form edits the ticket, which that tab shows. */
 export function openToEdit(host: ModuleHost, projectId: string, file: string): void {
   editOnOpen = file
-  host.openPage('tickets', [file], projectId)
+  openTab(host, projectId, [file])
 }
 
 // One ticket's own page: its whole text, not just the head the list row reads, under the head it

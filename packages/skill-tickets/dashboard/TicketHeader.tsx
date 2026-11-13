@@ -16,6 +16,7 @@ import {
 import { claimState, heldBack } from '../src/module.js'
 import type { WorkspaceTicketDetail } from './lib/types.js'
 import { releaseClaim } from './lib/release.js'
+import { openTab } from './lib/back-to-list.js'
 import { priorityTone } from './lib/ticket-priority.js'
 import { ticketAge, ticketDay } from './lib/ticket-date.js'
 import { TicketStartActions } from './TicketStartActions.js'
@@ -93,7 +94,6 @@ export function TicketHeader({
     await run(() => host.startRun(projectId, prompt), failure)
     setStarting(null)
   }
-  const open = (path: string[]) => host.openPage('tickets', path, projectId)
   const more = [
     ...(onEdit ? [{ label: 'Edit ticket', Icon: Pencil, onSelect: onEdit }] : []),
     ...(claimed ? [{ label: 'Release the claim', Icon: LockOpen, onSelect: () => (working ? setAsking(true) : void release()) }] : []),
@@ -161,7 +161,7 @@ export function TicketHeader({
             aria-selected={tab === name}
             // Said as read: the gap before "none yet" is only drawn.
             aria-label={name === 'plan' && !ticket.planned ? 'Plan, none yet' : undefined}
-            onClick={() => tab !== name && open(name === 'ticket' ? [ticket.file] : [ticket.file, 'plan'])}
+            onClick={() => tab !== name && openTab(host, projectId, name === 'ticket' ? [ticket.file] : [ticket.file, 'plan'])}
             className={cn('-mb-px border-b-2 px-0.5 pb-2 font-medium', tab === name ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground')}
           >
             {name === 'ticket' ? 'Ticket' : 'Plan'}

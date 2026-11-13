@@ -3,7 +3,7 @@ import { planBody } from '../src/module.js'
 import { TicketPageShell, TicketPageNote } from './TicketPageShell.js'
 import { TicketHeader } from './TicketHeader.js'
 import { openToEdit } from './TicketDetailPage.js'
-import { useBackToList } from './lib/back-to-list.js'
+import { openTab, useBackToList } from './lib/back-to-list.js'
 import { useTicket } from './lib/use-ticket.js'
 
 // One ticket's plan, its second tab: under the head it shares with the ticket's page, the plan set
@@ -24,7 +24,7 @@ export function TicketPlanPage({
   const onBack = useBackToList(host, [slug, 'plan'])
 
   return (
-    <TicketPageShell onBack={onBack} crumbs={ticket ? [{ label: ticket.title, onOpen: () => host.openPage('tickets', [ticket.file], projectId) }, { label: 'Plan' }] : []}>
+    <TicketPageShell onBack={onBack} crumbs={ticket ? [{ label: ticket.title, onOpen: () => openTab(host, projectId, [ticket.file]) }, { label: 'Plan' }] : []}>
       {!loaded ? (
         <TicketPageNote>Loading…</TicketPageNote>
       ) : read && 'error' in read ? (
