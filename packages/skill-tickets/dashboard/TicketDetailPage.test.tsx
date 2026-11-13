@@ -254,6 +254,8 @@ describe('TicketDetailPage (#1144)', () => {
     await screen.findAllByText(/at work/)
     await releaseFromMenu()
     expect(host.act).not.toHaveBeenCalled()
+    // The run is named as a run, not as the sentence's first word.
+    expect((await screen.findByRole('alertdialog')).textContent).toContain('The run “login-page” goes on working, and the ticket can be started or queued again.')
     fireEvent.click(await screen.findByRole('button', { name: 'Release' }))
     await waitFor(() => expect(host.act).toHaveBeenCalledWith('p1', ['release', '2026-07-20_do-the-thing.md', '--force']))
     await waitFor(() => expect(screen.queryByText(/Claimed/)).toBeNull())

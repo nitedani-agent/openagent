@@ -138,7 +138,8 @@ export function TicketHeader({
         open={asking}
         onOpenChange={setAsking}
         title="An agent is working on this ticket. Release it anyway?"
-        body={`${holder ?? 'The agent'} goes on working, and the ticket can be started or queued again.`}
+        // A run's name is not a sentence's start: it may begin in lowercase, and with a colon in it.
+        body={`${holder ? `The run “${holder}”` : 'The agent'} goes on working, and the ticket can be started or queued again.`}
         confirmLabel="Release"
         confirmBusyLabel="Releasing…"
         onConfirm={async () => {
