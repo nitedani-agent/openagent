@@ -5,7 +5,7 @@ const HELP = {
 
 Installs OpenAgent on this computer: the dashboard starts when you log in, at https://openagent.build,
 which this computer then answers itself. It asks for your password as the administrator, for that
-name and its port. Typed again, it does the same, and asks nothing it needs no more.
+name and its port. Run again, it does the same, and asks for nothing it no longer needs.
 
 \`npx @openagt/uninstall\` takes it all off again.
 
@@ -14,8 +14,8 @@ Options:
   uninstall: `Usage: npx @openagt/uninstall
 
 Takes OpenAgent off this computer: everything \`npx @openagt/install\` put on it. It asks for your
-password as the administrator, for the name and its port. Your projects and their agents' records
-are left as they are.
+password as the administrator, for the name openagent.build and its port. Your projects and
+their agents' records are left as they are.
 
 Options:
   -h, --help  Show this help.`,
