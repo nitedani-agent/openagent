@@ -324,6 +324,32 @@ describe('QueuePage', () => {
       await waitFor(() => expect(host.act).toHaveBeenCalledWith('p1', ['done', '--', PLAN]))
     })
 
+    test('an entry whose file is there already (a plan already written) is left over: its row offers no start, only its removal, and the batch leaves it out', async () => {
+      const names = async () => ({ 'tickets/2026-08-01_login-page.plan.md': { title: 'Plan: Login page · already written', href: 'tickets/2026-08-01_login-page.md', done: PLAN } })
+      show([{ entry: PLAN, priority: 8 }, { entry: 'Urgent', priority: 8 }, { entry: 'Later', priority: 3 }], naming(names))
+      await screen.findByRole('button', { name: 'Plan: Login page · already written' })
+      expect(screen.queryByRole('button', { name: 'Start an agent on entry 1' })).toBeNull()
+      expect(screen.getByRole('button', { name: 'Remove entry 1 from the queue' })).toBeTruthy()
+      expect((screen.getByRole('spinbutton', { name: 'How many agents to start' }) as HTMLInputElement).max).toBe('2')
+      fireEvent.click(screen.getByRole('button', { name: 'Start 2 agents' }))
+      await waitFor(() =>
+        expect(host.startRun.mock.calls).toEqual([
+          ['p1', workOnEntryPrompt('Urgent'), { land: false }],
+          ['p1', workOnEntryPrompt('Later'), { land: false }],
+        ]),
+      )
+    })
+
+    test('an entry that names a plan already written but asks something else of it is work: its row offers a start, and the batch takes it', async () => {
+      const review = 'Review tickets/2026-08-01_login-page.plan.md for accessibility issues'
+      const names = async () => ({ 'tickets/2026-08-01_login-page.plan.md': { title: 'Plan: Login page · already written', href: 'tickets/2026-08-01_login-page.md', done: PLAN } })
+      show([{ entry: review, priority: 8 }], naming(names))
+      await screen.findByRole('button', { name: 'Plan: Login page · already written' })
+      expect(screen.getByRole('button', { name: 'Start an agent on entry 1' })).toBeTruthy()
+      fireEvent.click(screen.getByRole('button', { name: 'Start 1 agent' }))
+      await waitFor(() => expect(host.startRun.mock.calls).toEqual([['p1', workOnEntryPrompt(review), { land: false }]]))
+    })
+
     test('a queued link reads as its text; to a web address it opens there, into the project it opens the page that names its target', async () => {
       const openPage = vi.fn()
       show(

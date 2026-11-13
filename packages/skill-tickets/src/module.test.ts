@@ -110,9 +110,9 @@ test('a path under tickets/ is called what its ticket is called: a ticket by its
   assert.deepEqual(namesOf(['tickets/2026-01-01_gone.md', 'tickets/2026-01-01_gone.plan.md', 'docs/readme.md', 'tickets/'], tickets), {})
 })
 
-test('a plan its ticket already has is called written already, unless it is outdated: an ask to write it again is left over', () => {
+test('a plan its ticket already has is called written already, and its ask is done, unless it is outdated: an ask to write it again is left over', () => {
   const plan = 'tickets/2026-08-30_login-page.plan.md'
-  assert.deepEqual(namesOf([plan], [{ file: FILE, title: 'Login page', planned: true }]), { [plan]: { title: 'Plan: Login page · already written', href: `tickets/${FILE}` } })
+  assert.deepEqual(namesOf([plan], [{ file: FILE, title: 'Login page', planned: true }]), { [plan]: { title: 'Plan: Login page · already written', href: `tickets/${FILE}`, done: `Create ${plan}` } })
   assert.deepEqual(namesOf([plan], [{ file: FILE, title: 'Login page', planned: true, outdated: true }]), { [plan]: { title: 'Plan: Login page', href: `tickets/${FILE}` } })
 })
 

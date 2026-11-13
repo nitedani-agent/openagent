@@ -1,5 +1,5 @@
 import { FastForward, ListTodo, Play } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitleLink, StartAgentButton, cn, pathsIn, useFileNames, useModuleHost, type ModuleCardProps } from '@openagt/dashboard/module'
+import { Card, CardContent, CardHeader, CardTitleLink, StartAgentButton, cn, useModuleHost, type ModuleCardProps } from '@openagt/dashboard/module'
 import { fanOutLabel, isWorkingOn, unclaimedEntries, workOnEntryPrompt } from '../src/module.js'
 import { AgentOnEntry, EntryTitle, entryView } from './entry.js'
 import { useQueueStarts } from './starts.js'
@@ -21,9 +21,8 @@ import { useQueueReads } from './reads.js'
 
 export function QueueCard({ projects }: ModuleCardProps) {
   const host = useModuleHost()
-  const { reads, loaded } = useQueueReads(projects)
+  const { reads, loaded, names } = useQueueReads(projects)
   const starts = useQueueStarts(host)
-  const names = useFileNames(reads.map(read => ({ projectId: read.project.id, paths: read.entries.flatMap(pathsIn) })))
   const { inFlight, error } = starts
 
   const shown = reads.filter(read => read.entries.length > 0 || read.error !== undefined)
@@ -57,8 +56,8 @@ export function QueueCard({ projects }: ModuleCardProps) {
           <ul className="space-y-4">
             {shown.map(read => {
               const { project, entries } = read
-              // An entry an agent is on gets no second one: the batch starts from the top of the others.
-              const free = unclaimedEntries(entries, read.working)
+              // An entry an agent is on gets no second one, and one that is done already none at all: the batch starts from the top of the others.
+              const free = unclaimedEntries(entries, read.working).filter(entry => !entryView(project.id, entry, names).done)
               const count = starts.batchOf(project.id, free)
               return (
                 <li key={project.id}>
@@ -106,7 +105,7 @@ export function QueueCard({ projects }: ModuleCardProps) {
                           {/* The agent on the entry, else its start: under the pointer, or with the keyboard on it; a phone has no hover, and there it always shows. */}
                           {agent ? (
                             <AgentOnEntry projectId={project.id} agent={agent} />
-                          ) : (
+                          ) : view.done ? null : (
                             <div className="shrink-0 opacity-0 transition-opacity group-hover/row:opacity-100 focus-within:opacity-100 has-[[aria-expanded=true]]:opacity-100 max-md:opacity-100">
                               <StartAgentButton
                                 variant="ghost"

@@ -126,8 +126,8 @@ function ProjectQueue({ read, titled, schedule, names, starts, reload }: { read:
   const host = useModuleHost()
   const { project, entries, error, working } = read
   const raw = (entries ?? []).map(placed => placed.entry)
-  // An entry an agent is on gets no second one: the batch starts from the top of the others.
-  const free = unclaimedEntries(raw, working)
+  // An entry an agent is on gets no second one, and one that is done already none at all: the batch starts from the top of the others.
+  const free = unclaimedEntries(raw, working).filter(entry => !entryView(project.id, entry, names).done)
   const count = starts.batchOf(project.id, free)
   return (
     <section aria-label={project.name}>
@@ -253,7 +253,7 @@ function EntryRow({ project, placed, agent, names, starts, reload }: { project: 
         {view.renamed && <span className="block truncate font-mono text-xs text-muted-foreground">{entry}</span>}
       </div>
       {agent && <AgentOnEntry projectId={project.id} agent={agent} />}
-      {!agent && (
+      {!agent && !view.done && (
         <StartAgentButton
           variant="ghost"
           size="icon-sm"

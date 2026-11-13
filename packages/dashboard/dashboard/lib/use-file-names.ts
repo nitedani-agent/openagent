@@ -16,6 +16,8 @@ export interface NamedFile {
   title: string
   /** Open the page that shows it. */
   open(): void
+  /** The ask for what it names, word for word, once it is there already: an entry saying just this is left over. */
+  done?: string
 }
 
 /** The name of a path into a project's files; `undefined` for one no installed page names. */
@@ -32,7 +34,14 @@ export function pathsIn(text: string): string[] {
   return [...new Set(found.map(path => path.replace(/[.,;:!?]+$/, '')).filter(path => dataLinkParts(path) !== undefined))]
 }
 
-const NOTHING: Record<string, { title: string; href: string }> = {}
+/** A name as read: what to show, the path it opens, and the ask it answers once it is there already. */
+interface ReadName {
+  title: string
+  href: string
+  done?: string
+}
+
+const NOTHING: Record<string, ReadName> = {}
 
 /** The names of the paths asked about, per project, read once a minute. A path whose page is not installed in that project, or does not name it, has no name. */
 export function useFileNames(asked: readonly { projectId: string; paths: readonly string[] }[]): FileNames {
@@ -40,9 +49,9 @@ export function useFileNames(asked: readonly { projectId: string; paths: readonl
   const services = useContext(HostServicesContext) ?? INERT_HOST_SERVICES
   const key = asked.map(({ projectId, paths }) => `${projectId}\n${[...paths].sort().join('\n')}`).join('\n\n')
   const naming = pages.filter(page => page.names !== undefined)
-  const { value: names } = usePolled<Record<string, { title: string; href: string }>>(
+  const { value: names } = usePolled<Record<string, ReadName>>(
     async () => {
-      const named: Record<string, { title: string; href: string }> = {}
+      const named: Record<string, ReadName> = {}
       await Promise.all(
         asked.flatMap(({ projectId, paths }) =>
           naming
@@ -52,8 +61,8 @@ export function useFileNames(asked: readonly { projectId: string; paths: readonl
               if (own.length === 0) return
               const answer = await page.names!(moduleHost({ ...services, package: page.package }), projectId, own).catch(() => ({}))
               for (const path of own) {
-                const name = (answer as Record<string, { title?: unknown; href?: unknown } | undefined>)[path]
-                if (name && typeof name.title === 'string' && name.title.trim() !== '') named[`${projectId}\n${path}`] = { title: name.title, href: typeof name.href === 'string' ? name.href : path }
+                const name = (answer as Record<string, { title?: unknown; href?: unknown; done?: unknown } | undefined>)[path]
+                if (name && typeof name.title === 'string' && name.title.trim() !== '') named[`${projectId}\n${path}`] = { title: name.title, href: typeof name.href === 'string' ? name.href : path, ...(typeof name.done === 'string' ? { done: name.done } : {}) }
               }
             }),
         ),
@@ -69,6 +78,6 @@ export function useFileNames(asked: readonly { projectId: string; paths: readonl
   return (projectId, path) => {
     const name = names[`${projectId}\n${path}`]
     const parts = name && dataLinkParts(name.href)
-    return name && parts ? { title: name.title, open: () => services.openPage(parts.segment, parts.rest, projectId) } : undefined
+    return name && parts ? { title: name.title, open: () => services.openPage(parts.segment, parts.rest, projectId), ...(name.done !== undefined ? { done: name.done } : {}) } : undefined
   }
 }
