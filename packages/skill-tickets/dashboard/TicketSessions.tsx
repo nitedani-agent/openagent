@@ -31,7 +31,7 @@ const WORDS = {
  * chat — the same conversation, the ticket and the plan already in its context; one still running
  * is watched.
  */
-export function TicketSessions({ sessions, onOpen }: { sessions: readonly TicketSession[]; onOpen: (agentId: string) => void }) {
+export function TicketSessions({ sessions, planned, onOpen }: { sessions: readonly TicketSession[]; planned: boolean; onOpen: (agentId: string) => void }) {
   if (sessions.length === 0) return null
   return (
     <ul className="divide-y divide-border rounded-lg border border-border">
@@ -42,7 +42,8 @@ export function TicketSessions({ sessions, onOpen }: { sessions: readonly Ticket
           <li key={kind} className="flex items-center gap-3 px-3 py-2 text-xs">
             <span className="w-9 shrink-0 font-medium text-muted-foreground">{words.label}</span>
             <span className="min-w-0 flex-1 truncate text-muted-foreground">
-              {running ? words.running : words.ended} <span className="font-medium text-foreground">{holdingRun(agent)?.name ?? agent.id}</span>
+              {/* A planning run that ended with no plan beside the ticket wrote none: it was asked for one. */}
+              {running ? words.running : kind === 'plan' && !planned ? 'Asked for in' : words.ended} <span className="font-medium text-foreground">{holdingRun(agent)?.name ?? agent.id}</span>
               {` · ${running ? 'at work' : agent.status} · ${formatAge(agent.endedAt ?? agent.startedAt)}`}
             </span>
             <Tooltip>

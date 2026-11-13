@@ -171,7 +171,7 @@ export function TicketHeader({
       </div>
       {sessions.length > 0 && (
         <div className="mt-4">
-          <TicketSessions sessions={sessions} onOpen={agentId => host.openAgent(projectId, agentId)} />
+          <TicketSessions sessions={sessions} planned={ticket.planned} onOpen={agentId => host.openAgent(projectId, agentId)} />
         </div>
       )}
     </div>

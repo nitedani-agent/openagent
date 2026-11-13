@@ -347,6 +347,13 @@ describe('TicketDetailPage (#1144)', () => {
     expect(session.textContent).toContain(`Being worked in ${claim.textContent}`)
   })
 
+  test('a planning session that ended with no plan written is said to have been asked for one, not to have written it', async () => {
+    agents = [{ id: 'plan-run', ask: 'Create tickets/2026-07-20_do-the-thing.plan.md', title: 'Plan the thing', status: 'done', startedAt: '2026-08-29T10:00:00.000Z' }]
+    onTicket.mockResolvedValue(ticket({ planned: false }))
+    render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
+    expect((await screen.findByText('Plan the thing')).parentElement!.textContent).toMatch(/^Asked for in Plan the thing · done/)
+  })
+
   test('a command that cannot run is named, not shown as a missing ticket', async () => {
     onTicket.mockResolvedValue(ticket())
     render(<TicketDetailPage projectId="p2" slug="2026-07-20_do-the-thing.md" />)
