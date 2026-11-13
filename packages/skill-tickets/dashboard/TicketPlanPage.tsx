@@ -2,6 +2,7 @@ import { Markdown, useModuleHost } from '@openagt/dashboard/module'
 import { planBody } from '../src/module.js'
 import { TicketPageShell, TicketPageNote } from './TicketPageShell.js'
 import { TicketHeader } from './TicketHeader.js'
+import { openToEdit } from './TicketDetailPage.js'
 import { useBackToList } from './lib/back-to-list.js'
 import { useTicket } from './lib/use-ticket.js'
 
@@ -34,7 +35,15 @@ export function TicketPlanPage({
         <TicketPageNote>This ticket does not exist.</TicketPageNote>
       ) : (
         <>
-          <TicketHeader projectId={projectId} ticket={ticket} holderStatus={read.holderStatus} sessions={read.sessions} tab="plan" onChanged={() => void reload()} />
+          <TicketHeader
+            projectId={projectId}
+            ticket={ticket}
+            holderStatus={read.holderStatus}
+            sessions={read.sessions}
+            tab="plan"
+            onEdit={() => openToEdit(host, projectId, ticket.file)}
+            onChanged={() => void reload()}
+          />
           <div className="mt-6">
             {read.plan === null ? (
               // No `.plan.md` beside the ticket — never written, or removed since: the head's button writes one.

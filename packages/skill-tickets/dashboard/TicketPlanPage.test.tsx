@@ -4,6 +4,8 @@ import type { ModuleAgent } from '@openagt/dashboard/module'
 import { planTicketPrompt, workOnTicketPrompt } from '../src/module.js'
 import { fakeHost, renderWithHost, type FakeHost } from './test-host.js'
 import { TicketPlanPage } from './TicketPlanPage.js'
+import { TicketDetailPage } from './TicketDetailPage.js'
+import { openMenu } from '../../dashboard/dashboard/test-utils.js'
 
 afterEach(cleanup)
 
@@ -27,6 +29,17 @@ describe('TicketPlanPage (#685)', () => {
     // The breadcrumb names the ticket, which it opens, and this page.
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toBe('Tickets›Do the thing›Plan'.replace(/›/g, ''))
     expect(screen.getByRole('tab', { name: 'Plan', selected: true })).toBeTruthy()
+  })
+
+  test('the head is the ticket tab\'s: More offers Edit ticket, which opens the ticket\'s page on its edit form', async () => {
+    const host = render(PLAN)
+    await openMenu(await screen.findByRole('button', { name: 'More' }))
+    fireEvent.click(await screen.findByText('Edit ticket'))
+    expect(host.openPage).toHaveBeenCalledWith('tickets', [SLUG], 'p1')
+    cleanup()
+    renderWithHost(<TicketDetailPage projectId="p1" slug={SLUG} />, host)
+    expect(await screen.findByRole('heading', { name: 'Edit ticket' })).toBeTruthy()
+    expect((screen.getByLabelText('Title') as HTMLInputElement).value).toBe('Do the thing')
   })
 
   test('a ticket with no plan says so rather than showing a blank page', async () => {
