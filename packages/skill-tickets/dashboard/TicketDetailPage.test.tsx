@@ -337,6 +337,16 @@ describe('TicketDetailPage (#1144)', () => {
     expect(host.openAgent).toHaveBeenCalledWith('p1', 'run-2')
   })
 
+  test('a session with no title yet is named as the claim on the line above names it, never by its id', async () => {
+    agents = [{ id: '2026-11-13T20-09-35-236Z', name: 'login-page', ask: 'hold: move the cart to a page of its own', status: 'running', startedAt: '2026-08-30T10:00:00.000Z' }]
+    onTicket.mockResolvedValue(ticket({ locked: true, lockedBy: '2026-11-13T20-09-35-236Z' }))
+    render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
+    const session = (await screen.findByText(/Being worked in/)).closest('li')!
+    expect(session.textContent).not.toContain('2026-11-13T20-09-35-236Z')
+    const claim = screen.getByRole('button', { name: /hold/ })
+    expect(session.textContent).toContain(`Being worked in ${claim.textContent}`)
+  })
+
   test('a command that cannot run is named, not shown as a missing ticket', async () => {
     onTicket.mockResolvedValue(ticket())
     render(<TicketDetailPage projectId="p2" slug="2026-07-20_do-the-thing.md" />)
