@@ -144,6 +144,12 @@ export function TicketEditor({
           id="ticket-body"
           value={body}
           onChange={event => setBody(event.target.value)}
+          // Enter makes a new line in the text; with Ctrl or ⌘ it saves the ticket.
+          onKeyDown={event => {
+            if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey)) return
+            event.preventDefault()
+            event.currentTarget.form?.requestSubmit()
+          }}
           rows={14}
           className="font-mono text-xs"
           placeholder={'## TLDR\n\nWhat is wrong or missing, and what done looks like.\n\n## Why it matters\n\n…'}

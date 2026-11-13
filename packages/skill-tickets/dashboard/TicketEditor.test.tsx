@@ -105,6 +105,23 @@ describe('a ticket written by hand', () => {
     await waitFor(() => expect(host.act).toHaveBeenCalledWith('p1', ['put', slug], undefined, 'Priority: 9\nIssue: [#4](https://example.com/issues/4)\n\n# Checkout\n'))
   })
 
+  test('Ctrl+Enter or ⌘+Enter in the text saves, as the press does; Enter alone is a new line', async () => {
+    const host = fakeHost({ p1: { 'list --local': [] } })
+    host.act.mockImplementation(async () => ({ ok: true, output: { ok: true } }))
+    renderWithHost(<NewTicketPage projectId="p1" />, host)
+    type('Title', 'Dark mode')
+    const text = screen.getByLabelText('Text')
+    fireEvent.keyDown(text, { key: 'Enter' })
+    expect(host.act).not.toHaveBeenCalled()
+    fireEvent.keyDown(text, { key: 'Enter', ctrlKey: true })
+    await waitFor(() => expect(host.act).toHaveBeenCalledTimes(1))
+    cleanup()
+    renderWithHost(<NewTicketPage projectId="p1" />, host)
+    type('Title', 'Light mode')
+    fireEvent.keyDown(screen.getByLabelText('Text'), { key: 'Enter', metaKey: true })
+    await waitFor(() => expect(host.act).toHaveBeenCalledTimes(2))
+  })
+
   test('a refused save says why and stays on the form', async () => {
     const host = fakeHost({ p1: { 'list --local': [] } })
     host.act.mockImplementation(async () => ({ ok: true, output: { ok: false, reason: 'the push was refused' } }))
