@@ -53,7 +53,7 @@ describe('AgentActionsMenu (#toolbar-menu)', () => {
     openMenu()
     // No retained worktree here, so the folder item names the project root it will actually open.
     await waitFor(() => expect(screen.getByText('Open on GitHub')).toBeTruthy())
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent!.trim())).toEqual(['Open project folder', 'Open in editor', 'Open on GitHub', 'Delete session'])
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent!.trim())).toEqual(['Open project folder', 'Open in editor', 'Open on GitHub', 'Delete session…'])
     expect(screen.getByText('Open on GitHub').closest('a')!.getAttribute('href')).toBe('https://github.com/o/r')
     // The offer of a repository is the project's own page's.
     expect(onRepositoryOffer).not.toHaveBeenCalled()
@@ -128,7 +128,7 @@ describe('AgentActionsMenu (#toolbar-menu)', () => {
     const onDeleted = vi.fn()
     render(<AgentActionsMenu projectId="p1" agentId="run-1" events={[]} label="my session" onDeleted={onDeleted} />)
     openMenu()
-    fireEvent.click(await screen.findByText('Delete session'))
+    fireEvent.click(await screen.findByText('Delete session…'))
     // The confirm dialog, not a bare delete: the session and its history go for good.
     await waitFor(() => expect(screen.getByText('Delete this session?')).toBeTruthy())
     expect(sendDeleteAgent).not.toHaveBeenCalled()
@@ -142,7 +142,7 @@ describe('AgentActionsMenu (#toolbar-menu)', () => {
     const onDeleted = vi.fn()
     render(<AgentActionsMenu projectId="p1" agentId="run-1" events={[]} label="my session" onDeleted={onDeleted} />)
     openMenu()
-    fireEvent.click(await screen.findByText('Delete session'))
+    fireEvent.click(await screen.findByText('Delete session…'))
     const confirm = await screen.findByRole('button', { name: 'Delete' })
     confirm.focus()
     fireEvent.click(confirm)
@@ -227,7 +227,7 @@ describe('the menu with no session: the project home (#809)', () => {
     const menu = await screen.findByRole('menu')
     expect(screen.queryByText('Stop agent')).toBeNull()
     expect(screen.queryByText('Remove worktree')).toBeNull()
-    expect(screen.queryByText('Delete session')).toBeNull()
+    expect(screen.queryByText('Delete session…')).toBeNull()
     expect(menu.querySelector('[role="separator"]')).toBeNull()
   })
 

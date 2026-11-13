@@ -298,7 +298,7 @@ export function AgentActionsMenu({
           )}
           {deletable && (
             <DropdownMenuItem onClick={() => setConfirmDelete(true)} className="text-danger">
-              <Trash2 className="h-3.5 w-3.5 shrink-0" /> Delete session
+              <Trash2 className="h-3.5 w-3.5 shrink-0" /> Delete session…
             </DropdownMenuItem>
           )}
 
