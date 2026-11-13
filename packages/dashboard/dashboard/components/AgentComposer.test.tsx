@@ -133,6 +133,10 @@ describe('AgentComposer box', () => {
     cleanup()
     renderComposer({ live: false })
     expect(props().placeholder).toBe('Message the agent to continue it…')
+    cleanup()
+    // Ended on a question its card asks: a message answers it.
+    renderComposer({ live: false, asked: true })
+    expect(props().placeholder).toBe('Or answer in your own words…')
   })
 
   test('on a touch screen the box names no keys', () => {

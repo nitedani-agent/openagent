@@ -414,6 +414,7 @@ export function AgentView({
             projectId={projectId}
             agentId={agentId}
             live={feedLive}
+            asked={outcome?.waiting === true}
             files={files}
             onAgentStarted={onAgentStarted}
             onSending={onSending}

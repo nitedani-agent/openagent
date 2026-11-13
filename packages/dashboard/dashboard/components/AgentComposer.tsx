@@ -45,6 +45,7 @@ export function AgentComposer({
   projectId,
   agentId,
   live,
+  asked = false,
   files,
   onAgentStarted,
   onSending,
@@ -71,6 +72,8 @@ export function AgentComposer({
   agentId: string
   /** Whether the agent is still running: what a send does is the same call, the note differs. */
   live: boolean
+  /** It ended on a question its card asks: a message is the answer, in the person's own words. */
+  asked?: boolean
   files: string[]
   /** An ended run was continued: the shell follows the same run as it goes live again. */
   onAgentStarted?: ((intent: string, agentId: string) => void) | undefined
@@ -304,7 +307,7 @@ export function AgentComposer({
         idleControl={idleControl}
         // What the box can do, not what it is for: the keys for a working agent, as Claude Code's box
         // says them in the same place; a touch screen has none to name.
-        placeholder={down ? 'OpenAgent is not answering' : live ? (touch ? 'Message the agent…' : `Enter to send, ${shortcut('Enter')} to queue for later`) : 'Message the agent to continue it…'}
+        placeholder={down ? 'OpenAgent is not answering' : live ? (touch ? 'Message the agent…' : `Enter to send, ${shortcut('Enter')} to queue for later`) : asked ? 'Or answer in your own words…' : 'Message the agent to continue it…'}
       />
     </div>
   )

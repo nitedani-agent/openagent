@@ -87,7 +87,7 @@ let queuedIds = 0
 const edited: string[] = []
 const givenBack: string[] = []
 vi.mock('./AgentComposer.js', () => ({
-  AgentComposer: ({ live, model, context, controls, onSending, onQueued, editInBox, giveBack, row, publish, prBase, agent, gitAccount, projectSkills }: { publish?: string; prBase?: string; live: boolean; model?: string; context?: ReactNode; controls?: ReactNode; onSending?: (text: string | null) => void; onQueued?: (message: { id: string; text: string; later: boolean }) => void; editInBox?: { current: ((text: string) => void) | null }; giveBack?: { current: ((text: string) => void) | null }; row?: ReactNode; agent?: string; gitAccount?: string; projectSkills?: 'none' | string[] }) => {
+  AgentComposer: ({ live, asked, model, context, controls, onSending, onQueued, editInBox, giveBack, row, publish, prBase, agent, gitAccount, projectSkills }: { publish?: string; prBase?: string; live: boolean; asked?: boolean; model?: string; context?: ReactNode; controls?: ReactNode; onSending?: (text: string | null) => void; onQueued?: (message: { id: string; text: string; later: boolean }) => void; editInBox?: { current: ((text: string) => void) | null }; giveBack?: { current: ((text: string) => void) | null }; row?: ReactNode; agent?: string; gitAccount?: string; projectSkills?: 'none' | string[] }) => {
     if (editInBox) editInBox.current = text => void edited.push(text)
     if (giveBack) giveBack.current = text => void givenBack.push(text)
     return (
@@ -103,6 +103,7 @@ vi.mock('./AgentComposer.js', () => ({
         <span data-testid="composer-project-skills" data-value={projectSkills === undefined ? 'all' : projectSkills === 'none' ? 'none' : projectSkills.join('+')} />
         <span data-testid="composer-context">{context}</span>
         <span data-testid="composer-live">{String(live)}</span>
+        <span data-testid="composer-asked">{String(asked)}</span>
       </>
     )
   },
@@ -836,6 +837,13 @@ describe('a message sent while the agent works', () => {
     rerender(view({ live: true, events: before }))
     expect(screen.getByTestId('composer-live').textContent).toBe('true')
     expect(screen.getByTestId('bar-live').textContent).toBe('true')
+  })
+
+  test('a run that ended on a question tells the box so: a message is the answer', async () => {
+    const asking = [start('go'), { kind: 'end', ok: true, waiting: true }] as OpenAgentEvent[]
+    onAgent.mockResolvedValue(asking)
+    render(view({ live: false, events: asking }))
+    await waitFor(() => expect(screen.getByTestId('composer-asked').textContent).toBe('true'))
   })
 
   test('a continued run opened afresh is live while its feed replays the leg before, and ends with its own end', () => {
