@@ -54,7 +54,10 @@ describe('a ticket written by hand', () => {
     expect(create.disabled).toBe(false)
     type('Priority', '11')
     expect(create.disabled).toBe(true)
-    expect(screen.getByText(/whole number from 0 to 10/)).toBeTruthy()
+    // The field is marked wrong, and says why to whoever is on it.
+    const field = screen.getByLabelText('Priority')
+    expect(field.getAttribute('aria-invalid')).toBe('true')
+    expect(field.getAttribute('aria-describedby') && document.getElementById(field.getAttribute('aria-describedby')!)?.textContent).toBe('Priority is a whole number from 0 to 10, or empty for none.')
   })
 
   test('after Save, and on the page of a ticket just created, the focus is on the ticket\'s title', async () => {

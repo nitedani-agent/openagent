@@ -95,14 +95,18 @@ export function TicketEditor({
       <div className="flex gap-3 max-sm:flex-col">
         <div className="space-y-1.5 sm:w-32">
           <Label htmlFor="ticket-priority">Priority</Label>
-          <Input id="ticket-priority" value={priority} onChange={event => setPriority(event.target.value)} inputMode="numeric" placeholder="0–10" aria-invalid={!priorityOk} />
+          <Input id="ticket-priority" value={priority} onChange={event => setPriority(event.target.value)} inputMode="numeric" placeholder="0–10" aria-invalid={!priorityOk} aria-describedby={priorityOk ? undefined : 'ticket-priority-error'} />
         </div>
         <div className="flex-1 space-y-1.5">
           <Label htmlFor="ticket-topics">Topics</Label>
           <Input id="ticket-topics" value={topics} onChange={event => setTopics(event.target.value)} placeholder="ui, install" />
         </div>
       </div>
-      {!priorityOk && <p className="text-xs text-danger">Priority is a whole number from 0 to 10, or empty for none.</p>}
+      {!priorityOk && (
+        <p id="ticket-priority-error" className="text-xs text-danger">
+          Priority is a whole number from 0 to 10, or empty for none.
+        </p>
+      )}
       <div className="space-y-1.5">
         <Label htmlFor="ticket-waiting">Waiting on</Label>
         <Input id="ticket-waiting" value={waiting} onChange={event => setWaiting(event.target.value)} placeholder="Nothing" aria-describedby="ticket-waiting-note" />
