@@ -63,7 +63,7 @@ export function QueueCard({ projects }: ModuleCardProps) {
                 <li key={project.id}>
                   <div className="flex w-full items-center gap-2">
                     <span className="truncate text-sm font-medium">{project.name}</span>
-                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{entries.length} queued</span>
+                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{entries.length === 1 ? '1 entry' : `${entries.length} entries`}</span>
                     {free.length > 0 && (
                       <>
                         {/* The project's batch act, said as one: how many agents, then "Start N", which starts them from the top. */}

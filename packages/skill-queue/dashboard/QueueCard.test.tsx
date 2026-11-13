@@ -27,11 +27,12 @@ const started = () => host.startRun.mock.calls.map(([projectId, prompt, opts]) =
 afterEach(cleanup)
 
 describe('QueueCard', () => {
-  test('lists every project with open entries from `queue --local`, and leaves out a project with none', async () => {
+  test('lists every project with open entries from `queue --local`, counted as the Queue page counts them, and leaves out a project with none', async () => {
     render({ p1: [LOGIN, 'Tidy the loader'], p2: [] })
     expect(await screen.findByText('Login page')).toBeTruthy()
     expect(screen.getByText('Tidy the loader')).toBeTruthy()
     expect(screen.getByText('alpha')).toBeTruthy()
+    expect(screen.getByText('2 entries')).toBeTruthy()
     expect(screen.queryByText('beta')).toBeNull()
     expect(host.runCommand).toHaveBeenCalledWith('p1', ['--local'])
     expect(host.runCommand).toHaveBeenCalledWith('p2', ['--local'])
