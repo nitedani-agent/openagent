@@ -32,6 +32,10 @@ const demo = await startDemo({
     said.push(line)
     if (said.length > 20) said.shift()
   },
+}).catch((err: unknown) => {
+  // What went wrong is in the message, with the dashboard's own lines; a stack would only bury it.
+  console.error(err instanceof Error ? err.message : String(err))
+  process.exit(1)
 })
 // Printed at the address the page shows, opened by its id, as `openagent` does with a project.
 const address = projectAddresses([demo.project.id], []).addressOf(demo.project.id)
