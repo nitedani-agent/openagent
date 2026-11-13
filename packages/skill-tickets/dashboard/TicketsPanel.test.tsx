@@ -340,7 +340,7 @@ describe('TicketsPanel (#697/#1144)', () => {
     host = fakeHost({ p1: { 'meta --local': meta } })
     renderWithHost(<TicketsPanel projectId="p1" tickets={[ticket({ planned: false, priority: '8' })]} loaded onOpen={() => {}} />, host, mounted)
     await openMenu(await screen.findByRole('button', { name: 'Other ways to plan Do the thing' }))
-    fireEvent.click(await screen.findByText('Queue plan'))
+    fireEvent.click(await screen.findByText('Add to queue'))
     await waitFor(() => expect(addToQueue).toHaveBeenCalledWith(expect.anything(), 'p1', [{ text: planTicketPrompt('2026-07-20_do-the-thing.md'), priority: 8 }]))
     // The row says it is queued, and starts nothing.
     expect(await screen.findByText('Queued')).toBeTruthy()
@@ -350,7 +350,7 @@ describe('TicketsPanel (#697/#1144)', () => {
     host = fakeHost({ p1: { 'meta --local': meta } })
     renderWithHost(<TicketsPanel projectId="p1" tickets={[ticket({ planned: true })]} loaded onOpen={() => {}} />, host, mounted)
     await openMenu(await screen.findByRole('button', { name: 'Other ways to work on Do the thing' }))
-    fireEvent.click(await screen.findByText('Queue work'))
+    fireEvent.click(await screen.findByText('Add to queue'))
     await waitFor(() => expect(addToQueue).toHaveBeenCalledWith(expect.anything(), 'p1', [{ text: 'Do the thing', href: 'tickets/2026-07-20_do-the-thing.md', priority: 5 }]))
   })
 

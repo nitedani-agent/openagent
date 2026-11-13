@@ -37,7 +37,6 @@ export function TicketStartActions({
     ? {
         prompt: workOnTicketPrompt(ticket.file),
         now: compact ? 'Start' : 'Start work',
-        later: 'Queue work',
         Icon: Play,
         tooltip: 'Starts an agent working on this ticket, from its plan',
         laterSays: 'An agent works on it when the queue reaches it.',
@@ -49,7 +48,6 @@ export function TicketStartActions({
     : {
         prompt: planTicketPrompt(ticket.file),
         now: compact ? 'Plan' : 'Plan now',
-        later: 'Queue plan',
         Icon: ClipboardPlus,
         tooltip: "Starts an agent writing this ticket's plan",
         laterSays: 'An agent writes the plan when the queue reaches it.',
@@ -71,7 +69,8 @@ export function TicketStartActions({
   // Queued here, or read as queued already (an entry on the queue for this ask).
   const isQueued = queued === 'done' || actions.some(action => action.done)
   const moreItems: StartMenuItem[] = actions.map(action => ({
-    label: queued === 'done' || action.done ? (action.doneLabel ?? action.label) : step.later,
+    // The module's own name for the act, as the list's header says it: the menu it is in says plan or work.
+    label: queued === 'done' || action.done ? (action.doneLabel ?? action.label) : action.label,
     description: step.laterSays,
     disabled: queued === 'running' || queued === 'done' || action.done,
     onSelect: () => void queue(action.key),
