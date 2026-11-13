@@ -71,7 +71,7 @@ export function TicketRow({
   // lock names as written (#1748).
   const holder = ticket.lockedByAgent?.name ?? ticket.lockedBy
   // In review or waiting: no agent is started on it nor on its plan, the tickets skill's own rule;
-  // claimed: an agent holds it. Either way the row offers no next step.
+  // claimed: an agent holds it. Either way the row offers no next step, only what is queued for it.
   const held = heldBack(ticket)
   const offered = !held && !ticket.locked
   return (
@@ -216,17 +216,16 @@ export function TicketRow({
       {/* The next step (TicketStartActions): Plan with no plan, Start with one; queueing it and
           setting it up first are in its menu. A fixed width keeps the columns lined up row to row. */}
       <div className="flex shrink-0 items-center justify-end gap-1.5 md:w-36 max-md:px-1">
-        {offered && (
-          <TicketStartActions
-            compact
-            projectId={projectId}
-            ticket={ticket}
-            busy={busy}
-            starting={starting}
-            onStart={onStart}
-            onConfigure={onConfigure}
-          />
-        )}
+        <TicketStartActions
+          compact
+          startable={offered}
+          projectId={projectId}
+          ticket={ticket}
+          busy={busy}
+          starting={starting}
+          onStart={onStart}
+          onConfigure={onConfigure}
+        />
       </div>
       {ticket.issue ? (
         <a

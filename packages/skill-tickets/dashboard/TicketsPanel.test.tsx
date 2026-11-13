@@ -354,6 +354,15 @@ describe('TicketsPanel (#697/#1144)', () => {
     await waitFor(() => expect(addToQueue).toHaveBeenCalledWith(expect.anything(), 'p1', [{ text: 'Do the thing', href: 'tickets/2026-07-20_do-the-thing.md', priority: 5 }]))
   })
 
+  test('a claimed row still says its plan is queued, and offers no start', async () => {
+    const queuedPlan = { label: 'Add to queue', doneLabel: 'Queued', run: vi.fn(), done: async () => () => true, package: '@x/queue', projects: ['p1'] }
+    const mounted: MountedModules = { pages: [], cards: [], linkActions: [queuedPlan], panels: [], runSlots: [], settings: [], everyPage: [], loaded: true }
+    host = fakeHost({ p1: { 'meta --local': meta } })
+    renderWithHost(<TicketsPanel projectId="p1" tickets={[ticket({ locked: true, lockedBy: 'agent-1' })]} loaded onOpen={() => {}} />, host, mounted)
+    expect(await screen.findByText('Queued')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /^Plan/ })).toBeNull()
+  })
+
   test("Start work's Configure first opens the launcher with the ticket's own prompt", async () => {
     render(<TicketsPanel projectId="p1" tickets={[ticket({ planned: true })]} loaded onOpen={() => {}} />)
     await configureFirst('Other ways to work on Do the thing')
