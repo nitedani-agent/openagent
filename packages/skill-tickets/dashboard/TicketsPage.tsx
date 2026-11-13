@@ -343,10 +343,10 @@ function linksByProject(rows: readonly { projectId: string; ticket: WorkspaceTic
 }
 
 /**
- * What a page-wide add acts on, as the object of its verb: "5 tickets", "one plan". Short, so the
+ * What a page-wide add acts on, as the object of its verb: "5 tickets", "1 plan", in digits beside each other. Short, so the
  * heading stays one line: which tickets it takes — the shown or the selected ones, less the ones
  * it skips — is the tooltip's to say.
  */
 function counted(count: number, noun: string): string {
-  return count === 1 ? `one ${noun}` : `${count} ${noun}s`
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
 }
