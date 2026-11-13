@@ -18,7 +18,9 @@ const FULL = [{ entry: 'Hand-written on top' }, { entry: 'Urgent', priority: 8 }
 
 afterEach(() => {
   cleanup()
+  // The answers kept for the next visit too: one test's is never another's first frame.
   forgetRemembered()
+  localStorage.clear()
 })
 
 let host: FakeHost
@@ -102,6 +104,18 @@ describe('QueuePage', () => {
       cleanup()
       show(FULL, { ...scheduling([]), schedule: { page: 'automations', read: () => new Promise(() => {}), package: 'a-scheduler', projects: ['p1'] } })
       await screen.findByText('Urgent')
+      expect(taker()).toContain('/work-queue is on')
+    })
+
+    test('opening the page again, the line stands from the first frame, also while the installed modules are not known yet', async () => {
+      show(FULL, scheduling([{ command: 'work-queue', on: true }]))
+      await waitFor(() => expect(taker()).toContain('/work-queue is on'))
+      cleanup()
+      forgetRemembered()
+      show(FULL, { ...NO_MODULES, loaded: false })
+      expect(taker()).toContain('/work-queue is on')
+      await waitFor(() => expect(host.runCommand).toHaveBeenCalled())
+      await new Promise(resolve => setTimeout(resolve, 20))
       expect(taker()).toContain('/work-queue is on')
     })
 
@@ -389,25 +403,19 @@ describe('QueuePage', () => {
   test('a second visit names the entries from the first frame: the names read last time stand until the fresh read lands, or until the page that names them is in', async () => {
     const named = { 'tickets/2026-08-01_login-page.plan.md': { title: 'Plan: Login page', href: 'tickets/2026-08-01_login-page.md' } }
     const tickets = (names: () => Promise<typeof named>): MountedModules => ({ ...NO_MODULES, pages: [{ segment: 'tickets', label: 'Tickets', Page: () => null, package: 'a-tickets', projects: ['p1'], names }] })
-    try {
-      show([{ entry: PLAN, priority: 5 }], tickets(async () => named))
-      await screen.findByRole('button', { name: 'Plan: Login page' })
-      cleanup()
-      forgetRemembered()
-      show([{ entry: PLAN, priority: 5 }], tickets(() => new Promise(() => {})))
-      expect(screen.getByRole('button', { name: 'Plan: Login page' })).toBeTruthy()
-      // Nor while the page that names it is not in yet: no answer is no name.
-      cleanup()
-      forgetRemembered()
-      show([{ entry: PLAN, priority: 5 }], { ...NO_MODULES, loaded: false })
-      await waitFor(() => expect(host.runCommand).toHaveBeenCalled())
-      await new Promise(resolve => setTimeout(resolve, 20))
-      expect(screen.getByRole('button', { name: 'Plan: Login page' })).toBeTruthy()
-    } finally {
-      cleanup()
-      forgetRemembered('skill-queue:page:p1')
-      forgetRemembered('skill-queue:page-names:p1')
-    }
+    show([{ entry: PLAN, priority: 5 }], tickets(async () => named))
+    await screen.findByRole('button', { name: 'Plan: Login page' })
+    cleanup()
+    forgetRemembered()
+    show([{ entry: PLAN, priority: 5 }], tickets(() => new Promise(() => {})))
+    expect(screen.getByRole('button', { name: 'Plan: Login page' })).toBeTruthy()
+    // Nor while the page that names it is not in yet: no answer is no name.
+    cleanup()
+    forgetRemembered()
+    show([{ entry: PLAN, priority: 5 }], { ...NO_MODULES, loaded: false })
+    await waitFor(() => expect(host.runCommand).toHaveBeenCalled())
+    await new Promise(resolve => setTimeout(resolve, 20))
+    expect(screen.getByRole('button', { name: 'Plan: Login page' })).toBeTruthy()
   })
 
   test('a project whose command fails is named with the reason, and has no field to add to', async () => {
