@@ -269,7 +269,7 @@ describe('the Agent menu under the box', () => {
     expect(screen.getByRole('button', { name: 'Agent: Default' }).textContent).toBe('Default')
     rerender(<AgentMenu agents={VIEW.agents} picked="reviewer" busy={false} onPick={onPick} />)
     const trigger = screen.getByRole('button', { name: 'Agent: Reviewer' })
-    expect(screen.getByRole('tooltip').textContent).toBe('This session is on the agent Reviewer: 2 skills, as @octo-agent on GitHub')
+    expect(screen.getByRole('tooltip').textContent).toBe('This session is on the agent Reviewer: its own 2 skills, as @octo-agent on GitHub')
     fireEvent.click(trigger)
     fireEvent.click(screen.getByRole('menuitem', { name: /^Default/ }))
     expect(onPick).toHaveBeenCalledWith('default')
