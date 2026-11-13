@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FastForward, Play, Plus, Trash2 } from 'lucide-react'
 import {
   Button,
@@ -132,8 +132,16 @@ function ProjectQueue({ read, titled, schedule, names, starts, reload }: { read:
   // An entry an agent is on gets no second one, and one that is done already none at all: the batch starts from the top of the others.
   const free = unclaimedEntries(raw, working).filter(entry => !entryView(project.id, entry, names).done)
   const count = starts.batchOf(project.id, free)
+  const section = useRef<HTMLElement>(null)
+  // A removed row takes the focus with it: it goes to the entry now in its place, else the one before it, else the field that adds one.
+  const [removed, setRemoved] = useState<{ place: number }>()
+  useEffect(() => {
+    if (!removed || !section.current) return
+    const bins = section.current.querySelectorAll<HTMLElement>('[data-remove-entry]')
+    ;(bins[removed.place - 1] ?? bins[bins.length - 1] ?? section.current.querySelector<HTMLElement>('input[name="task"]'))?.focus()
+  }, [removed])
   return (
-    <section aria-label={project.name}>
+    <section ref={section} aria-label={project.name}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         {titled && <h2 className="text-sm font-semibold">{project.name}</h2>}
         {raw.length > 0 && <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">{raw.length === 1 ? '1 entry' : `${raw.length} entries`}</span>}
@@ -172,7 +180,16 @@ function ProjectQueue({ read, titled, schedule, names, starts, reload }: { read:
             {/* Counted on from the section before, so the number a screen reader says is the one shown. */}
             <ol start={section.entries[0]!.place} className="mt-1.5 list-none divide-y divide-border rounded-md border border-border">
               {section.entries.map(placed => (
-                <EntryRow key={`${placed.place}\n${placed.entry}`} project={project} placed={placed} agent={working.find(agent => isWorkingOn(agent.ask, placed.entry))} names={names} starts={starts} reload={reload} />
+                <EntryRow
+                  key={`${placed.place}\n${placed.entry}`}
+                  project={project}
+                  placed={placed}
+                  agent={working.find(agent => isWorkingOn(agent.ask, placed.entry))}
+                  names={names}
+                  starts={starts}
+                  reload={reload}
+                  onRemoved={() => setRemoved({ place: placed.place })}
+                />
               ))}
             </ol>
           </div>
@@ -236,7 +253,23 @@ function TakerLine({ schedule, projectId }: { schedule: Schedule; projectId: str
 }
 
 /** One entry: its place, what it reads as, the agent on it when one is, its start button, and its removal. */
-function EntryRow({ project, placed, agent, names, starts, reload }: { project: ModuleProject; placed: Numbered; agent: ModuleAgent | undefined; names: FileNames; starts: QueueStarts; reload: () => Promise<void> }) {
+function EntryRow({
+  project,
+  placed,
+  agent,
+  names,
+  starts,
+  reload,
+  onRemoved,
+}: {
+  project: ModuleProject
+  placed: Numbered
+  agent: ModuleAgent | undefined
+  names: FileNames
+  starts: QueueStarts
+  reload: () => Promise<void>
+  onRemoved: () => void
+}) {
   const host = useModuleHost()
   const { entry, place } = placed
   const view = entryView(project.id, entry, names)
@@ -244,6 +277,7 @@ function EntryRow({ project, placed, agent, names, starts, reload }: { project: 
     const answer = await host.act(project.id, doneArgs(entry))
     if (!answer.ok) throw new Error(answer.error)
     await reload()
+    onRemoved()
   }
   return (
     <li className="flex items-center gap-3 px-3 py-2 text-sm max-md:gap-1.5 max-md:px-2">
@@ -275,7 +309,7 @@ function EntryRow({ project, placed, agent, names, starts, reload }: { project: 
       )}
       <ConfirmDialog
         trigger={
-          <Button variant="ghost" size="icon-sm" aria-label={`Remove entry ${place} from the queue`} title="Remove from the queue" className="shrink-0 text-muted-foreground hover:text-danger">
+          <Button data-remove-entry variant="ghost" size="icon-sm" aria-label={`Remove entry ${place} from the queue`} title="Remove from the queue" className="shrink-0 text-muted-foreground hover:text-danger">
             <Trash2 className="h-3.5 w-3.5" aria-hidden />
           </Button>
         }

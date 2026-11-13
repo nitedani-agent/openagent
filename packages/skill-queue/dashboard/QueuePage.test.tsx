@@ -235,6 +235,27 @@ describe('QueuePage', () => {
       await waitFor(() => expect(host.runCommand.mock.calls.length).toBeGreaterThan(reads))
     })
 
+    test('after a removal the focus is on the entry now in its place, else on the one before it, else on the field that adds one', async () => {
+      let entries = [{ entry: 'First' }, { entry: 'Second' }, { entry: 'Third' }]
+      host = fakeHost()
+      host.runCommand.mockImplementation(async () => ({ ok: true, output: entries }))
+      host.act.mockImplementation(async (_projectId: string, args: string[]) => {
+        entries = entries.filter(placed => placed.entry !== args[2])
+        return { ok: true, output: { ok: true } }
+      })
+      renderWithHost(<QueuePage projects={[alpha]} projectId={null} path={[]} />, host, NO_MODULES)
+      const remove = async (place: number, focused: string) => {
+        fireEvent.click(await screen.findByRole('button', { name: `Remove entry ${place} from the queue` }))
+        fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Remove' }))
+        await waitFor(() => expect(document.activeElement?.getAttribute('aria-label')).toBe(focused))
+      }
+      await screen.findByText('Third')
+      await remove(3, 'Remove entry 2 from the queue')
+      await remove(1, 'Remove entry 1 from the queue')
+      expect(document.activeElement?.closest('li')?.textContent).toContain('Second')
+      await remove(1, 'A task to add to the queue')
+    })
+
     test('"Cancel" removes nothing', async () => {
       show()
       await screen.findByText('Urgent')
