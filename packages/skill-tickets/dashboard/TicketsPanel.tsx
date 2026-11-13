@@ -172,10 +172,10 @@ export function TicketRow({
           </span>
         )}
         {ticket.effort !== undefined && (
-          <Badge className="shrink-0 border-transparent px-1 text-[10px] text-muted-foreground">Effort: {ticket.effort}</Badge>
+          <Badge className="shrink-0 border-transparent px-1 text-[10px] text-muted-foreground">Effort {ticket.effort}/10</Badge>
         )}
         {ticket.uncertainty !== undefined && (
-          <Badge className="shrink-0 border-transparent px-1 text-[10px] text-muted-foreground">Uncertainty: {ticket.uncertainty}</Badge>
+          <Badge className="shrink-0 border-transparent px-1 text-[10px] text-muted-foreground">Uncertainty {ticket.uncertainty}/10</Badge>
         )}
       </span>
       {/* Priority and date: snug fixed widths — barely wider than their content, kept fixed (and

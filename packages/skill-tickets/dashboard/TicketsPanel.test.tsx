@@ -268,8 +268,9 @@ describe('TicketsPanel (#697/#1144)', () => {
        
       />,
     )
-    expect(await screen.findByText('Effort: 2')).toBeTruthy()
-    expect(screen.getByText('Uncertainty: 4')).toBeTruthy()
+    // Said as the ticket's own page says them.
+    expect(await screen.findByText('Effort 2/10')).toBeTruthy()
+    expect(screen.getByText('Uncertainty 4/10')).toBeTruthy()
     // Priority sits left of the date (#1265), the date left of the issue link.
     const row = screen.getByText('Do the thing').closest('li')!
     const order = [row.textContent!.indexOf('Priority'), row.textContent!.indexOf('ago'), row.textContent!.indexOf('#42')]
