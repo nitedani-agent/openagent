@@ -123,6 +123,13 @@ describe('TicketDetailPage (#1144)', () => {
     expect(screen.queryByRole('button', { name: /^Queue / })).toBeNull()
   })
 
+  test('the Plan tab of a ticket with no plan is named as it reads: "Plan, none yet"', async () => {
+    onTicket.mockResolvedValue(ticket())
+    render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
+    expect(await screen.findByRole('tab', { name: 'Plan, none yet' })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Ticket' })).toBeTruthy()
+  })
+
   test('shows the effort and uncertainty the plan recorded, with the rest of the meta (#1144/#1265)', async () => {
     onTicket.mockResolvedValue(ticket({ planned: true, effort: 2, uncertainty: 0 }))
     render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)

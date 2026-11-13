@@ -158,6 +158,8 @@ export function TicketHeader({
             type="button"
             role="tab"
             aria-selected={tab === name}
+            // Said as read: the gap before "none yet" is only drawn.
+            aria-label={name === 'plan' && !ticket.planned ? 'Plan, none yet' : undefined}
             onClick={() => tab !== name && open(name === 'ticket' ? [ticket.file] : [ticket.file, 'plan'])}
             className={cn('-mb-px border-b-2 px-0.5 pb-2 font-medium', tab === name ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground')}
           >
