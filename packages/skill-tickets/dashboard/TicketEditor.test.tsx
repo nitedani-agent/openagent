@@ -141,7 +141,9 @@ describe('a ticket written by hand', () => {
     renderWithHost(<TicketDetailPage projectId="p1" slug={slug} />, host)
     await openMenu(await screen.findByRole('button', { name: 'More' }))
     fireEvent.click(await screen.findByText('Edit ticket'))
-    expect(screen.getByText(/follows issue #12/)).toBeTruthy()
+    // The issue may write the title and the text again: each of the two fields says so.
+    const note = screen.getByText(/follows issue #12/)
+    for (const field of ['Title', 'Text']) expect(screen.getByLabelText(field).getAttribute('aria-describedby')).toBe(note.id)
     expect((screen.getByLabelText('Title') as HTMLInputElement).value).toBe('Do the thing')
     type('Text', 'The thing is half done.')
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))

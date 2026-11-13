@@ -94,7 +94,7 @@ export function TicketEditor({
       }}
     >
       {issueLabel && (
-        <p className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
+        <p id="ticket-issue-note" className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
           This ticket follows issue {issueLabel}: when the issue changes, Update tickets writes its title and text again from it. Priority and topics stay as you set them.
         </p>
       )}
@@ -108,7 +108,8 @@ export function TicketEditor({
           placeholder="What should be done, in a few words"
           autoFocus
           aria-invalid={titleMissing}
-          aria-describedby={titleMissing ? 'ticket-title-error' : undefined}
+          // The issue's note is said at the two fields it may write again.
+          aria-describedby={[titleMissing && 'ticket-title-error', issueLabel && 'ticket-issue-note'].filter(Boolean).join(' ') || undefined}
         />
         {titleMissing && (
           <p id="ticket-title-error" className="text-xs text-danger">
@@ -142,6 +143,7 @@ export function TicketEditor({
         <Label htmlFor="ticket-body">Text</Label>
         <Textarea
           id="ticket-body"
+          aria-describedby={issueLabel ? 'ticket-issue-note' : undefined}
           value={body}
           onChange={event => setBody(event.target.value)}
           // Enter makes a new line in the text; with Ctrl or ⌘ it saves the ticket.
