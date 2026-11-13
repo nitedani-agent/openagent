@@ -153,6 +153,8 @@ describe('QueuePage', () => {
       await screen.findByText('Only one')
       const box = screen.getByRole('spinbutton', { name: 'How many agents to start' }) as HTMLInputElement
       expect([box.value, box.max]).toEqual(['1', '1'])
+      // Its name is said once: by the box, not again by a group around it.
+      expect(screen.getAllByLabelText('How many agents to start')).toEqual([box])
       // A count typed past the entries snaps back, and the box says why while it is in use.
       fireEvent.focus(box)
       fireEvent.change(box, { target: { value: '9' } })

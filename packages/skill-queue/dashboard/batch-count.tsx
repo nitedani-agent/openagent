@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@openagt/dashboard/modu
 export function BatchCount({ count, max, onChange }: { count: number; max: number; onChange: (count: number) => void }) {
   return (
     <Tooltip>
-      <TooltipTrigger render={<div role="group" aria-label="How many agents to start" className="flex h-7 shrink-0 items-center rounded-md border border-border text-xs tabular-nums" />}>
+      <TooltipTrigger render={<div className="flex h-7 shrink-0 items-center rounded-md border border-border text-xs tabular-nums" />}>
         <button type="button" aria-label="One agent fewer" disabled={count <= 1} onClick={() => onChange(count - 1)} className="flex h-full w-6 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40">
           <Minus className="h-3 w-3" aria-hidden />
         </button>
