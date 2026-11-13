@@ -165,6 +165,8 @@ export function QuestionPanel({
     const onKey = (e: KeyboardEvent) => {
       // Keys typed into a text field are that field's, except this card's own "Other" row.
       const target = e.target as HTMLElement | null
+      // So is one a field outside the card took: the message box sends on Ctrl+Enter, and is no field while it sends.
+      if (e.defaultPrevented && !card.current?.contains(target)) return
       const typing = target !== null && (target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         if (typing && target !== otherInput.current) return
