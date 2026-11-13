@@ -138,6 +138,7 @@ export function Hero() {
       </a>
 
       <div
+        className="try-commands"
         style={{
           display: 'flex',
           flexDirection: 'column',
