@@ -192,11 +192,12 @@ export function AgentComposer({
 
   const send = async (text: string, { later }: { later: boolean } = { later: false }): Promise<void> => {
     if (busy) return
+    // The box is emptied as the message goes, so what is typed meanwhile stays; a message refused comes back to it.
+    composerRef.current?.clear()
     if (await say(contextSet ? promptWithContext(text, contextSet.context) : text, later)) {
-      composerRef.current?.clear()
       contextSet?.reset()
       setNotSent(false)
-    }
+    } else composerRef.current?.append(text)
     composerRef.current?.focus()
   }
 

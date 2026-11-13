@@ -25,9 +25,12 @@ vi.mock('./GitHosts.js', () => ({ GitHostOff: ({ home, account }: { home: { name
 
 // The Composer is exercised by its own tests; here it only has to hand back a submit and report
 // the props this component sets on it.
+const box = vi.hoisted(() => ({ clear: vi.fn(), focus: vi.fn(), edit: vi.fn(), append: vi.fn() }))
 vi.mock('./Composer.js', async () => {
-  const { forwardRef } = await import('react')
-  const Composer = forwardRef((props: any, _ref: any) => (
+  const { forwardRef, useImperativeHandle } = await import('react')
+  const Composer = forwardRef((props: any, ref: any) => {
+    useImperativeHandle(ref, () => box)
+    return (
     <div>
       <button type="button" disabled={props.busy} onClick={() => props.onSubmit('hello', { later: false })}>
         submit
@@ -44,7 +47,8 @@ vi.mock('./Composer.js', async () => {
       <span data-testid="composer-controls-end">{props.controlsEnd}</span>
       {props.sessionRow}
     </div>
-  ))
+    )
+  })
   return { Composer }
 })
 
@@ -250,6 +254,19 @@ describe('AgentComposer, live (#714)', () => {
     fireEvent.click(screen.getByText('submit later'))
     await waitFor(() => expect(sendMessage).toHaveBeenCalledWith('p1', 'hello', 'run-1', null, { id: expect.any(String), later: true }))
     await waitFor(() => expect(onQueued).toHaveBeenCalledWith(expect.objectContaining({ text: 'hello', later: true })))
+  })
+
+  test('the box is emptied as the message goes, so what is typed meanwhile stays; a refused one comes back to it', async () => {
+    let answer: (outcome: unknown) => void = () => {}
+    sendMessage.mockReturnValue(new Promise(resolve => (answer = resolve)))
+    box.clear.mockClear()
+    box.append.mockClear()
+    renderComposer()
+    fireEvent.click(screen.getByText('submit'))
+    expect(box.clear).toHaveBeenCalledTimes(1)
+    act(() => answer({ ok: false, error: 'unknown session' }))
+    await waitFor(() => expect(box.append).toHaveBeenCalledWith('hello'))
+    expect(box.clear).toHaveBeenCalledTimes(1)
   })
 
   test('a refused message shows why, and is not reported as queued', async () => {

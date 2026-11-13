@@ -280,7 +280,8 @@ export const Composer = forwardRef<ComposerHandle, {
       projectPresets={projectPresets}
       // The `/` menu's "Save prompt…" opens the create panel under the box.
       onNewPreset={() => setAddingPreset(true)}
-      disabled={busy}
+      // A session's box takes what is typed next while a message goes: the message has left it.
+      disabled={busy && !inAgent}
       {...(placeholder ? { placeholder } : {})}
       label={inAgent ? 'Message' : 'Prompt'}
       {...(carriedDraft ? { initialText: carriedDraft.text, initialFocus: carriedDraft.handedOver || !phone, replacedText: carriedDraft.over } : {})}
