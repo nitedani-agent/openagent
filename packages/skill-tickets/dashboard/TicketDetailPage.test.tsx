@@ -33,7 +33,9 @@ const modules = (projects: string[] = ['p1']): MountedModules => ({
 })
 const render = (ui: ReactElement, mounted: MountedModules = modules()) => {
   const slug = (ui.props as { slug: string }).slug
-  host = fakeHost({ p1: { [`show ${slug} --local`]: shown ? { ok: true, ticket: shown } : { ok: false, reason: 'no-ticket', file: slug } } }, { p1: agents })
+  host = fakeHost(shown ? { p1: { [`show ${slug} --local`]: { ok: true, ticket: shown } } } : {}, { p1: agents })
+  // The command refuses a ticket it does not have: the page is handed the line the refusal leaves, as the dashboard runs it.
+  if (!shown) host.runCommand.mockImplementation(async () => ({ ok: false, error: `no ticket tickets/${slug}` }))
   host.act.mockImplementation(async (_projectId, args) => {
     expect(args).toEqual(['release', slug, '--force'])
     return released.ok ? { ok: true, output: { ok: true, file: `tickets/${slug}` } } : released

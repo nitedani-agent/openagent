@@ -51,11 +51,13 @@ test('the command\'s answers are read back: a list, one ticket or its refusal, t
   assert.deepEqual(readListed({ ok: true, output: { ok: false } }), { error: 'the tickets command did not print a list' })
   assert.deepEqual(readListed({ ok: false, error: 'tickets took too long' }), { error: 'tickets took too long' })
   const detail = { ...row, content: '# Login page\n' }
-  assert.deepEqual(readShown({ ok: true, output: { ok: true, ticket: detail, plan: 'Effort: 1\n', holder: 'a1' } }), { shown: { ticket: detail, plan: 'Effort: 1\n', holder: 'a1' } })
-  assert.deepEqual(readShown({ ok: true, output: { ok: true, ticket: detail } }), { shown: { ticket: detail } })
-  assert.deepEqual(readShown({ ok: true, output: { ok: false, reason: 'no-ticket', file: FILE } }), { shown: null })
-  assert.deepEqual(readShown({ ok: true, output: { ok: true, ticket: row } }), { error: 'the tickets command did not print a ticket' })
-  assert.deepEqual(readShown({ ok: false, error: 'boom' }), { error: 'boom' })
+  assert.deepEqual(readShown({ ok: true, output: { ok: true, ticket: detail, plan: 'Effort: 1\n', holder: 'a1' } }, FILE), { shown: { ticket: detail, plan: 'Effort: 1\n', holder: 'a1' } })
+  assert.deepEqual(readShown({ ok: true, output: { ok: true, ticket: detail } }, FILE), { shown: { ticket: detail } })
+  // A refusal reaches the page as the line the command left: the ticket's own "no ticket" is no ticket, any other line an error.
+  assert.deepEqual(readShown({ ok: false, error: `no ticket tickets/${FILE}` }, FILE), { shown: null })
+  assert.deepEqual(readShown({ ok: false, error: 'no ticket tickets/2026-01-01_other.md' }, FILE), { error: 'no ticket tickets/2026-01-01_other.md' })
+  assert.deepEqual(readShown({ ok: true, output: { ok: true, ticket: row } }, FILE), { error: 'the tickets command did not print a ticket' })
+  assert.deepEqual(readShown({ ok: false, error: 'boom' }, FILE), { error: 'boom' })
   assert.deepEqual(readMeta({ ok: true, output: { lastImportedAt: '2026-09-01T00:00:00Z' } }), { lastImportedAt: '2026-09-01T00:00:00Z' })
   assert.deepEqual(readMeta({ ok: true, output: {} }), {})
   assert.deepEqual(readMeta({ ok: false, error: 'x' }), {})

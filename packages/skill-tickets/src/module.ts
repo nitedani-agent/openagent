@@ -2,7 +2,7 @@
 // are unit-tested like the rest of the package: the sentences the pages start agents with, how a
 // page finds the agent behind a claim or a plan, how the module's URL reads, what a ticket is as
 // a link, which lane of the Overview card a ticket sits in, and how the command's answers are read back.
-import { TICKETS_DIR, isTicketFile, nameInTickets, queuePriorityForTicket, ticketOfPlan, ticketPlanName } from './names.js'
+import { TICKETS_DIR, isTicketFile, nameInTickets, noTicketSaid, queuePriorityForTicket, ticketOfPlan, ticketPlanName } from './names.js'
 import type { Ticket, TicketDetail, TicketsMeta } from './tickets.js'
 
 export type { Ticket, TicketDetail, TicketsMeta }
@@ -251,14 +251,14 @@ export interface ShownTicket {
 }
 
 /**
- * What `show` answered: the ticket, `null` for a refusal (no such ticket — deleted since the list
- * read, or a stale link), or the error of a command that could not run or printed no ticket.
+ * What `show <file>` answered: the ticket, `null` for its refusal of a ticket it does not have
+ * (deleted since the list read, or a stale link), or the error of a command that could not run or
+ * printed no ticket.
  */
-export function readShown(result: CommandResult): { shown: ShownTicket | null } | { error: string } {
-  if (!result.ok) return { error: result.error }
-  const answer = result.output as { ok?: unknown; ticket?: unknown; plan?: unknown; holder?: unknown } | null
+export function readShown(result: CommandResult, file: string): { shown: ShownTicket | null } | { error: string } {
+  if (!result.ok) return result.error === noTicketSaid(file) ? { shown: null } : { error: result.error }
+  const answer = result.output as { ticket?: unknown; plan?: unknown; holder?: unknown } | null
   if (!answer || typeof answer !== 'object') return { error: 'the tickets command did not print a ticket' }
-  if (answer.ok === false) return { shown: null }
   if (!isTicket(answer.ticket) || typeof (answer.ticket as { content?: unknown }).content !== 'string') return { error: 'the tickets command did not print a ticket' }
   return {
     shown: {

@@ -19,7 +19,7 @@ export function useTicket(projectId: string, slug: string): { read: TicketRead |
   const host = useModuleHost()
   const { value: read, loaded, reload } = usePolled<TicketRead | null>(
     async () => {
-      const [shown, agents] = await Promise.all([host.runCommand(projectId, ['show', slug, '--local']).then(readShown), host.agents(projectId).catch(() => [])])
+      const [shown, agents] = await Promise.all([host.runCommand(projectId, ['show', slug, '--local']).then(result => readShown(result, slug)), host.agents(projectId).catch(() => [])])
       if ('error' in shown) return shown
       if (!shown.shown) return { ticket: null, plan: null, sessions: [] }
       const holder = holderAgent(agents, shown.shown.ticket.lockedBy)
