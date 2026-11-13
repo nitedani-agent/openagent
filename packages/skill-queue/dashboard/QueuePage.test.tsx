@@ -386,6 +386,30 @@ describe('QueuePage', () => {
     }
   })
 
+  test('a second visit names the entries from the first frame: the names read last time stand until the fresh read lands, or until the page that names them is in', async () => {
+    const named = { 'tickets/2026-08-01_login-page.plan.md': { title: 'Plan: Login page', href: 'tickets/2026-08-01_login-page.md' } }
+    const tickets = (names: () => Promise<typeof named>): MountedModules => ({ ...NO_MODULES, pages: [{ segment: 'tickets', label: 'Tickets', Page: () => null, package: 'a-tickets', projects: ['p1'], names }] })
+    try {
+      show([{ entry: PLAN, priority: 5 }], tickets(async () => named))
+      await screen.findByRole('button', { name: 'Plan: Login page' })
+      cleanup()
+      forgetRemembered()
+      show([{ entry: PLAN, priority: 5 }], tickets(() => new Promise(() => {})))
+      expect(screen.getByRole('button', { name: 'Plan: Login page' })).toBeTruthy()
+      // Nor while the page that names it is not in yet: no answer is no name.
+      cleanup()
+      forgetRemembered()
+      show([{ entry: PLAN, priority: 5 }], { ...NO_MODULES, loaded: false })
+      await waitFor(() => expect(host.runCommand).toHaveBeenCalled())
+      await new Promise(resolve => setTimeout(resolve, 20))
+      expect(screen.getByRole('button', { name: 'Plan: Login page' })).toBeTruthy()
+    } finally {
+      cleanup()
+      forgetRemembered('skill-queue:page:p1')
+      forgetRemembered('skill-queue:page-names:p1')
+    }
+  })
+
   test('a project whose command fails is named with the reason, and has no field to add to', async () => {
     host = fakeHost({})
     renderWithHost(<QueuePage projects={[alpha]} projectId={null} path={[]} />, host)

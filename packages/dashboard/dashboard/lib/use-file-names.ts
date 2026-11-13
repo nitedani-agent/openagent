@@ -43,14 +43,20 @@ interface ReadName {
 
 const NOTHING: Record<string, ReadName> = {}
 
-/** The names of the paths asked about, per project, read once a minute. A path whose page is not installed in that project, or does not name it, has no name. */
-export function useFileNames(asked: readonly { projectId: string; paths: readonly string[] }[]): FileNames {
-  const { pages } = useMountedModules()
+/**
+ * The names of the paths asked about, per project, read once a minute. A path whose page is not
+ * installed in that project, or does not name it, has no name. The names are kept under `remember`
+ * for the next visit, as the list the paths come from is: they show from the first frame.
+ */
+export function useFileNames(asked: readonly { projectId: string; paths: readonly string[] }[], remember: string): FileNames {
+  const { pages, loaded: mounted } = useMountedModules()
   const services = useContext(HostServicesContext) ?? INERT_HOST_SERVICES
   const key = asked.map(({ projectId, paths }) => `${projectId}\n${[...paths].sort().join('\n')}`).join('\n\n')
   const naming = pages.filter(page => page.names !== undefined)
   const { value: names } = usePolled<Record<string, ReadName>>(
     async () => {
+      // Which pages name paths is not known before every module is in: no answer yet, so the names kept stand.
+      if (!mounted) throw new Error('the modules are not in yet')
       const named: Record<string, ReadName> = {}
       await Promise.all(
         asked.flatMap(({ projectId, paths }) =>
@@ -71,9 +77,9 @@ export function useFileNames(asked: readonly { projectId: string; paths: readonl
     },
     NOTHING,
     60_000,
-    [key, naming.map(page => page.package).join(',')],
-    // The names read before stay while the next read is asked: an entry added or removed does not turn every title back into a path for a moment.
-    'previous',
+    [key, naming.map(page => page.package).join(','), mounted],
+    // One key for every set of paths: an entry added or removed does not turn every title back into a path for a moment.
+    { remember, stored: true },
   )
   return (projectId, path) => {
     const name = names[`${projectId}\n${path}`]

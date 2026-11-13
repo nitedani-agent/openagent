@@ -35,6 +35,9 @@ export function useQueueReads(projects: ModuleProject[]): { reads: ProjectRead[]
     // One read for the tile and the card, kept for the next visit: the page opens with the last count.
     { remember: `skill-queue:queue:${key}`, stored: true },
   )
-  const names = useFileNames(reads.map(read => ({ projectId: read.project.id, paths: read.entries.flatMap(pathsIn) })))
+  const names = useFileNames(
+    reads.map(read => ({ projectId: read.project.id, paths: read.entries.flatMap(pathsIn) })),
+    `skill-queue:queue-names:${key}`,
+  )
   return { reads, loaded, names }
 }

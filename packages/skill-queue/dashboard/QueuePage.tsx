@@ -98,7 +98,10 @@ export function QueuePage({ projects }: ModulePageProps) {
     { remember: `skill-queue:page:${key}`, stored: true },
   )
   const schedule = useSchedule(projects)
-  const names = useFileNames(reads.map(read => ({ projectId: read.project.id, paths: (read.entries ?? []).flatMap(placed => pathsIn(placed.entry)) })))
+  const names = useFileNames(
+    reads.map(read => ({ projectId: read.project.id, paths: (read.entries ?? []).flatMap(placed => pathsIn(placed.entry)) })),
+    `skill-queue:page-names:${key}`,
+  )
   const starts = useQueueStarts(host)
 
   return (
