@@ -282,7 +282,9 @@ function EntryRow({ project, placed, agent, names, starts, reload }: { project: 
         title="Remove this entry from the queue?"
         body={
           <>
-            <span className="block break-words font-mono text-xs">{entry}</span>
+            {/* Named as the row names it; the line as written under a name that stands in for it, as on the row. */}
+            <span className="block break-words">{view.title}</span>
+            {view.renamed && <span className="block break-words font-mono text-xs">{entry}</span>}
             <span className="mt-2 block">It is deleted from the queue of {project.name}, for everyone who shares it. Nothing else changes: no ticket is closed, and an agent already working on it goes on.</span>
           </>
         }

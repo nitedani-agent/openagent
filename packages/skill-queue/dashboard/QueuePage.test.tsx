@@ -332,9 +332,12 @@ describe('QueuePage', () => {
       // What an agent is started with is still the line as written.
       fireEvent.click(screen.getByRole('button', { name: 'Start an agent on entry 1' }))
       await waitFor(() => expect(host.startRun.mock.calls).toEqual([['p1', workOnEntryPrompt(PLAN)]]))
-      // And what is removed is the line as written: the queue knows no other name for it.
+      // The question names it as the row does, with the line as written; what is removed is that line: the queue knows no other name for it.
       fireEvent.click(screen.getByRole('button', { name: 'Remove entry 1 from the queue' }))
-      fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Remove' }))
+      const dialog = await screen.findByRole('alertdialog')
+      expect(within(dialog).getByText('Plan: Login page')).toBeTruthy()
+      expect(within(dialog).getByText(PLAN)).toBeTruthy()
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }))
       await waitFor(() => expect(host.act).toHaveBeenCalledWith('p1', ['done', '--', PLAN]))
     })
 
