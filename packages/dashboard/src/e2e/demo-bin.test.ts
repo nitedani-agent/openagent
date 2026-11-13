@@ -28,3 +28,16 @@ test('a port another program holds is said in the dashboard’s words, with no s
     await new Promise(resolve => other.close(resolve))
   }
 })
+
+test('an argument the demo cannot read is named, then the usage', async () => {
+  for (const [args, refused] of [
+    [['--bogus'], 'unknown option: --bogus'],
+    [['--port', 'abc'], 'invalid --port: must be a port number from 0 to 65535'],
+    [['--port', '4300', 'shop'], 'unknown command: shop'],
+  ] as const) {
+    const { code, stdout, stderr } = await demo([...args])
+    assert.equal(code, 2, args.join(' '))
+    assert.equal(stdout, '')
+    assert.match(stderr, new RegExp(`^${refused}\\n\\nUsage: pnpm demo `), args.join(' '))
+  }
+})
