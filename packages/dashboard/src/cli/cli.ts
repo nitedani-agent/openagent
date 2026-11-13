@@ -18,10 +18,10 @@ const defaultIO: CliIO = {
   err: line => process.stderr.write(line + '\n'),
 }
 
-const HELP = `OpenAgent — turnkey AI orchestration that wraps a coding agent (Claude Code or Codex).
+const HELP = `OpenAgent — autonomous AI programming, with a coding agent (Claude Code or Codex).
 
 Usage:
-  openagent              Serve the dashboard in the foreground. Ctrl+C closes it; the server
+  openagent              Serve the dashboard in the foreground. Ctrl+C stops it; the server
                          logs stream to this terminal. Typed inside a Git repository, it adds
                          that repository to the dashboard's projects and opens its page. With
                          the dashboard running already, it hands the repository to that one.
