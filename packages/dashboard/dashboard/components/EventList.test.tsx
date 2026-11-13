@@ -125,14 +125,15 @@ describe('EventList conversation rows', () => {
     ]
     render(<EventList events={events} stick={false} />)
     // My message says how long ago under its box; the reply, with no time of its own, holds none.
-    expect(screen.queryAllByText(new Date(at).toLocaleTimeString())).toHaveLength(0)
+    expect(screen.queryAllByText(/ago$/, { selector: 'span' })).toHaveLength(0)
     cleanup()
-    // A message holds none either: the column would narrow it as it lands. Other rows do.
+    // A message holds none either: the column would narrow it as it lands. Other rows do, as an age, as under a message.
     render(<EventList events={[{ kind: 'driver', event: { type: 'text', text: 'hi' }, at }]} stick={false} />)
-    expect(screen.queryAllByText(new Date(at).toLocaleTimeString())).toHaveLength(0)
+    expect(screen.queryAllByText(/ago$/, { selector: 'span' })).toHaveLength(0)
     cleanup()
     render(<EventList events={[{ kind: 'log', message: 'hi', at }, { kind: 'log', message: 'there', at }]} stick={false} />)
-    const times = screen.getAllByText(new Date(at).toLocaleTimeString())
+    expect(screen.queryAllByText(new Date(at).toLocaleTimeString())).toHaveLength(0)
+    const times = screen.getAllByText(/ago$/, { selector: 'span' })
     expect(times).toHaveLength(1)
     expect(times[0]!.className).toContain('opacity-0')
     expect(times[0]!.className).toContain('group-hover/row:opacity-100')
@@ -1059,7 +1060,7 @@ describe('EventList subagent rows', () => {
     expect(screen.getAllByLabelText('Your message')).toHaveLength(2)
     expect(messageRow()).toBeTruthy()
     // It has no time at its end.
-    expect(screen.queryByText(new Date('2026-10-01T10:04:00.000Z').toLocaleTimeString())).toBeNull()
+    expect(within(messageRow().closest('[data-message-id]') as HTMLElement).queryByText(/ago$/, { selector: 'span' })).toBeNull()
   })
 
   test("a subagent's end right under the row of a subagent just started goes on that run of rows: it holds no time of its own", () => {
@@ -1067,7 +1068,7 @@ describe('EventList subagent rows', () => {
     const quick = sub({ id: '2026-10-01T10-03-59-000Z', startedAt: '2026-10-01T10:03:59.000Z', intent: 'Second task', status: 'done', endedAt: '2026-10-01T10:03:59.900Z' })
     render(<EventList events={[...events, told]} subagents={[quick]} stick={false} />)
     expect(messageRow()).toBeTruthy()
-    expect(screen.queryByText(new Date('2026-10-01T10:04:00.000Z').toLocaleTimeString())).toBeNull()
+    expect(within(messageRow().closest('[data-message-id]') as HTMLElement).queryByText(/ago$/, { selector: 'span' })).toBeNull()
   })
 
   test('the same words about a run that is not a subagent of this one stay a message the reader wrote', () => {

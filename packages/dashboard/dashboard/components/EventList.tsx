@@ -137,11 +137,6 @@ function promptFirst(events: OpenAgentEvent[]): OpenAgentEvent[] {
   return [events[at]!, ...events.slice(0, at), ...events.slice(at + 1)]
 }
 
-/** HH:MM:SS in the reader's locale, for the column that says when each line was written. */
-function formatTime(at: string): string {
-  return new Date(at).toLocaleTimeString()
-}
-
 /**
  * A question the person did not answer in its card but wrote a message instead of: one grey line,
  * as Claude Code on the web folds it, `Asked "Background"  Replied in chat`, opening to the question.
@@ -1043,7 +1038,7 @@ export function EventList({
                   {!own && !end && message === null && chunkHead && at !== undefined && footer === undefined && !steps.has(e) && (
                     <Tooltip>
                       <TooltipTrigger render={<span className={TIME} />}>
-                        {formatTime(at)}
+                        {formatAge(at)}
                       </TooltipTrigger>
                       <TooltipContent>{new Date(at).toLocaleString()}</TooltipContent>
                     </Tooltip>
