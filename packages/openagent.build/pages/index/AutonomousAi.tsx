@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
-import { cardStyle, CodeChip, Note, SectionHead, sectionStyle } from './ui'
+import { cardStyle, CodeChip, Emoji, Note, SectionHead, sectionStyle, WipBadge } from './ui'
 
-function Item({ children }: { children: ReactNode }) {
+function Item({ children, marker }: { children: ReactNode; marker?: ReactNode }) {
   return (
     <li style={{ display: 'flex', gap: 10 }}>
-      <span style={{ color: '#a7c080' }}>✓</span>
+      <span style={{ color: '#a7c080' }}>{marker ?? '✓'}</span>
       {children}
     </li>
   )
@@ -58,9 +58,9 @@ export function AutonomousAi() {
           <Item>Test &amp; review</Item>
           <Item>Research, plan, and prioritize your tickets</Item>
           <Item>Turn your team conversations into tickets</Item>
-          <Item>
+          <Item marker={<Emoji e="🚧" />}>
             <span>
-              Save your team conversations to <CodeChip fontSize={13}>{'conversations/<DATE>_<TOPICS_SLUG>.md'}</CodeChip>
+              <WipBadge /> Save your team conversations to <CodeChip fontSize={13}>{'conversations/<DATE>_<TOPICS_SLUG>.md'}</CodeChip>
             </span>
           </Item>
           <Item>Market research</Item>
