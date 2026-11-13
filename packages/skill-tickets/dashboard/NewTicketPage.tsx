@@ -2,7 +2,7 @@ import { useModuleHost } from '@openagt/dashboard/module'
 import { TicketEditor } from './TicketEditor.js'
 import { TicketPageShell } from './TicketPageShell.js'
 
-const BLANK = { priority: '', topics: [], title: '', body: '', kept: [] }
+const BLANK = { priority: '', topics: [], waiting: '', title: '', body: '', kept: [] }
 
 /** A ticket written by hand in one project: once created, its own page. */
 export function NewTicketPage({ projectId }: { projectId: string }) {

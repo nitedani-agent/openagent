@@ -38,6 +38,21 @@ describe('a ticket written by hand', () => {
     expect(screen.getByText(/whole number from 0 to 10/)).toBeTruthy()
   })
 
+  test('what a waiting ticket waits on is in its edit, and emptied, the wait is over: the line is gone, the rest kept', async () => {
+    const slug = '2026-07-20_checkout.md'
+    const content = 'Priority: 9\nWaiting: the design review\nIssue: [#4](https://example.com/issues/4)\n\n# Checkout\n'
+    const ticket = { file: slug, title: 'Checkout', summary: '', date: '2026-07-20', planned: false, priority: '9', waiting: 'the design review', issue: { label: '#4', url: 'https://example.com/issues/4' }, content }
+    const host = fakeHost({ p1: { [`show ${slug} --local`]: { ok: true, ticket } } })
+    host.act.mockImplementation(async () => ({ ok: true, output: { ok: true } }))
+    renderWithHost(<TicketDetailPage projectId="p1" slug={slug} />, host)
+    await openMenu(await screen.findByRole('button', { name: 'More' }))
+    fireEvent.click(await screen.findByText('Edit ticket'))
+    expect((screen.getByLabelText('Waiting on') as HTMLInputElement).value).toBe('the design review')
+    type('Waiting on', '')
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(host.act).toHaveBeenCalledWith('p1', ['put', slug], undefined, 'Priority: 9\nIssue: [#4](https://example.com/issues/4)\n\n# Checkout\n'))
+  })
+
   test('a refused save says why and stays on the form', async () => {
     const host = fakeHost({ p1: { 'list --local': [] } })
     host.act.mockImplementation(async () => ({ ok: true, output: { ok: false, reason: 'the push was refused' } }))

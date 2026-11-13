@@ -16,9 +16,9 @@ function today(): string {
 }
 
 /**
- * A ticket written by hand: its title, priority, topics and text, saved with the tickets
- * command's `put` as one commit, like any other change to the tickets. Editing keeps the lines
- * above the title it does not show (`Issue:`, `PR:`, `Waiting:`); a new ticket is named by today
+ * A ticket written by hand: its title, priority, topics, what it waits on and its text, saved with
+ * the tickets command's `put` as one commit, like any other change to the tickets. Editing keeps
+ * the lines above the title it does not show (`Issue:`, `PR:`); a new ticket is named by today
  * and its title, never over one already there.
  */
 export function TicketEditor({
@@ -42,6 +42,7 @@ export function TicketEditor({
   const [title, setTitle] = useState(initial.title)
   const [priority, setPriority] = useState(initial.priority)
   const [topics, setTopics] = useState(initial.topics.join(', '))
+  const [waiting, setWaiting] = useState(initial.waiting)
   const [body, setBody] = useState(initial.body)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +60,7 @@ export function TicketEditor({
         if ('error' in listed) throw new Error(listed.error)
         name = newTicketFile(title, today(), new Set(listed.tickets.map(ticket => ticket.file)))
       }
-      const content = writeTicketFile({ priority: priority.trim(), topics: topicsIn(topics), title, body, kept: initial.kept })
+      const content = writeTicketFile({ priority: priority.trim(), topics: topicsIn(topics), waiting, title, body, kept: initial.kept })
       const result = await host.act(projectId, ['put', name], undefined, content)
       if (!result.ok) throw new Error(result.error)
       const refused = refusal(result.output)
@@ -100,6 +101,13 @@ export function TicketEditor({
         </div>
       </div>
       {!priorityOk && <p className="text-xs text-danger">Priority is a whole number from 0 to 10, or empty for none.</p>}
+      <div className="space-y-1.5">
+        <Label htmlFor="ticket-waiting">Waiting on</Label>
+        <Input id="ticket-waiting" value={waiting} onChange={event => setWaiting(event.target.value)} placeholder="Nothing" aria-describedby="ticket-waiting-note" />
+        <p id="ticket-waiting-note" className="text-xs text-muted-foreground">
+          No agent plans or works the ticket while it waits. Empty it when the wait is over.
+        </p>
+      </div>
       <div className="space-y-1.5">
         <Label htmlFor="ticket-body">Text</Label>
         <Textarea
