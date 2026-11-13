@@ -21,6 +21,14 @@ import { ticketAge, ticketDay } from './lib/ticket-date.js'
 import { TicketStartActions } from './TicketStartActions.js'
 import { TicketSessions, type TicketSession } from './TicketSessions.js'
 
+/** The ticket just saved by hand, whose head takes the focus to its title once shown: the form it was saved from is gone. */
+let saved: string | null = null
+
+/** The ticket `file` was saved by hand: its head, once shown, puts the focus on its title. */
+export function focusTitleOnceShown(file: string): void {
+  saved = file
+}
+
 /** Which of a ticket's two pages is shown under its header. */
 export type TicketTab = 'ticket' | 'plan'
 
@@ -73,6 +81,11 @@ export function TicketHeader({
   useEffect(() => {
     if (released) title.current?.focus()
   }, [released])
+  useEffect(() => {
+    if (saved !== ticket.file) return
+    saved = null
+    title.current?.focus()
+  }, [ticket.file])
   // Which start is in flight, by its prompt: only that one spins.
   const [starting, setStarting] = useState<string | null>(null)
   const start = async (prompt: string, failure: string) => {

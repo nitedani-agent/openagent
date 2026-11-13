@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Input, Label, Textarea, useModuleHost } from '@openagt/dashboard/module'
 import { newTicketFile, topicsIn, writeTicketFile, type TicketFields } from '../src/ticket-file.js'
 import { listTickets, ticketsChanged } from './lib/list.js'
+import { focusTitleOnceShown } from './TicketHeader.js'
 
 /** What `put` answered, when it refused: its reason. */
 function refusal(output: unknown): string | undefined {
@@ -66,6 +67,7 @@ export function TicketEditor({
       const refused = refusal(result.output)
       if (refused) throw new Error(refused)
       ticketsChanged(projectId)
+      focusTitleOnceShown(name)
       onSaved(name)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))

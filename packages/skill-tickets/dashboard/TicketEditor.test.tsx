@@ -57,6 +57,27 @@ describe('a ticket written by hand', () => {
     expect(screen.getByText(/whole number from 0 to 10/)).toBeTruthy()
   })
 
+  test('after Save, and on the page of a ticket just created, the focus is on the ticket\'s title', async () => {
+    const slug = '2026-07-20_do-the-thing.md'
+    const ticket = { file: slug, title: 'Do the thing', summary: '', date: '2026-07-20', planned: false, content: '# Do the thing\n' }
+    const host = fakeHost({ p1: { [`show ${slug} --local`]: { ok: true, ticket }, 'list --local': [] } })
+    host.act.mockImplementation(async () => ({ ok: true, output: { ok: true } }))
+    renderWithHost(<TicketDetailPage projectId="p1" slug={slug} />, host)
+    await openMenu(await screen.findByRole('button', { name: 'More' }))
+    fireEvent.click(await screen.findByText('Edit ticket'))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Do the thing' })))
+    cleanup()
+    renderWithHost(<NewTicketPage projectId="p1" />, host)
+    type('Title', 'Dark mode')
+    fireEvent.click(screen.getByRole('button', { name: 'Create ticket' }))
+    await waitFor(() => expect(host.openPage).toHaveBeenCalled())
+    cleanup()
+    const created = { ...ticket, file: `${TODAY}_dark-mode.md`, title: 'Dark mode', content: '# Dark mode\n' }
+    renderWithHost(<TicketDetailPage projectId="p1" slug={created.file} />, fakeHost({ p1: { [`show ${created.file} --local`]: { ok: true, ticket: created } } }))
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Dark mode' })))
+  })
+
   test('what a waiting ticket waits on is in its edit, and emptied, the wait is over: the line is gone, the rest kept', async () => {
     const slug = '2026-07-20_checkout.md'
     const content = 'Priority: 9\nWaiting: the design review\nIssue: [#4](https://example.com/issues/4)\n\n# Checkout\n'
