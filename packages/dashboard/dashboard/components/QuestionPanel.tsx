@@ -14,6 +14,9 @@ import { isMobileScreen } from '../lib/use-mobile.js'
 /** The pick that is no option: the person's own words, typed in the "Other" row. */
 const OTHER = Symbol('other')
 
+/** Whether keys typed in `el` are its own: a text field's. */
+const isTextField = (el: Element | null): boolean => el instanceof HTMLElement && (el.isContentEditable || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')
+
 
 // A pick's mark, as Claude Code on the web draws one: a ring, filled with a dot when picked; a
 // box with a tick where several may be picked.
@@ -167,7 +170,7 @@ export function QuestionPanel({
       const target = e.target as HTMLElement | null
       // So is one a field outside the card took: the message box sends on Ctrl+Enter, and is no field while it sends.
       if (e.defaultPrevented && !card.current?.contains(target)) return
-      const typing = target !== null && (target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+      const typing = isTextField(target)
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         if (typing && target !== otherInput.current) return
         e.preventDefault()
@@ -185,6 +188,19 @@ export function QuestionPanel({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [active, sent, choice.options, send])
+
+  // The focus is in a text field outside the card, which takes Ctrl+Enter for itself: the card's is not drawn then.
+  const [keysElsewhere, setKeysElsewhere] = useState(false)
+  useEffect(() => {
+    const onFocus = () => setKeysElsewhere(isTextField(document.activeElement) && !card.current?.contains(document.activeElement))
+    onFocus()
+    document.addEventListener('focusin', onFocus)
+    document.addEventListener('focusout', onFocus)
+    return () => {
+      document.removeEventListener('focusin', onFocus)
+      document.removeEventListener('focusout', onFocus)
+    }
+  }, [])
 
   useEffect(() => {
     if (focused && !isMobileScreen()) card.current?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"], [role="checkbox"]')?.focus({ preventScroll: true })
@@ -254,7 +270,7 @@ export function QuestionPanel({
         )}
         <button type="button" disabled={busy || down || !ready} onClick={submit} className="flex h-6 items-center gap-1.5 rounded-md bg-foreground px-2 text-[13px] font-medium text-background hover:bg-foreground/90 disabled:opacity-60">
           Submit
-          {active && (
+          {active && !keysElsewhere && (
             <span className="flex gap-0.5 pointer-coarse:hidden" aria-hidden>
               <kbd className="flex h-[17px] min-w-[17px] items-center justify-center rounded border border-background/20 px-0.5 font-sans text-[11px]">{MOD_KEY}</kbd>
               <kbd className="flex h-[17px] min-w-[17px] items-center justify-center rounded border border-background/20 px-0.5 font-sans text-[11px]">Enter</kbd>

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { KeyboardEvent } from 'react'
 
 const sendChoice = vi.hoisted(() => vi.fn())
@@ -197,6 +197,21 @@ describe('QuestionPanel', () => {
     )
     fireEvent.keyDown(screen.getByLabelText('message box'), { key: 'Enter', ctrlKey: true })
     expect(sendChoice).not.toHaveBeenCalled()
+  })
+
+  test('Submit draws its Ctrl+Enter only while that key is the card\'s, not while the message box has the focus', () => {
+    render(
+      <>
+        <textarea aria-label="message box" />
+        {panel({ active: true })}
+      </>,
+    )
+    const submit = screen.getByRole('button', { name: 'Submit' })
+    expect(submit.textContent).toContain('Enter')
+    act(() => screen.getByLabelText('message box').focus())
+    expect(submit.textContent).toBe('Submit')
+    act(() => screen.getByLabelText('message box').blur())
+    expect(submit.textContent).toContain('Enter')
   })
 
   test('one pick is a radio group: ArrowDown picks the next choice and takes the focus there, "Other" included', async () => {
