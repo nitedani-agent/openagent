@@ -44,11 +44,11 @@ function usePm(): Pm {
 /** `command` in the package manager the visitor picked: what a click copies, and what its press is named by. */
 export const usePickedCommand = (command: Command): string => PMS[usePm()][command]
 
-/** One tab per package manager; picking one switches every command on the page. */
+/** One tab per package manager; picking one switches every command on the page. Named as one group, laid out by the row it sits in. */
 export function PmTabs() {
   const pm = usePm()
   return (
-    <>
+    <span role="group" aria-label="Package manager" style={{ display: 'contents' }}>
       {PM_NAMES.map((name) => (
         <button
           key={name}
@@ -60,7 +60,7 @@ export function PmTabs() {
           {name}
         </button>
       ))}
-    </>
+    </span>
   )
 }
 
