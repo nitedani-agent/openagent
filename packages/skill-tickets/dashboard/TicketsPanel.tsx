@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { ExternalLink, ClipboardList, Hammer, Plus } from 'lucide-react'
-import { Badge, Button, Checkbox, Tooltip, TooltipTrigger, TooltipContent, cn, formatRelative, formatAge, formatDateTime, useAction, useLoaded, useModuleHost } from '@openagt/dashboard/module'
+import { Badge, Button, Checkbox, Tooltip, TooltipTrigger, TooltipContent, cn, formatRelative, useAction, useLoaded, useModuleHost } from '@openagt/dashboard/module'
 import { NEW_TICKET, UPDATE_TICKETS_PROMPT, heldBack, readMeta, type TicketsMeta } from '../src/module.js'
 import { TicketStartActions } from './TicketStartActions.js'
 import type { WorkspaceTicket } from './lib/types.js'
 import { UpdateTicketsButton } from './UpdateTicketsButton.js'
 import { priorityTone } from './lib/ticket-priority.js'
+import { ticketAge, ticketDay } from './lib/ticket-date.js'
 
 /** Captured once: `useLoaded` treats a fresh `{}` literal as a new value on every render. */
 const NO_META: TicketsMeta = {}
@@ -183,9 +184,9 @@ export function TicketRow({
       </span>
       <span
         className="flex w-14 shrink-0 items-center justify-end text-[10px] text-muted-foreground/70 max-md:ml-auto"
-        title={formatDateTime(ticket.date)}
+        title={ticketDay(ticket)}
       >
-        {formatAge(ticket.date)}
+        {ticketAge(ticket)}
       </span>
       {/* The plan, when there is one to read: a link to it, strong blue and thicker-stroked so the
           planned rows are scannable. A sibling of the row's button, not a child: an interactive

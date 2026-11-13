@@ -186,7 +186,8 @@ describe('TicketsPanel (#697/#1144)', () => {
     render(
       <TicketsPanel
         projectId="p1"
-        tickets={[ticket({ priority: '8', topics: ['dx', 'ui'], date: twoDaysAgo })]}
+        // Named with no day, it is dated by its file: two days ago.
+        tickets={[ticket({ file: 'do-the-thing.md', priority: '8', topics: ['dx', 'ui'], date: twoDaysAgo })]}
         loaded
         onOpen={() => {}}
        
@@ -202,6 +203,14 @@ describe('TicketsPanel (#697/#1144)', () => {
     const tags = screen.getByText('dx').parentElement as HTMLElement
     expect(tags.classList.contains('max-sm:hidden')).toBe(true)
     expect(tags.classList.contains('hidden')).toBe(false)
+  })
+
+  test('a ticket named today reads today, at any hour: its filename holds a day, and its tooltip says the day', async () => {
+    const now = new Date()
+    const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    render(<TicketsPanel projectId="p1" tickets={[ticket({ file: `${day}_dark-mode.md`, date: `${day}T00:00:00.000Z` })]} loaded onOpen={() => {}} />)
+    const age = await screen.findByText('today')
+    expect(age.getAttribute('title')).toBe(now.toLocaleDateString())
   })
 
   test('sorts by date is the server\'s job — the list renders whatever order it is given (#1144)', async () => {

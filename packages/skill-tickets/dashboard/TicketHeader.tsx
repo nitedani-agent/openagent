@@ -9,8 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   cn,
-  formatAge,
-  formatDateTime,
   useAction,
   useModuleHost,
   useOpenAgentDown,
@@ -19,6 +17,7 @@ import { claimState, heldBack } from '../src/module.js'
 import type { WorkspaceTicketDetail } from './lib/types.js'
 import { releaseClaim } from './lib/release.js'
 import { priorityTone } from './lib/ticket-priority.js'
+import { ticketAge, ticketDay } from './lib/ticket-date.js'
 import { TicketStartActions } from './TicketStartActions.js'
 import { TicketSessions, type TicketSession } from './TicketSessions.js'
 
@@ -192,7 +191,7 @@ function TicketFacts({
           {dot}
         </>
       )}
-      <span title={formatDateTime(ticket.date)}>{formatAge(ticket.date)}</span>
+      <span title={ticketDay(ticket)}>{ticketAge(ticket)}</span>
       {ticket.priority && (
         <>
           {dot}

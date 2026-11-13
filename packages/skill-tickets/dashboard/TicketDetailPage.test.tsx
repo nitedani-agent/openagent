@@ -104,7 +104,8 @@ describe('TicketDetailPage (#1144)', () => {
 
   test('shows the date first in the meta under the title (#1144/#1265)', async () => {
     const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60_000).toISOString()
-    onTicket.mockResolvedValue(ticket({ date: twoDaysAgo }))
+    // Named with no day, it is dated by its file: two days ago.
+    onTicket.mockResolvedValue(ticket({ file: 'do-the-thing.md', date: twoDaysAgo }))
     render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
     const meta = (await screen.findByText('2d ago')).parentElement!
     expect(meta.textContent?.startsWith('2d ago')).toBe(true)
