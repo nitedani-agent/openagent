@@ -14,7 +14,10 @@ export type TicketRead =
   | { ticket: WorkspaceTicketDetail | null; plan: string | null; holderStatus?: string; sessions: TicketSession[] }
   | { error: string }
 
-/** The ticket `slug` of a project, read by identity (`tickets show <file> --local`) and again every 10 s. */
+/**
+ * The ticket `slug` of a project, read by identity (`tickets show <file> --local`) and again every
+ * 10 s. The last read is kept, in this browser too, so both its tabs open on it at once.
+ */
 export function useTicket(projectId: string, slug: string): { read: TicketRead | null; loaded: boolean; reload: () => Promise<void> } {
   const host = useModuleHost()
   const { value: read, loaded, reload } = usePolled<TicketRead | null>(
@@ -33,6 +36,7 @@ export function useTicket(projectId: string, slug: string): { read: TicketRead |
     null,
     10_000,
     [projectId, slug],
+    { remember: `skill-tickets:ticket:${projectId}/${slug}`, stored: true },
   )
   return { read, loaded, reload }
 }

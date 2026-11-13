@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
-import type { ModuleAgent } from '@openagt/dashboard/module'
+import { forgetRemembered, type ModuleAgent } from '@openagt/dashboard/module'
 import { planTicketPrompt, workOnTicketPrompt } from '../src/module.js'
 import { fakeHost, renderWithHost, type FakeHost } from './test-host.js'
 import { TicketPlanPage } from './TicketPlanPage.js'
@@ -8,7 +8,12 @@ import { TicketDetailPage } from './TicketDetailPage.js'
 import { openFromList } from './lib/back-to-list.js'
 import { openMenu } from '../../dashboard/dashboard/test-utils.js'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  // Every story reads the same ticket: none opens on the one before's.
+  forgetRemembered()
+  localStorage.clear()
+})
 
 const SLUG = '2026-07-20_do-the-thing.md'
 const TICKET = { file: SLUG, title: 'Do the thing', summary: '', date: '2026-01-01T00:00:00.000Z', planned: true, content: '# Do the thing\n' }

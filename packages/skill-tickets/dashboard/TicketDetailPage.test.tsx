@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { openMenu } from '../../dashboard/dashboard/test-utils.js'
 import type { ReactElement } from 'react'
-import type { ModuleAgent } from '@openagt/dashboard/module'
+import { forgetRemembered, type ModuleAgent } from '@openagt/dashboard/module'
 import type { MountedModules } from '@openagt/dashboard/module/testing'
 import { fakeHost, renderWithHost, type FakeHost } from './test-host.js'
 import { TicketDetailPage } from './TicketDetailPage.js'
@@ -66,6 +66,9 @@ const ticket = (over: Record<string, unknown> = {}) => ({
 
 afterEach(() => {
   cleanup()
+  // Every story reads the same ticket: none opens on the one before's.
+  forgetRemembered()
+  localStorage.clear()
   shown = null
   agents = []
   released = { ok: true }
@@ -75,6 +78,18 @@ afterEach(() => {
 // One ticket's own page (#1144): the entire file, read by the same slug the list row and the
 // route carry, plus the actions on it the one-liner list no longer has room for.
 describe('TicketDetailPage (#1144)', () => {
+  test('a ticket read before opens on that read at once, not on Loading', async () => {
+    onTicket.mockResolvedValue(ticket())
+    render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
+    expect(await screen.findByRole('heading', { name: 'Do the thing' })).toBeTruthy()
+    cleanup()
+    // Open again, the read still on its way.
+    render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
+    host.runCommand.mockImplementation(() => new Promise(() => {}))
+    expect(screen.getByRole('heading', { name: 'Do the thing' })).toBeTruthy()
+    expect(screen.queryByText('Loading…')).toBeNull()
+  })
+
   test('reads the ticket by slug and renders its text below the title, the title, the keys above it and its summary said once', async () => {
     onTicket.mockResolvedValue(ticket({ priority: '8', planned: true, content: 'Priority: 8\n\n# Do the thing\n\n## TLDR\n\nThe thing is not done.\n\nMore detail below the fold.' }))
     render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
