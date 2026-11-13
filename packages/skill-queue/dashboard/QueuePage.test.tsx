@@ -153,6 +153,11 @@ describe('QueuePage', () => {
       await screen.findByText('Only one')
       const box = screen.getByRole('spinbutton', { name: 'How many agents to start' }) as HTMLInputElement
       expect([box.value, box.max]).toEqual(['1', '1'])
+      // A count typed past the entries snaps back, and the box says why while it is in use.
+      fireEvent.focus(box)
+      fireEvent.change(box, { target: { value: '9' } })
+      expect(box.value).toBe('1')
+      expect((await screen.findByRole('tooltip')).textContent).toBe('How many agents to start: one per entry, from the top of the queue, so at most 1.')
       expect(screen.getByRole('button', { name: 'Start 1 agent' })).toBeTruthy()
     })
 

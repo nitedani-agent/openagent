@@ -30,7 +30,7 @@ export function BatchCount({ count, max, onChange }: { count: number; max: numbe
           <Plus className="h-3 w-3" aria-hidden />
         </button>
       </TooltipTrigger>
-      <TooltipContent>How many agents to start: one per entry, from the top of the queue.</TooltipContent>
+      <TooltipContent>How many agents to start: one per entry, from the top of the queue, so at most {max}.</TooltipContent>
     </Tooltip>
   )
 }
