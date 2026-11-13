@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Button, FadeWhileStale, LinkActions, Page, usePolled, useAction, useModuleHost, type ProjectLinks, type ModuleLink, type ModuleProject } from '@openagt/dashboard/module'
+import { Button, FadeWhileStale, LinkActions, Page, usePolled, useAction, useModuleHost, type ProjectLinks, type ModuleLink, type ModuleProject, type LinkActionOffer } from '@openagt/dashboard/module'
 import { heldBack, holderAgent, planLink, ticketLink, withHolder } from '../src/module.js'
 import { holdingRun } from './lib/holding-run.js'
 import type { ProjectTickets, WorkspaceTicket } from './lib/types.js'
@@ -154,12 +154,10 @@ export function TicketsPage({ projects }: { projects: ModuleProject[] }) {
   // it again (the button's own rule, keyed by these).
   const queueKey = targets.map(r => `${r.projectId}/${r.ticket.file}`).join('\n')
   const planKey = planTargets.map(r => `${r.projectId}/${r.ticket.file}`).join('\n')
-  // The labels count what the click adds — saying "selected" while a selection narrows the
-  // buttons, and stopping saying "all" the moment their count differs from the set's tally,
-  // never promising a ticket they will skip. Each is the object of the module's own verb:
-  // "Add to queue: all 5 tickets shown below".
-  const queueObject = counted(targets.length, 'ticket')
-  const planObject = counted(planTargets.length, 'plan')
+  // The labels count what the click adds, never a ticket it will skip or one already added, each
+  // the object of the module's own verb: "Add to queue: 5 tickets". Done, they say what it did to the whole set: "Queued: 5 tickets".
+  const queueLabel = (action: LinkActionOffer, done: boolean) => (done ? `${action.doneLabel ?? action.label}: ${counted(targets.length, 'ticket')}` : `${action.label}: ${counted(action.left, 'ticket')}`)
+  const planLabel = (action: LinkActionOffer, done: boolean) => (done ? `${action.doneLabel ?? action.label}: ${counted(planTargets.length, 'plan')}` : `${action.label}: ${counted(action.left, 'plan')}`)
   const projectsShown = [...new Set(scope.map(r => r.projectId))]
 
   return (
@@ -198,7 +196,7 @@ export function TicketsPage({ projects }: { projects: ModuleProject[] }) {
               projects={projectsShown}
               targets={linksByProject(planTargets, planLink)}
               resetKey={`plans\n${planKey}`}
-              label={action => `${action.label}: ${planObject}`}
+              label={planLabel}
               disabled={busy}
               tooltip={
                 <>
@@ -215,7 +213,7 @@ export function TicketsPage({ projects }: { projects: ModuleProject[] }) {
               projects={projectsShown}
               targets={linksByProject(targets, ticketLink)}
               resetKey={`tickets\n${queueKey}`}
-              label={action => `${action.label}: ${queueObject}`}
+              label={queueLabel}
               disabled={busy}
               tooltip={
                 <>
