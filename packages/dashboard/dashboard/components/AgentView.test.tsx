@@ -48,9 +48,10 @@ vi.mock('../lib/preferences.js', () => ({
 // The `actions` and `summary` slots of the bar above the message box ARE rendered, so the handoff
 // cluster and the modules' summaries stay reachable.
 vi.mock('./AgentActionBar.js', () => ({
-  AgentActionBar: ({ ready, checkout, onToggle, onProjectRemoved, onShowWorkBar }: { ready?: boolean; checkout: unknown; onToggle?: () => void; onProjectRemoved?: () => void; onShowWorkBar?: () => void }) => (
+  AgentActionBar: ({ live, ready, checkout, onToggle, onProjectRemoved, onShowWorkBar }: { live?: boolean; ready?: boolean; checkout: unknown; onToggle?: () => void; onProjectRemoved?: () => void; onShowWorkBar?: () => void }) => (
     <>
       <span data-testid="bar-frame" />
+      <span data-testid="bar-live">{String(live)}</span>
       {onShowWorkBar && <button type="button" onClick={onShowWorkBar}>Show the work bar</button>}
       <button type="button" onClick={onProjectRemoved}>project removed</button>
       <button type="button" onClick={onToggle}>details</button>
@@ -822,8 +823,60 @@ describe('a message sent while the agent works', () => {
   test('a run whose feed shows its end is ended at once, its Stop gone with the end line, before the list of runs says so', () => {
     const { rerender } = render(view({ live: true, events: [start('go'), text] }))
     expect(screen.getByTestId('composer-live').textContent).toBe('true')
-    rerender(view({ live: true, events: [start('go'), text, { kind: 'end', ok: false, stopped: true }] as OpenAgentEvent[] }))
+    rerender(view({ live: true, events: [start('go'), text, { kind: 'end', ok: false, stopped: true, at: new Date().toISOString() }] as OpenAgentEvent[] }))
     expect(screen.getByTestId('composer-live').textContent).toBe('false')
+    expect(screen.getByTestId('bar-live').textContent).toBe('false')
+  })
+
+  test('a run continued by a message is live from the list of runs on, its Stop in the box and the menu, before its new leg writes a line', () => {
+    const before = [start('go'), text, { kind: 'end', ok: true, at: '2026-01-01T10:00:00.000Z' }] as OpenAgentEvent[]
+    const { rerender } = render(view({ live: false, events: before }))
+    expect(screen.getByTestId('composer-live').textContent).toBe('false')
+    rerender(view({ live: true, events: before }))
+    expect(screen.getByTestId('composer-live').textContent).toBe('true')
+    expect(screen.getByTestId('bar-live').textContent).toBe('true')
+  })
+
+  test('a continued run opened afresh is live while its feed replays the leg before, and ends with its own end', () => {
+    const before = [start('go'), text, { kind: 'end', ok: true, at: '2026-01-01T10:00:00.000Z' }] as OpenAgentEvent[]
+    const { rerender } = render(view({ live: true, events: [], replayed: false }))
+    rerender(view({ live: true, events: before.slice(0, 2), replayed: false }))
+    rerender(view({ live: true, events: before, replayed: false }))
+    expect(screen.getByTestId('composer-live').textContent).toBe('true')
+    rerender(view({ live: true, events: before }))
+    expect(screen.getByTestId('composer-live').textContent).toBe('true')
+    rerender(view({ live: true, events: [...before, { kind: 'end', ok: false, stopped: true, at: '2026-01-01T10:00:00.000Z' }] as OpenAgentEvent[] }))
+    expect(screen.getByTestId('composer-live').textContent).toBe('false')
+  })
+
+  // The browser may be another device, its clock its own: the daemon's times say nothing of this page's.
+  describe.each([
+    ['five minutes ahead of', 300_000],
+    ['five minutes behind', -300_000],
+    ['the same as', 0],
+  ])('with this browser\'s clock %s the daemon\'s', (_, skew) => {
+    const daemonNow = () => new Date(Date.now() - skew).toISOString()
+    afterEach(() => vi.restoreAllMocks())
+
+    test('a continued run is live from the list of runs on, before its new leg writes a line', () => {
+      const before = [start('go'), text, { kind: 'end', ok: true, at: new Date(Date.now() - 1000).toISOString() }] as OpenAgentEvent[]
+      const now = Date.now()
+      vi.spyOn(Date, 'now').mockReturnValue(now + skew)
+      const { rerender } = render(view({ live: false, events: before }))
+      rerender(view({ live: true, events: before }))
+      expect(screen.getByTestId('composer-live').textContent).toBe('true')
+    })
+
+    test('a continued run\'s own end ends it at once, its Stop gone with the end line', () => {
+      const before = [start('go'), text, { kind: 'end', ok: true, at: new Date(Date.now() - 1000).toISOString() }] as OpenAgentEvent[]
+      const now = Date.now()
+      vi.spyOn(Date, 'now').mockReturnValue(now + skew)
+      const { rerender } = render(view({ live: false, events: before }))
+      rerender(view({ live: true, events: before }))
+      rerender(view({ live: true, events: [...before, start('more'), { kind: 'end', ok: false, stopped: true, at: daemonNow() }] as OpenAgentEvent[] }))
+      expect(screen.getByTestId('composer-live').textContent).toBe('false')
+      expect(screen.getByTestId('bar-live').textContent).toBe('false')
+    })
   })
 
   test('a session whose run is not known yet has no message box, which would say an ended run\'s words; it comes once the record or the feed says', () => {

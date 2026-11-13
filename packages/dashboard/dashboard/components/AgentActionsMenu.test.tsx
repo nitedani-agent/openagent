@@ -157,21 +157,32 @@ describe('AgentActionsMenu (#toolbar-menu)', () => {
 })
 
 describe('the live-session action: Stop', () => {
-  const liveEvents = [{ kind: 'session-update', sessionId: 'working' }] as never
-
   test('a live session offers Stop, and no Merge while it works', async () => {
-    render(<AgentActionsMenu projectId="p1" agentId="run-1" events={liveEvents} onDeleted={vi.fn()} />)
+    render(<AgentActionsMenu projectId="p1" agentId="run-1" events={[]} live onDeleted={vi.fn()} />)
     openMenu()
     await waitFor(() => expect(screen.getByText('Stop agent')).toBeTruthy())
     expect(screen.queryByText(/Merge/)).toBeNull()
   })
 
   test('an ended session offers no Stop', async () => {
-    const ended = [{ kind: 'session-update', sessionId: 'working' }, { kind: 'end', ok: true }] as never
-    render(<AgentActionsMenu projectId="p1" agentId="run-1" events={ended} onDeleted={vi.fn()} />)
+    render(<AgentActionsMenu projectId="p1" agentId="run-1" events={[]} live={false} onDeleted={vi.fn()} />)
     openMenu()
     await waitFor(() => expect(screen.getByText('Open in editor')).toBeTruthy())
     expect(screen.queryByText('Stop agent')).toBeNull()
+  })
+
+  test('a run stopped from the menu and continued later can be stopped again', async () => {
+    sendStop.mockClear()
+    const { rerender } = render(<AgentActionsMenu projectId="p1" agentId="run-1" events={[]} live onDeleted={vi.fn()} />)
+    openMenu()
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Stop agent' }))
+    await waitFor(() => expect(sendStop).toHaveBeenCalledTimes(1))
+    openMenu()
+    expect(await screen.findByRole('menuitem', { name: 'Stopping…' })).toBeTruthy()
+    rerender(<AgentActionsMenu projectId="p1" agentId="run-1" events={[]} live={false} onDeleted={vi.fn()} />)
+    rerender(<AgentActionsMenu projectId="p1" agentId="run-1" events={[]} live onDeleted={vi.fn()} />)
+    const stop = await screen.findByRole('menuitem', { name: 'Stop agent' })
+    expect(stop.getAttribute('aria-disabled')).toBeNull()
   })
 
   test('while OpenAgent is not answering, Stop is off and sends nothing', async () => {
@@ -179,7 +190,7 @@ describe('the live-session action: Stop', () => {
     sendStop.mockClear()
     render(
       <DaemonDown.Provider value>
-        <AgentActionsMenu projectId="p1" agentId="run-1" events={liveEvents} onDeleted={vi.fn()} />
+        <AgentActionsMenu projectId="p1" agentId="run-1" events={[]} live onDeleted={vi.fn()} />
       </DaemonDown.Provider>,
     )
     openMenu()

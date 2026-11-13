@@ -73,6 +73,7 @@ export function AgentView({
   files,
   lost = false,
   writing = '',
+  replayed = true,
   startedWith,
   onAgentStarted,
   contextSet,
@@ -109,6 +110,8 @@ export function AgentView({
   lost?: boolean
   /** The message the agent is writing, as far as it has got: shown after the feed while it runs. */
   writing?: string
+  /** The live channel has brought the lines the run had written when it was opened; false while it replays them. */
+  replayed?: boolean
   /** The prompt this page just started the agent with: shown until the agent's own prompt line arrives. */
   startedWith?: string | undefined
   /** Jump to the agent a preset or a continuation started (#959). */
@@ -123,7 +126,7 @@ export function AgentView({
   subagents?: readonly AgentMeta[]
 }) {
   // The log on screen: the live channel's while the agent works, its archive once it has ended.
-  const { archived, shown, active, feedLive } = useAgentFeed(projectId, agentId, live, events)
+  const { archived, shown, active, feedLive } = useAgentFeed(projectId, agentId, live, events, replayed)
   // What each working subagent is doing now, read only while one works: an ended one's row says how it ended.
   const workingSubagents = subagents.filter(agent => agent.status === 'running').map(agent => agent.id).join(',')
   // How many subagents the run's job still waits on: while any, the run is not over, whatever its own turn says.
@@ -339,6 +342,7 @@ export function AgentView({
             projectId={projectId}
             agentId={agentId}
             events={shown}
+            live={feedLive}
             label={label}
             naming={naming}
             retainedWorktree={hasWorktree}
