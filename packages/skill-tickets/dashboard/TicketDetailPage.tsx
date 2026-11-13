@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Markdown, useModuleHost } from '@openagt/dashboard/module'
-import { ticketBody } from '../src/module.js'
+import { claimState, ticketBody } from '../src/module.js'
 import { readTicketFile } from '../src/ticket-file.js'
 import { TicketPageShell, TicketPageNote } from './TicketPageShell.js'
 import { TicketHeader } from './TicketHeader.js'
@@ -45,6 +45,7 @@ export function TicketDetailPage({
             file={ticket.file}
             initial={readTicketFile(ticket.content)}
             issueLabel={ticket.issue?.label}
+            workedBy={ticket.locked && claimState(read.holderStatus) === 'working' ? (ticket.lockedByAgent?.name ?? ticket.lockedBy) : undefined}
             onSaved={() => {
               setEditing(false)
               void reload()

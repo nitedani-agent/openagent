@@ -262,6 +262,22 @@ describe('TicketDetailPage (#1144)', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Do the thing' })))
   })
 
+  test('editing a ticket a run is working on says the run may not see the change; one held for nobody says nothing', async () => {
+    agents = [{ id: 'run-1', name: 'login-page', status: 'running', startedAt: '2026-08-30T10:00:00.000Z' }]
+    onTicket.mockResolvedValue(ticket({ locked: true, lockedBy: 'run-1' }))
+    render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
+    await screen.findAllByText(/at work/)
+    await openMenu(screen.getByRole('button', { name: 'More' }))
+    fireEvent.click(await screen.findByText('Edit ticket'))
+    expect(screen.getByText('The run “login-page” is working on this ticket and started from it as it was: it may not see this change.')).toBeTruthy()
+    cleanup()
+    agents = [{ id: 'run-1', name: 'login-page', status: 'done', startedAt: '2026-08-30T10:00:00.000Z' }]
+    render(<TicketDetailPage projectId="p1" slug="2026-07-20_do-the-thing.md" />)
+    await openMenu(await screen.findByRole('button', { name: 'More' }))
+    fireEvent.click(await screen.findByText('Edit ticket'))
+    expect(screen.queryByText(/may not see this change/)).toBeNull()
+  })
+
   test('a failed release surfaces and keeps the claim visible (#1420)', async () => {
     onTicket.mockResolvedValue(ticket({ locked: true }))
     sendReleaseTicketLock.mockResolvedValue({ ok: false, error: 'the release could not be committed' })

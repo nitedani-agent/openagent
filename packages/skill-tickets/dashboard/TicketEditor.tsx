@@ -27,6 +27,7 @@ export function TicketEditor({
   file,
   initial,
   issueLabel,
+  workedBy,
   onSaved,
   onCancel,
 }: {
@@ -36,6 +37,8 @@ export function TicketEditor({
   initial: TicketFields
   /** The issue the ticket follows: its title and text are rewritten from it when it changes. */
   issueLabel?: string | undefined
+  /** The run at work on the ticket, by its name: it started from the ticket as it was. */
+  workedBy?: string | undefined
   onSaved: (file: string) => void
   onCancel: () => void
 }) {
@@ -93,6 +96,11 @@ export function TicketEditor({
         void save()
       }}
     >
+      {workedBy && (
+        <p className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
+          The run “{workedBy}” is working on this ticket and started from it as it was: it may not see this change.
+        </p>
+      )}
       {issueLabel && (
         <p id="ticket-issue-note" className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
           This ticket follows issue {issueLabel}: when the issue changes, Update tickets writes its title and text again from it. Priority and topics stay as you set them.
