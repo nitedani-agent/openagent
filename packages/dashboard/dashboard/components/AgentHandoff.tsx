@@ -111,7 +111,7 @@ export function HandoffActions(props: {
 }) {
   const { handoff, act } = props.state
   // What the last press did, said until the work on the branch moves on or the bar is put away.
-  const [said, setSaid] = useState<{ text: string; work: string; title?: string } | null>(null)
+  const [said, setSaid] = useState<{ text: string; work: string; title?: string; shown?: false } | null>(null)
   // The pull request a merge pressed here left to merge once its checks pass.
   const [armed, setArmed] = useState<number | null>(null)
   const work = handoff ? [handoff.commits.length, handoff.pendingFiles?.length ?? 0, handoff.insertions, handoff.deletions].join('|') : ''
@@ -129,7 +129,7 @@ export function HandoffActions(props: {
   }
   return (
     <>
-      {saying && (
+      {saying && saying.shown !== false && (
         <Reason {...(saying.title ? { title: saying.title } : {})} hidden>
           {saying.text}
         </Reason>
@@ -148,7 +148,8 @@ type Pressed = <T>(
   fn: () => Promise<T>,
   failed: string,
   answered?: (value: Exclude<T, { ok: false }>) => Partial<AgentHandoff> | undefined,
-  says?: (value: Exclude<T, { ok: false }>) => { text: string; title?: string } | undefined,
+  /** `shown: false`: what the bar already shows, said to a screen reader alone. */
+  says?: (value: Exclude<T, { ok: false }>) => { text: string; title?: string; shown?: false } | undefined,
 ) => void
 
 /** After a press the focus stays in the bar, on its next press or else on the bar, unless the person has moved it. */
@@ -326,7 +327,8 @@ function NextStep({
       () => sendOpenPullRequest(projectId, agentId, { draft }),
       'Could not open the pull request.',
       opened => (opened.number !== undefined && opened.url !== undefined ? { pushed: true, pr: { number: opened.number, url: opened.url, state: 'OPEN', title: '' } } : undefined),
-      opened => (opened.number !== undefined ? { text: `Opened ${draft ? 'draft ' : ''}PR #${opened.number}.` } : undefined),
+      // The bar names the pull request from here on.
+      opened => (opened.number !== undefined ? { text: `Opened ${draft ? 'draft ' : ''}PR #${opened.number}.`, shown: false } : undefined),
     )
   return (
     <>

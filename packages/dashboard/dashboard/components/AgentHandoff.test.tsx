@@ -285,6 +285,8 @@ describe('run handoff (#799)', () => {
     await new Promise(resolve => setTimeout(resolve, 20))
     expect(screen.getByRole('button', { name: 'Merge PR' })).toBeTruthy()
     expect(document.querySelector('[aria-live="polite"]')!.textContent).toBe('Opened PR #3.')
+    // Said to a screen reader alone: the bar names the pull request.
+    expect(screen.getAllByText('Opened PR #3.')).toHaveLength(1)
   })
 
   test("a PR opened for one session is never shown on another opened while it was opening, nor once it is open", async () => {
