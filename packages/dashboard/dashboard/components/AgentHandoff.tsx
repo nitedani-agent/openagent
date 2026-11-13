@@ -261,6 +261,7 @@ function NextStep({
         variant="ghost"
         className={NEXT_STEP}
         {...step}
+        title={`Merges PR #${pr.number} now, or once its checks pass`}
         onClick={() =>
           press(
             'merge',
@@ -339,6 +340,7 @@ function NextStep({
           variant="ghost"
           className={cn(NEXT_STEP, 'pr-1.5')}
           {...step}
+          title={`${handoff.pushed ? 'Opens' : 'Pushes the branch and opens'} a pull request for ${handoff.branch}`}
           onClick={() => openPr(false)}
         >
           <Steady words={['Open PR', 'Opening PR…', 'Publishing…']} now={pending === 'pr' ? 1 : pending === 'push' ? 2 : 0} />

@@ -277,13 +277,15 @@ describe('run handoff (#799)', () => {
     sendOpenPullRequest.mockResolvedValue({ ok: true, number: 3, url: 'https://example.test/3' })
     render(<Harness />)
     const open = await screen.findByText('Open PR')
+    // What the press does, before it is pressed.
+    expect(open.closest('button')!.title).toBe('Pushes the branch and opens a pull request for openagent/dark-mode')
     // The read after the press is still looking up the PR, as it does once the cached one was dropped.
     onAgentHandoff.mockResolvedValue({ ...worked, pushed: true, prPending: true })
     const reads = onAgentHandoff.mock.calls.length
     fireEvent.click(open)
     await waitFor(() => expect(onAgentHandoff.mock.calls.length).toBeGreaterThan(reads))
     await new Promise(resolve => setTimeout(resolve, 20))
-    expect(screen.getByRole('button', { name: 'Merge PR' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Merge PR' }).title).toBe('Merges PR #3 now, or once its checks pass')
     expect(document.querySelector('[aria-live="polite"]')!.textContent).toBe('Opened PR #3.')
     // Said to a screen reader alone: the bar names the pull request.
     expect(screen.getAllByText('Opened PR #3.')).toHaveLength(1)
