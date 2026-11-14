@@ -186,7 +186,8 @@ export function EditPanel({
   /** Back from the question to the panel: why a removal was not taken is said in the question alone. */
   const back = (): void => (setAsking(false), setFailed(undefined))
 
-  const frame = 'mt-3 rounded-md border border-border bg-muted/40 p-4'
+  /** What stands in the panel's place after a save or before a removal: one thing said, in a box of its own. */
+  const frame = 'mt-3 rounded-lg border border-hairline p-4'
 
   if (saved) {
     return (
@@ -225,7 +226,7 @@ export function EditPanel({
         )}
         <div className="mt-3 flex justify-end gap-2">
           {/* The keyboard lands on the way out, not on the deletion. */}
-          <Button variant="outline" autoFocus disabled={saving} onClick={back}>
+          <Button variant="secondary" autoFocus disabled={saving} onClick={back}>
             Cancel
           </Button>
           <Button variant="destructive" disabled={saving || down} onClick={() => void remove()}>
@@ -247,7 +248,7 @@ export function EditPanel({
         // Escape closes a panel that has nothing to lose. Any other is closed with Cancel, so a slip of a key loses no prompt and no pick.
         if (e.key === 'Escape' && !saving && !dirty) onClose()
       }}
-      className={`${frame} space-y-5`}
+      className="mt-4 max-w-180 space-y-6"
     >
       <Section title="What it does">
         {own ? (
@@ -315,22 +316,23 @@ export function EditPanel({
         <PublishField gitHost={project.gitHost} own={isOwn(scheduled)} pick={publish} disabled={saving} onChange={next => (setPublish(next), setFailed(undefined))} />
         {scheduled.each && <p className="text-sm text-muted-foreground">{EACH_KEEPS_OWN}.</p>}
       </Section>
-      <p className="rounded-md border border-border bg-background px-3 py-2 text-sm">{problem ?? (dirty ? sentence : `${sentence} Nothing is changed yet.`)}</p>
+      <p className="text-sm">{problem ?? (dirty ? sentence : `${sentence} Nothing is changed yet.`)}</p>
       {failed !== undefined && (
         <p role="alert" className="text-xs text-danger">
           {failed}
         </p>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* The presses stay in view at the window's foot while the panel is longer than the window. */}
+      <div className="sticky bottom-0 -mx-3 flex flex-wrap items-center justify-between gap-3 bg-background px-3 py-3">
         <p className="min-w-0 flex-1 text-xs text-muted-foreground">{keptWhereHint(opened)}</p>
         <div className="flex gap-2">
           {/* Only what the tool wrote is the tool's to delete. */}
           {scheduled.editable && opened && (
-            <Button variant="outline" disabled={saving} onClick={() => (setAsking(true), setFailed(undefined))} className="text-danger">
+            <Button variant="ghost" disabled={saving} onClick={() => (setAsking(true), setFailed(undefined))} className="text-danger">
               Remove
             </Button>
           )}
-          <Button variant="outline" disabled={saving} onClick={onClose}>
+          <Button variant="secondary" disabled={saving} onClick={onClose}>
             Cancel
           </Button>
           <Button disabled={saving || down || problem !== undefined || !dirty} onClick={() => void save()}>

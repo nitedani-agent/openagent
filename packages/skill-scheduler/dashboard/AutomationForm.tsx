@@ -67,11 +67,9 @@ export function AutomationForm({
     onSaved()
   }
 
-  const frame = 'mt-3 rounded-md border border-border bg-muted/40 p-4'
-
   if (saved) {
     return (
-      <div role="group" aria-label="New automation" className={`${frame} text-sm`}>
+      <div role="group" aria-label="New automation" className="mb-8 rounded-lg border border-hairline p-4 text-sm">
         <p>
           Saved <span className="font-mono">{saved.onThisMachine ? saved.command : `/${saved.command}`}</span> as <span className="font-mono">{saved.file}</span>.
         </p>
@@ -99,9 +97,10 @@ export function AutomationForm({
         // Escape closes a form that has nothing to lose. Any other is closed with Cancel, so a slip of a key loses no prompt.
         if (e.key === 'Escape' && !saving && isUntouched(draft)) onClose()
       }}
-      className={`${frame} space-y-5`}
+      className="mb-8 max-w-180 space-y-6"
     >
-      <fieldset disabled={saving} className="space-y-5">
+      <h3 className="text-base font-semibold">New automation</h3>
+      <fieldset disabled={saving} className="space-y-6">
         <Section title="Name">
           <div className="flex items-center gap-1 text-sm">
             {/* A shared one is a command a person can type; one kept on this machine is no command, so it has no slash. */}
@@ -116,7 +115,7 @@ export function AutomationForm({
               aria-label="Name"
               aria-invalid={badName !== undefined}
               {...(badName !== undefined ? { 'aria-describedby': 'automation-name-problem' } : {})}
-              className="h-8 w-64 max-w-full bg-background px-2 font-mono"
+              className="w-64 max-w-full font-mono"
             />
           </div>
           {badName !== undefined && (
@@ -154,16 +153,17 @@ export function AutomationForm({
           </RadioGroup>
         </Section>
       </fieldset>
-      <p className="rounded-md border border-border bg-background px-3 py-2 text-sm">{(badName === undefined ? problem : whatAndWhenProblem(draft)) ?? `${sentence}.`}</p>
+      <p className="text-sm">{(badName === undefined ? problem : whatAndWhenProblem(draft)) ?? `${sentence}.`}</p>
       {failed !== undefined && (
         <p role="alert" className="text-xs text-danger">
           {failed}
         </p>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* The presses stay in view at the window's foot while the form is longer than the window. */}
+      <div className="sticky bottom-0 -mx-3 flex flex-wrap items-center justify-between gap-3 bg-background px-3 py-3">
         <p className="min-w-0 flex-1 text-xs text-muted-foreground">{whereHint(draft, schedulerRuns)}</p>
         <div className="flex gap-2">
-          <Button variant="outline" disabled={saving} onClick={onClose}>
+          <Button variant="secondary" disabled={saving} onClick={onClose}>
             Cancel
           </Button>
           <Button disabled={saving || down || problem !== undefined} onClick={() => void save()}>

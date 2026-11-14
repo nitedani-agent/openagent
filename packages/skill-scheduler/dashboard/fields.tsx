@@ -20,7 +20,7 @@ const hint = 'text-xs text-muted-foreground'
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section aria-label={title} className="space-y-2">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h4>
+      <h4 className="text-sm font-medium">{title}</h4>
       {children}
     </section>
   )
@@ -78,7 +78,7 @@ export function SaidFields({ project, said, agent, autoFocus, onChange }: { proj
     <>
       <Label htmlFor="automation-prompt">What the agent is told</Label>
       <Textarea id="automation-prompt" rows={4} autoFocus={autoFocus} value={said.prompt} onChange={e => onChange({ prompt: e.target.value })} placeholder="Answer each new comment below." />
-      <Label htmlFor="automation-waits-for" className="pt-1">
+      <Label htmlFor="automation-waits-for" className="pt-2">
         What the line waits for, in plain words <span className={hint}>optional, said on the row</span>
       </Label>
       <Input
@@ -91,10 +91,9 @@ export function SaidFields({ project, said, agent, autoFocus, onChange }: { proj
           setWritten(undefined)
         }}
         placeholder="when someone commented"
-        className="bg-background"
       />
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="outline" disabled={words === '' || written === 'writing'} onClick={() => void writeIt()}>
+        <Button variant="secondary" disabled={words === '' || written === 'writing'} onClick={() => void writeIt()}>
           {written === 'writing' ? 'Writing…' : 'Write the line'}
         </Button>
         <span className={hint}>Asks {AGENT_LABELS[agent]} once for a shell line from these words, and puts it below; costs a fraction of a cent. Nothing is run or saved.</span>
@@ -104,7 +103,7 @@ export function SaidFields({ project, said, agent, autoFocus, onChange }: { proj
           {written}
         </p>
       )}
-      <Label htmlFor="automation-when" className="pt-1">
+      <Label htmlFor="automation-when" className="pt-2">
         A shell line that prints what is new <span className={hint}>optional</span>
       </Label>
       <Textarea
@@ -125,13 +124,13 @@ export function SaidFields({ project, said, agent, autoFocus, onChange }: { proj
         <span className="font-mono">$LAST_RUN</span> is the time the row last started an agent, or was switched on when that is later.
       </p>
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="outline" disabled={line === '' || tried === 'trying'} onClick={() => void tryIt()}>
+        <Button variant="secondary" disabled={line === '' || tried === 'trying'} onClick={() => void tryIt()}>
           {tried === 'trying' ? 'Trying…' : 'Try it'}
         </Button>
         <span className={hint}>Runs the line once, now, on this machine, for 20 seconds at most. Nothing is saved and no agent starts.</span>
       </div>
       {tried !== undefined && tried !== 'trying' && (
-        <div role="status" aria-label="What the line answered" className="rounded-md border border-border bg-background px-3 py-2 text-sm">
+        <div role="status" aria-label="What the line answered" className="rounded-md bg-muted px-3 py-2 text-sm">
           <p className={cn(tried.tone === 'start' && 'text-success', tried.tone === 'failed' && 'text-danger')}>{tried.verdict}</p>
           {tried.printed !== '' && <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words font-mono text-xs">{tried.printed}</pre>}
           {tried.lastRun !== undefined && <p className="mt-2 text-xs text-muted-foreground">Tried as if the row had last started a day ago: $LAST_RUN was {tried.lastRun}.</p>}
@@ -149,11 +148,11 @@ export function SaidFields({ project, said, agent, autoFocus, onChange }: { proj
 export function SaidShown({ description, when, waitsFor, where }: { description?: string | undefined; when?: string | undefined; waitsFor?: string | undefined; where: string }) {
   return (
     <div className="space-y-2 opacity-70">
-      <p className="rounded-md border border-border bg-muted px-3 py-2 text-sm">{description ?? 'It does not say.'}</p>
+      <p className="rounded-md bg-muted px-3 py-2 text-sm">{description ?? 'It does not say.'}</p>
       {when !== undefined && (
         <>
           <p className="text-sm">Its shell line{waitsFor !== undefined && <span className="text-xs text-muted-foreground"> {waitsFor}</span>}</p>
-          <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-md border border-border bg-muted px-3 py-2 font-mono text-xs">{when}</pre>
+          <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-md bg-muted px-3 py-2 font-mono text-xs">{when}</pre>
         </>
       )}
       <p className="text-xs text-muted-foreground">{where}</p>
@@ -222,7 +221,7 @@ export function PaceFields({
   const interval = (
     // A field typed into is the pick: nobody types a wait and means another choice.
     <div className={cn('flex flex-wrap items-center gap-2 text-sm', !own && 'opacity-60')}>
-      <Input type="number" name="every" min={1} max={MAX_COUNT} value={typed.count} disabled={disabled} onChange={e => onChange(wait({ count: e.target.value }))} aria-label="How long" className="h-8 w-20 bg-background px-2" />
+      <Input type="number" name="every" min={1} max={MAX_COUNT} value={typed.count} disabled={disabled} onChange={e => onChange(wait({ count: e.target.value }))} aria-label="How long" className="w-20" />
       <Select items={PACE_UNITS.map(unit => ({ value: unit, label: unitWord(unit, typed.count) }))} value={typed.unit} disabled={disabled} onValueChange={unit => onChange(wait({ unit: unit as PaceUnit }))}>
         <SelectTrigger aria-label="Unit" className="w-28">
           <SelectValue />
@@ -248,7 +247,7 @@ export function PaceFields({
             // Chrome sends no change while a blank time is typed part-way, so leaving the field tells it; left as it was, it picks nothing.
             onBlur={e => e.target.validity.badInput !== (own && draft.atHalfTyped === true) && onChange(wait({ at: e.target.value }))}
             aria-label={work ? 'Not before this time of day' : 'Time of day'}
-            className="h-8 w-auto bg-background px-2"
+            className="w-auto"
           />
           <span className={hint}>optional, this machine's time{typed.unit === 'mo' ? '; a month counts as 30 days' : ''}</span>
         </>
@@ -318,7 +317,7 @@ export function AgentsFields({ name, draft, asSaid, start, where, disabled, onCh
   const count = (
     <div className={cn('flex flex-wrap items-center gap-2 text-sm', draft.kind !== 'own' && 'opacity-60')}>
       <span>Up to</span>
-      <Input type="number" name="agents" min={1} max={MAX_AGENTS} value={typed.count} disabled={disabled} onChange={e => onChange({ kind: 'own', count: e.target.value })} aria-label="How many agents" className="h-8 w-20 bg-background px-2" />
+      <Input type="number" name="agents" min={1} max={MAX_AGENTS} value={typed.count} disabled={disabled} onChange={e => onChange({ kind: 'own', count: e.target.value })} aria-label="How many agents" className="w-20" />
       <span>{Number(typed.count) === 1 ? 'agent' : 'agents'} at once</span>
     </div>
   )
