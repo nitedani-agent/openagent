@@ -51,6 +51,8 @@ test('the runs cut by day, each day with its runs and their cost; a run by its n
   expect(within(login).getByText('make the login page')).toBeTruthy()
   expect(screen.getAllByText('yesterday work')[0]!.closest('tr')!.textContent).toContain('2m')
   // A chip per status the runs have, each with its count; its pick is kept in the page's address, in the place of the last one, so Back leaves the page.
+  // A status is one word on its chip and beside a run's dot.
+  expect(within(screen.getAllByText('break it')[0]!.closest('tr')!).getByText('Failed')).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: /^Failed/ }))
   expect(host.openPage).toHaveBeenLastCalledWith('logs', ['failed'], undefined, { replace: true })
   rerender(page(['failed']))
@@ -98,7 +100,7 @@ test("each status in the dashboard's colors: a waiting run's dot is the sidebar'
       <LogsPage projects={[{ id: 'p1', name: 'alpha', gitHost: true }]} projectId={null} path={[]} />
     </ModuleHostContext.Provider>,
   )
-  const dot = (title: string) => within(screen.getAllByText(title)[0]!.closest('tr')!).getByText(/^(waiting|done)$/).querySelector('span')!.className
+  const dot = (title: string) => within(screen.getAllByText(title)[0]!.closest('tr')!).getByText(/^(Waiting|Done)$/).querySelector('span')!.className
   await screen.findAllByText('Asks')
   expect(dot('Asks')).toContain('bg-warning')
   expect(dot('Ended')).toContain('border-muted-foreground/60')
@@ -180,10 +182,10 @@ test('each run as the dashboard says it stands: a record that still says running
     </ModuleHostContext.Provider>,
   )
   const added = (await screen.findAllByText('Only on the laptop'))[0]!.closest('tr')!
-  expect(added.textContent).toContain('done')
+  expect(added.textContent).toContain('Done')
   const frozen = screen.getAllByText('frozen in the records')[0]!.closest('tr')!
-  expect(within(frozen).getByText('status unknown').closest('[title]')!.getAttribute('title')).toBe(`MacBook offline · last seen ${new Date(seenAt).toLocaleString()}`)
-  expect(screen.queryAllByText('running')).toHaveLength(0)
+  expect(within(frozen).getByText('Status unknown').closest('[title]')!.getAttribute('title')).toBe(`MacBook offline · last seen ${new Date(seenAt).toLocaleString()}`)
+  expect(screen.queryAllByText('Running')).toHaveLength(0)
 })
 
 test("each run says whose it is: their picture where the project's git host knows them, else two letters; a very old card has no mark, and its name stays in line", async () => {
