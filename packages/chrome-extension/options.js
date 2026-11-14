@@ -2,8 +2,8 @@
 // claude.ai can read the secret that talks to the daemon.
 
 const DEFAULT_DAEMON = 'http://localhost:4200'
-// The dashboard addresses the manifest's host permissions name, on any port: Chrome lets the extension reach no other.
-const REACHABLE = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+// The dashboard addresses the manifest's host permissions name, on any port and in any case: Chrome lets the extension reach no other.
+const REACHABLE = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i
 const daemonEl = document.getElementById('daemon')
 const tokenEl = document.getElementById('token')
 const statusEl = document.getElementById('status')

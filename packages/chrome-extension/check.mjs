@@ -953,6 +953,13 @@ function appPage({ sessions = SESSIONS, firstPage = 6, sendAppendsRow = true } =
     otherPort.fetched[0] === 'http://localhost:4300/_bridge/ping' &&
     /^Connected\./.test(otherPort.said)
   check(ok, 'an address Chrome never lets the extension reach is kept, and told the localhost address to use instead of a Site access switch; localhost on another port is tested', `outside: stored=${outside.stored}, fetched=${outside.fetched.length}, said=${outside.said}; port 4300: fetched=${otherPort.fetched[0]}, said=${otherPort.said}`)
+  // A host is the same whatever its case, to Chrome's grant too.
+  const upper = await save('http://LOCALHOST:4200')
+  check(
+    upper.stored === 'http://LOCALHOST:4200' && upper.fetched[0] === 'http://LOCALHOST:4200/_bridge/ping' && /^Connected\./.test(upper.said),
+    'localhost typed in capitals is kept as typed and tested, as any localhost address',
+    `stored=${upper.stored}, fetched=${upper.fetched[0]}, said=${upper.said}`,
+  )
 }
 
 console.log(failed ? `\n${failed} case(s) failed` : '\nall cases passed')
