@@ -57,21 +57,24 @@ async function newAgentPress(): Promise<HTMLElement> {
   return press
 }
 
+/** The agents' rows, top to bottom; `hidden`, also while a dialog over the page hides them. */
+async function agentRows(hidden = false): Promise<HTMLElement[]> {
+  const list = await screen.findByRole('list', { name: 'Agents', hidden })
+  return within(list).getAllByRole('listitem', { hidden }).filter(item => item.parentElement === list)
+}
+
 describe('the Agents page', () => {
-  test('one card per agent, the default first and marked; each with its skills and the accounts it works as, the computer’s where it names none', async () => {
+  test('one row per agent, the default first and marked; each with its skills and the accounts it works as, the computer’s where it names none', async () => {
     render(<AgentsPage />)
-    const cards = await screen.findAllByRole('region')
-    expect(cards.map(card => card.getAttribute('aria-label'))).toEqual(['Default', 'Reviewer'])
-    expect(within(cards[0]!).getByText(/The agent a session is on unless you pick another/)).toBeTruthy()
-    expect(within(cards[0]!).getByText('GitHub: whatever the computer uses')).toBeTruthy()
-    expect(within(cards[1]!).getByText('@octo-agent on GitHub · Claude: Dani')).toBeTruthy()
-    expect(within(cards[1]!).getByText('readability')).toBeTruthy()
+    const rows = await agentRows()
+    expect(rows.map(row => row.querySelector('span.block')?.textContent)).toEqual(['Default', 'Reviewer'])
+    expect(within(rows[0]!).getByText(/The agent a session is on unless you pick another/)).toBeTruthy()
+    expect(within(rows[0]!).getByText('ask, github · GitHub: whatever the computer uses')).toBeTruthy()
     // An agent set to never pick up the project's own skills says so after its list; the default does not.
-    expect(within(cards[1]!).getByText('· no project skills')).toBeTruthy()
-    expect(within(cards[0]!).queryByText('· no project skills')).toBeNull()
+    expect(within(rows[1]!).getByText('ask, readability, no project skills · @octo-agent on GitHub · Claude: Dani')).toBeTruthy()
     // The default is never removed.
-    expect(within(cards[0]!).queryByRole('button', { name: 'Remove Default' })).toBeNull()
-    expect(within(cards[1]!).getByRole('button', { name: 'Remove Reviewer' })).toBeTruthy()
+    expect(within(rows[0]!).queryByRole('button', { name: 'Remove Default' })).toBeNull()
+    expect(within(rows[1]!).getByRole('button', { name: 'Remove Reviewer' })).toBeTruthy()
   })
 
   test('a new agent: its name, typed at once, the skills ticked from the list, the two every agent starts with ticked already; saved as the dashboard’s call, and the list read again', async () => {
@@ -213,11 +216,11 @@ describe('the Agents page', () => {
     await waitFor(() => expect(rpc.sendSaveAgent).toHaveBeenCalledWith(expect.objectContaining({ name: 'Social media', accounts: { github: 'me-agent' } })))
   }, 15_000)
 
-  test('the editor is a dialog over the page: the agent\u2019s card stays under it, a click beside it closes nothing, and it says what every project run gets besides', async () => {
+  test('the editor is a dialog over the page: the agent\u2019s row stays under it, a click beside it closes nothing, and it says what every project run gets besides', async () => {
     render(<AgentsPage />)
     fireEvent.click(await screen.findByRole('button', { name: 'Edit Reviewer' }))
     const editor = screen.getByRole('dialog', { name: 'Editing Reviewer' })
-    expect(screen.getByRole('region', { name: 'Reviewer', hidden: true })).toBeTruthy()
+    expect((await agentRows(true)).some(row => row.textContent?.startsWith('Reviewer'))).toBe(true)
     expect(within(editor).getByText(/every run also gets the branches skill/)).toBeTruthy()
     // Save and Cancel are the dialog's own presses, outside what scrolls.
     expect(within(editor).getByRole('button', { name: 'Save' })).toBeTruthy()
@@ -262,7 +265,7 @@ describe('the Agents page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Remove Reviewer' }))
     rpc.onAgentsList.mockResolvedValue({ ...VIEW, agents: [DEFAULT] })
     fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Remove' }))
-    await waitFor(() => expect(screen.queryByRole('region', { name: 'Reviewer' })).toBeNull())
+    await waitFor(() => expect(screen.queryByText('Reviewer')).toBeNull())
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'New agent' })))
   })
 })
