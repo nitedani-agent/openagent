@@ -45,8 +45,8 @@ export const USAGE = `usage: logs [command]
   people [--days N]                  who works here: each person who started runs (by the folder their
                                      runs are kept in) or committed to the main branch, with their runs
                                      of the last N days (30 unless said), what they cost, how many are
-                                     going now, their commits, the name git knows them by, and when
-                                     they last did either
+                                     going now and how many wait on an answer, their commits, the name
+                                     git knows them by, and when they last did either
   skills [--days N]                  which skills the agents used in the last N days (30 unless said): for each, how many
                                      times it was loaded or a run started with its command, in how many runs, and when last
   delete <id>                        remove a run, card and diary, as one commit
