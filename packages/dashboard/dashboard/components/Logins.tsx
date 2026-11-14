@@ -62,27 +62,6 @@ export function hostLoginState(row: GitHostRow): LoginState | undefined {
   return p.accounts.length > 0 && p.accounts.every(a => a.ok) ? 'connected' : 'step'
 }
 
-const PILL: Record<Exclude<LoginState, 'connected'>, { words: string; tone: string; dot: string }> = {
-  step: { words: 'Not logged in', tone: 'bg-warning/10 text-warning', dot: 'bg-warning' },
-  'not-installed': { words: 'Not installed', tone: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground' },
-}
-
-/** A state in a word or two, on a pill of its colour. */
-function Pill({ words, tone, dot }: { words: string; tone: string; dot: string }) {
-  return (
-    <span className={cn('inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium', tone)}>
-      <span aria-hidden className={cn('size-1.5 rounded-full', dot)} />
-      {words}
-    </span>
-  )
-}
-
-/** A card's state beside its name; none when connected: each account's row says where it is used. */
-export function StatePill({ state }: { state: LoginState }) {
-  if (state === 'connected') return null
-  return <Pill {...PILL[state]} />
-}
-
 /** A package's logo, an SVG it gave: drawn as a mask in the text's colour, never put in the page as markup. */
 export function PackageLogo({ svg, className }: { svg: string | undefined; className?: string }) {
   if (!svg) return <span aria-hidden className={cn('size-4 shrink-0 rounded-sm bg-muted-foreground/30', className)} />
@@ -90,21 +69,11 @@ export function PackageLogo({ svg, className }: { svg: string | undefined; class
   return <span aria-hidden className={cn('size-4 shrink-0 bg-current', className)} style={{ maskImage: url, WebkitMaskImage: url, maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} />
 }
 
-/** A command longer than this is one line until it is asked for whole. */
-const LONG = 72
-
-/** The command a press runs, under its button, so the person sees what is done on their computer. A long one is a line, whole on a press. */
+/** The command a press runs, under its button, so the person sees what is done on their computer: one line, which scrolls sideways when it is longer than its room. */
 function CommandLine({ command }: { command: string }) {
-  const [whole, setWhole] = useState(false)
-  const long = command.length > LONG
   return (
     <div className="flex min-w-0 items-center gap-1 rounded-md bg-muted py-0.5 pr-0.5 pl-2">
-      <code className={cn('min-w-0 font-mono text-xs text-muted-foreground', long && !whole ? 'truncate' : 'wrap-anywhere')}>{command}</code>
-      {long && (
-        <button type="button" className="focus-ring shrink-0 rounded-sm text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline" onClick={() => setWhole(!whole)}>
-          {whole ? 'Less' : 'Show all'}
-        </button>
-      )}
+      <code className="min-w-0 flex-1 overflow-x-auto py-1 font-mono text-xs whitespace-nowrap text-muted-foreground">{command}</code>
       <CopyButton text={command} label="Copy the command" className="justify-center md:size-6 max-md:size-11" />
     </div>
   )
@@ -127,14 +96,27 @@ export function hostWords(row: GitHostRow): string {
   return !p.installed ? `${p.tool}, the tool for ${p.name}, is not installed.` : p.accounts.length === 0 ? `OpenAgent has no ${p.name} account yet.` : `${p.name} no longer takes a login: add it again.`
 }
 
-/** A press that fixes one thing: its button, what it is doing while it does, the command it runs, why it failed. */
-export function FixAction({ label, busy, busyWords, command, failed, onPress, size = 'default', variant }: { label: string; busy: boolean; busyWords: string; command?: string; failed?: string; onPress: () => void; size?: 'default' | 'sm' | undefined; variant?: 'outline' | undefined }) {
+/** How a fix's press is drawn: the page's primary by default, or a quieter press beside another's. */
+export type FixVariant = 'secondary' | undefined
+
+/** A press that fixes one thing: its button, what it is doing while it does, the command it runs, why it failed. With `words`, what is missing stands on the press's line, the press at its right edge. */
+export function FixAction({ label, busy, busyWords, command, failed, onPress, words, size = 'default', variant }: { label: string; busy: boolean; busyWords: string; command?: string; failed?: string; onPress: () => void; words?: ReactNode; size?: 'default' | 'sm' | undefined; variant?: FixVariant }) {
+  // Busy, the press stays with the focus it was pressed with, and says it is waiting under it.
+  const press = (
+    <Button size={size} variant={variant} aria-disabled={busy || undefined} className={cn(busy && 'opacity-50')} onClick={() => void (busy || onPress())}>
+      {label}
+    </Button>
+  )
   return (
-    <div className="min-w-0 space-y-1">
-      {/* Busy, the press stays with the focus it was pressed with, and says it is waiting beside it. */}
-      <Button size={size} variant={variant} aria-disabled={busy || undefined} className={cn(busy && 'opacity-50')} onClick={() => void (busy || onPress())}>
-        {label}
-      </Button>
+    <div className="min-w-0 space-y-2">
+      {words === undefined ? (
+        press
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <p className="min-w-0 grow basis-60 text-sm text-muted-foreground">{words}</p>
+          {press}
+        </div>
+      )}
       {busy && (
         <p role="status" className="text-xs text-muted-foreground">
           {busyWords}
@@ -170,12 +152,13 @@ function agentBusyWords(state: AgentState): string {
 }
 
 /** The agent's fix as one press: [Install Claude Code] or [Log this computer in to Claude Code], with the command; the command alone where it is typed; nothing when nothing fixes it. */
-export function AgentFix({ state, onChanged, size, variant }: { state: AgentState; onChanged: () => void; size?: 'default' | 'sm' | undefined; variant?: 'outline' | undefined }) {
+export function AgentFix({ state, onChanged, words, size, variant }: { state: AgentState; onChanged: () => void; words?: ReactNode; size?: 'default' | 'sm' | undefined; variant?: FixVariant }) {
   const [error, setError] = useState<string | undefined>()
   if (state.ready || !state.fix) return null
   if (state.typed)
     return (
-      <div className="min-w-0 space-y-1">
+      <div className="min-w-0 space-y-2">
+        {words !== undefined && <p className="text-sm text-muted-foreground">{words}</p>}
         <p className="text-xs text-muted-foreground">This computer has no browser to log in with a press: type this in a terminal on it.</p>
         <CommandLine command={state.fix.command} />
       </div>
@@ -191,6 +174,7 @@ export function AgentFix({ state, onChanged, size, variant }: { state: AgentStat
     <FixAction
       size={size}
       variant={variant}
+      words={words}
       label={state.fix.kind === 'install' ? `Install ${name}` : `Log this computer in to ${name}`}
       busy={state.fixing !== undefined}
       busyWords={agentBusyWords(state)}

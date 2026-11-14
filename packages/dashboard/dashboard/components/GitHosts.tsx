@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Check, ChevronDown, GitBranch, Loader2, MoreHorizontal, Plus } from 'lucide-react'
+import { Check, ChevronDown, Loader2, MoreHorizontal, Plus } from 'lucide-react'
 import type { GitHostHome } from '../../src/index.js'
 import { sendForgetGitHostAccount, sendUseGitHostAccount, type GitHostRow, type GitHostsView } from '../rpc/logins.js'
 import { onMachineGitHosts } from '../rpc/machines.js'
 import { readAhead, usePolled } from '../lib/use-async.js'
 import { cn } from '../lib/utils.js'
 import { Button } from './ui/button.js'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card.js'
+import { List } from './ui/list.js'
+import { Section } from './ui/section.js'
 import { HostFix, useAddGitAccount } from './AddGitAccount.js'
 import { PackageLogo, hostWords, useGitHosts } from './Logins.js'
 import { AccountWhere, useServers } from './ServerLogins.js'
@@ -31,51 +32,47 @@ export function GitHostsCard() {
   const withPackage = (view?.hosts ?? []).filter(row => row.provider)
   const hosts = withPackage.some(row => row.provider!.installed && row.provider!.accounts.length > 0) ? withPackage : []
   return (
-    <Card>
-      <CardHeader className="gap-1">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-base">
-            <span className="inline-flex items-center gap-2">
-              <GitBranch className="h-4 w-4 text-muted-foreground" aria-hidden />
-              Git host accounts
-            </span>
-          </CardTitle>
-          {/* Another account, at the card's title as the coding agents' card has it: the one host's dialog at once, a menu of them with more. */}
+    <Section
+      title="Git host accounts"
+      action={
+        <>
+          {/* Another account, at the heading as the coding agents' card has it: the one host's dialog at once, a menu of them with more. */}
           {hosts.length === 1 && (
-            <Button variant="outline" aria-label={`Add a ${hosts[0]!.provider!.name} account`} onClick={() => adding.add(hosts[0]!.host)}>
-              <Plus className="size-3.5" aria-hidden />
+            <Button variant="secondary" aria-label={`Add a ${hosts[0]!.provider!.name} account`} onClick={() => adding.add(hosts[0]!.host)}>
+              <Plus className="size-4" aria-hidden />
               Add
             </Button>
           )}
           {hosts.length > 1 && (
             <DropdownMenu>
-              <DropdownMenuTrigger render={<Button variant="outline" aria-label="Add a git host account" />}>
-                <Plus className="size-3.5" aria-hidden />
+              <DropdownMenuTrigger render={<Button variant="secondary" aria-label="Add a git host account" />}>
+                <Plus className="size-4" aria-hidden />
                 Add
-                <ChevronDown className="size-3 opacity-70" aria-hidden />
+                <ChevronDown className="size-4 text-muted-foreground" aria-hidden />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[10rem]">
+              <DropdownMenuContent align="end" className="min-w-40">
                 {hosts.map(row => (
                   <DropdownMenuItem key={row.host} onClick={() => adding.add(row.host)}>
-                    <PackageLogo svg={row.provider!.logo} className="size-3.5" />
+                    <PackageLogo svg={row.provider!.logo} />
                     {row.provider!.name}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-        </div>
-        <p className="text-sm text-muted-foreground">Runs push with the one in use at each host, never your own login.</p>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+        </>
+      }
+    >
+      <p className="-mt-1 mb-4 text-sm text-muted-foreground">Runs push with the one in use at each host, never your own login.</p>
+      <div className="flex flex-col gap-6">
         {view && view.hosts.length === 0 ? (
           <p className="text-sm text-muted-foreground">None of your projects has a remote yet. A project pushed to a git host gets its accounts here.</p>
         ) : (
           (view?.hosts ?? []).map(row => (row.provider ? <HostAccounts key={row.host} row={row} onChanged={reload} /> : <NoPackage key={row.host} row={row} />))
         )}
-      </CardContent>
+      </div>
       {adding.dialog}
-    </Card>
+    </Section>
   )
 }
 
@@ -85,7 +82,7 @@ function usedBy(row: GitHostRow): string {
 
 function NoPackage({ row }: { row: GitHostRow }) {
   return (
-    <p aria-label={row.host} className="rounded-lg border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground">
+    <p aria-label={row.host} className="text-sm text-muted-foreground">
       <span className="font-medium text-foreground">{row.host}</span>
       {` · ${usedBy(row)}. No package for it yet.`}
     </p>
@@ -121,11 +118,12 @@ function HostAccounts({ row, onChanged }: { row: GitHostRow; onChanged: () => Pr
         <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{usedBy(row)}</span>
       </header>
       {p.accounts.length > 0 && (
-        <ul className="space-y-2">
+        <List>
           {p.accounts.map(account => {
             const busy = pending?.login === account.login
             return (
-              <li key={account.login} aria-label={`@${account.login}`} className="flex min-w-0 items-start gap-2.5">
+              // Two lines, as a list's row that says more than its name: the login and how it was added, then where it works.
+              <li key={account.login} aria-label={`@${account.login}`} className="flex min-w-0 items-start gap-3 rounded-md px-3 py-2">
                 <Avatar src={account.avatar} login={account.login} />
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex min-w-0 items-center gap-2">
@@ -142,10 +140,10 @@ function HostAccounts({ row, onChanged }: { row: GitHostRow; onChanged: () => Pr
                       </span>
                     )}
                     <DropdownMenu>
-                      <DropdownMenuTrigger aria-label={`More for @${account.login}`} disabled={pending !== undefined} className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+                      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" className="text-muted-foreground" />} aria-label={`More for @${account.login}`} disabled={pending !== undefined}>
                         {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <MoreHorizontal className="size-4" aria-hidden />}
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="min-w-[11rem]">
+                      <DropdownMenuContent align="end" className="min-w-44">
                         {!account.runs && (
                           <DropdownMenuItem disabled={!account.ok} onClick={() => void act(account.login, 'use', () => sendUseGitHostAccount(row.host, account.login))}>
                             Use for runs
@@ -158,7 +156,7 @@ function HostAccounts({ row, onChanged }: { row: GitHostRow; onChanged: () => Pr
                     </DropdownMenu>
                   </div>
                   {removing === account.login && (
-                    <div role="group" aria-label={`Remove @${account.login}`} className="flex flex-wrap items-center gap-2 rounded-md bg-muted px-2.5 py-2 text-xs">
+                    <div role="group" aria-label={`Remove @${account.login}`} className="flex flex-wrap items-center gap-2 rounded-md bg-muted px-3 py-2 text-xs">
                       <p className="min-w-0 grow basis-60">
                         {account.runs
                           ? `Runs use @${account.login}. Without it they have no ${p.name} account until you add one.`
@@ -178,14 +176,14 @@ function HostAccounts({ row, onChanged }: { row: GitHostRow; onChanged: () => Pr
               </li>
             )
           })}
-        </ul>
+        </List>
       )}
       {empty && (
         // The press beside what is missing, else under it. A wrap and `grow`: a module's stylesheet loaded later has its own `.flex-1` and `.items-center`.
         <div className="flex flex-wrap items-center gap-3 pt-1">
           <p className="min-w-0 grow basis-60 text-sm text-muted-foreground">{hostWords(row)}</p>
           <div className="shrink-0">
-            <HostFix row={row} variant="outline" onChanged={onChanged} />
+            <HostFix row={row} variant="secondary" onChanged={onChanged} />
           </div>
         </div>
       )}

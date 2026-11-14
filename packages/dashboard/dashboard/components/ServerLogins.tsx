@@ -310,7 +310,7 @@ function Standing({ server, computer, onChanged }: { server: ServerLogins; compu
 }
 
 function Bar({ tone, children }: { tone: 'ask' | 'quiet'; children: ReactNode }) {
-  return <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-2', tone === 'ask' && 'rounded-lg border border-warning/40 bg-warning/10 px-3 py-2.5')}>{children}</div>
+  return <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-2', tone === 'ask' && 'rounded-lg border border-warning/40 bg-warning/10 px-3 py-2')}>{children}</div>
 }
 
 function BarWords({ title, words }: { title: string; words: string }) {
@@ -341,7 +341,7 @@ const KIND_LOGOS: Record<CopiedKind, ComponentType<{ className?: string }>> = { 
 function LoginLine({ row, name, on, words, tone = 'text-muted-foreground', children }: { row: RowOf; name: string; on: string; words: string; tone?: string; children?: ReactNode }) {
   const Logo = KIND_LOGOS[row.kind]
   return (
-    <li aria-label={`${name} on ${on}`} className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 py-1">
+    <li aria-label={`${name} on ${on}`} className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 py-1">
       <Logo className="size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0 grow basis-40">
         <p className="truncate text-sm font-medium">{name}</p>

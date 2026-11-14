@@ -81,11 +81,6 @@
   "dashboard/dashboard/components/FilterChips.tsx": {
     "px-2.5": 1
   },
-  "dashboard/dashboard/components/GitHosts.tsx": {
-    "gap-2.5": 1,
-    "px-2.5": 1,
-    "py-2.5": 1
-  },
   "dashboard/dashboard/components/Markdown.tsx": {
     "leading-[22px]": 1,
     "space-y-2.5": 2,
@@ -95,10 +90,6 @@
   "dashboard/dashboard/components/ProjectSkills.tsx": {
     "gap-2.5": 1,
     "rounded": 4
-  },
-  "dashboard/dashboard/components/ServerLogins.tsx": {
-    "gap-x-2.5": 1,
-    "py-2.5": 1
   },
   "dashboard/dashboard/components/SettingsDialog.tsx": {
     "rounded": 5

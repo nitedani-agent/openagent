@@ -4,7 +4,7 @@ import { sendGitHostInstall, sendGitHostLogin, sendStopGitHostLogin, type GitHos
 import { Button } from './ui/button.js'
 import { CopyButton } from './ui/copy-button.js'
 import { Dialog } from './ui/dialog.js'
-import { FixAction, hostWords, useGitHosts } from './Logins.js'
+import { FixAction, hostWords, useGitHosts, type FixVariant } from './Logins.js'
 
 // Adding an account of OpenAgent's at a git host, the same dialog wherever one is added (his pick
 // over a code shown in each place's own layout): the Permissions page, the Overview's first steps,
@@ -220,7 +220,7 @@ export function useAddGitAccount(onAdded?: (login: string, host: string) => void
 }
 
 /** The press for a host with no account, or no tool: it opens the dialog that adds one. Nothing for a host that has one. */
-export function HostFix({ row, onChanged, size = 'default', variant }: { row: GitHostRow; onChanged: () => Promise<void>; size?: 'default' | 'sm' | undefined; variant?: 'outline' | undefined }) {
+export function HostFix({ row, onChanged, size = 'default', variant }: { row: GitHostRow; onChanged: () => Promise<void>; size?: 'default' | 'sm' | undefined; variant?: FixVariant }) {
   const adding = useAddGitAccount(onChanged)
   const p = row.provider
   if (!p) return null

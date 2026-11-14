@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card.js'
-import { ClaudeLogo, CodexLogo } from './driver-logos.js'
 import { Skeleton, useSkeleton } from './ui/skeleton.js'
 import type { DriverName } from '../../src/client.js'
 import { takeLostFocus } from '../lib/lost-focus.js'
 import { useMountedModules } from '../lib/use-modules.js'
 import { useAgentAccounts } from './AgentAccounts.js'
 import { GitHostsCard } from './GitHosts.js'
-import { AgentFix, StatePill, agentLoginState, agentWords, useAgentState } from './Logins.js'
+import { AgentFix, agentLoginState, agentWords, useAgentState } from './Logins.js'
 import { ModuleSlot } from './ModulePageView.js'
 import { Page } from './Page.js'
+import { Section } from './ui/section.js'
 import { AccountWhere, ServerAsks, ServersProvider } from './ServerLogins.js'
 
 // The Permissions page: every account OpenAgent's agents work with, in one place. An agent can
@@ -36,10 +35,11 @@ export function PermissionsPage() {
 export function AccountsList() {
   return (
     <ServersProvider>
-      <div className="space-y-4">
+      <div className="space-y-8">
         <FromLine />
-        <AgentSetup driver="claude-code" title="Claude Code" Logo={ClaudeLogo} />
-        <AgentSetup driver="codex" title="Codex" Logo={CodexLogo} />
+        {/* Claude Code's press is the page's one primary, as the Overview draws it: the agent runs start on unless a person picks another. */}
+        <AgentSetup driver="claude-code" title="Claude Code" primary />
+        <AgentSetup driver="codex" title="Codex" primary={false} />
         <ServerAsks />
         <RotationCard />
         <GitHostsCard />
@@ -55,9 +55,7 @@ function RotationCard() {
   const reading = useSkeleton(!card && !loaded)
   if (!card || reading)
     return loaded && !reading ? (
-      <Card>
-        <CardContent className="pt-6! text-sm text-muted-foreground">The accounts card did not load.</CardContent>
-      </Card>
+      <p className="text-sm text-muted-foreground">The accounts card did not load.</p>
     ) : (
       <Skeleton className="h-32 w-full" />
     )
@@ -68,8 +66,8 @@ function RotationCard() {
   )
 }
 
-/** An agent that needs its press before it can run, as a card of the page: its state, and the press that installs it or logs it in. Once it can run, it says so while the page is open, then nothing. */
-function AgentSetup({ driver, title, Logo }: { driver: DriverName; title: string; Logo: typeof ClaudeLogo }) {
+/** An agent that needs its press before it can run, as a part of the page: what is missing, and the press that installs it or logs it in. Once it can run, it says so while the page is open, then nothing. */
+function AgentSetup({ driver, title, primary }: { driver: DriverName; title: string; /** Whether its press is the page's primary. */ primary: boolean }) {
   const { state, reload } = useAgentState(driver)
   const missing = !!state && !state.ready && (state.fix !== undefined || agentLoginState(state) === 'not-installed')
   const [wasMissing, setWasMissing] = useState(false)
@@ -78,27 +76,15 @@ function AgentSetup({ driver, title, Logo }: { driver: DriverName; title: string
   }, [missing])
   if (!state || (!missing && !(wasMissing && state.ready))) return null
   return (
-    <Card role="region" aria-label={title}>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Logo className="size-4 shrink-0" />
-          <CardTitle className="min-w-0 flex-1 text-base">{title}</CardTitle>
-          <StatePill state={agentLoginState(state)!} />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {state.ready ? (
-          <p ref={takeLostFocus} role="status" tabIndex={-1} className="text-sm text-muted-foreground outline-none">
-            {`${title} is ready: runs can start with it.`}
-          </p>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">{agentWords(state)}</p>
-            <AgentFix state={state} variant="outline" onChanged={() => void reload()} />
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <Section title={title}>
+      {state.ready ? (
+        <p ref={takeLostFocus} role="status" tabIndex={-1} className="text-sm text-muted-foreground outline-none">
+          {`${title} is ready: runs can start with it.`}
+        </p>
+      ) : (
+        <AgentFix state={state} words={agentWords(state)} variant={primary ? undefined : 'secondary'} onChanged={() => void reload()} />
+      )}
+    </Section>
   )
 }
 
