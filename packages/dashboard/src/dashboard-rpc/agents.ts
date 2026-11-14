@@ -119,7 +119,8 @@ export async function sendSaveAgent(change: AgentChange): Promise<({ ok: true; i
   const name = change.name.trim()
   const id = change.id === undefined ? agentIdOf(name) : change.id
   if (!isAgentId(id)) return { ok: false, error: 'That is no agent id.' }
-  if (change.id === undefined && (await readAgent(id)) !== undefined) return { ok: false, error: `There is an agent ${name} already.` }
+  const taken = change.id === undefined ? await readAgent(id) : undefined
+  if (taken) return { ok: false, error: `There is an agent ${taken.name} already: pick another name.` }
   if (change.id !== undefined && change.id !== DEFAULT_AGENT && (await readAgent(change.id)) === undefined) return { ok: false, error: 'That agent is gone: make it again.' }
   if (id === DEFAULT_AGENT && name !== 'Default') return { ok: false, error: 'The default agent keeps its name.' }
   const known = new Set((await skillChoices()).flatMap(group => group.skills.map(skill => skill.name)))
