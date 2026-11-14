@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button, Input, RadioGroup, RadioGroupOption, useOpenAgentDown, type ModuleCommandResult, type ModuleProject } from '@openagt/dashboard/module'
-import { EMPTY_DRAFT, addArgs, draftProblem, draftSentence, isUntouched, nameProblem, ownPaceArgs, whatAndWhenProblem, savedFile, savedWords, whereHint, type AutomationDraft, type OwnPace } from './automation-form.js'
+import { EMPTY_DRAFT, addArgs, draftProblem, draftSentence, isUntouched, nameProblem, ownPaceArgs, savedFile, savedWords, whereHint, type AutomationDraft, type OwnPace } from './automation-form.js'
 import { PaceFields, SaidFields, Section } from './fields.js'
 import { DEFAULT_AGENT } from '../src/names.js'
 
@@ -154,7 +154,7 @@ export function AutomationForm({
           </RadioGroup>
         </Section>
       </fieldset>
-      <p className="rounded-md border border-border bg-background px-3 py-2 text-sm">{(badName === undefined ? problem : whatAndWhenProblem(draft)) ?? `${sentence}.`}</p>
+      <p className="rounded-md border border-border bg-background px-3 py-2 text-sm">{problem ?? `${sentence}.`}</p>
       {failed !== undefined && (
         <p role="alert" className="text-xs text-danger">
           {failed}

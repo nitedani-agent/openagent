@@ -2140,12 +2140,16 @@ describe('the "New automation" form', () => {
     expect(name.hasAttribute('aria-describedby')).toBe(false)
   })
 
-  test('while the name cannot be one, the line under the form says what else is missing, and when the row would run once nothing else is', async () => {
+  test('the line under the form says its first problem in the form\'s order: a name it cannot have before what else is missing, then when the row would run once nothing is', async () => {
     const { host } = scheduler()
     show(host)
     fireEvent.click(await screen.findByRole('button', { name: 'New automation in gemstack' }))
     const form = screen.getByRole('group', { name: 'New automation' })
-    fireEvent.change(within(form).getByRole('textbox', { name: 'Name' }), { target: { value: 'Answer comments' } })
+    const name = within(form).getByRole('textbox', { name: 'Name' })
+    fireEvent.change(name, { target: { value: 'Answer comments' } })
+    expect(within(form).getByText("Give it another name: the one above cannot be an automation's.")).toBeTruthy()
+    expect(within(form).queryByText('Write what the agent is told.')).toBeNull()
+    fireEvent.change(name, { target: { value: 'answer-comments' } })
     expect(within(form).getByText('Write what the agent is told.')).toBeTruthy()
     fireEvent.change(within(form).getByLabelText('What the agent is told'), { target: { value: 'Answer each new comment below.' } })
     expect(within(form).getByText('Every day.')).toBeTruthy()
