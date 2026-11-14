@@ -59,10 +59,8 @@ export function TicketDetailPage({
             initial={readTicketFile(ticket.content)}
             issueLabel={ticket.issue?.label}
             workedBy={ticket.locked && claimState(read.holderStatus) === 'working' ? (ticket.lockedByAgent?.name ?? ticket.lockedBy) : undefined}
-            onSaved={() => {
-              setEditing(false)
-              void reload()
-            }}
+            // The form stays until the ticket is read as saved: closed sooner, it shows the last read.
+            onSaved={() => void reload().then(() => setEditing(false))}
             onCancel={() => setEditing(false)}
           />
         </>

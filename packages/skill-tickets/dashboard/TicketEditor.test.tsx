@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest'
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { openMenu } from '../../dashboard/dashboard/test-utils.js'
 import { fakeHost, renderWithHost } from './test-host.js'
 import { NewTicketPage } from './NewTicketPage.js'
@@ -88,6 +88,34 @@ describe('a ticket written by hand', () => {
     const created = { ...ticket, file: `${TODAY}_dark-mode.md`, title: 'Dark mode', content: '# Dark mode\n' }
     renderWithHost(<TicketDetailPage projectId="p1" slug={created.file} />, fakeHost({ p1: { [`show ${created.file} --local`]: { ok: true, ticket: created } } }))
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Dark mode' })))
+  })
+
+  test('after Save, the page shows the ticket as saved from the moment the form closes', async () => {
+    const slug = '2026-07-20_rate-limit.md'
+    const ticket = { file: slug, title: 'Rate limit', summary: '', date: '2026-07-20', planned: false, priority: '3', content: 'Priority: 3\n\n# Rate limit\n' }
+    const host = fakeHost({ p1: { [`show ${slug} --local`]: { ok: true, ticket } } })
+    // Saved, the ticket reads as saved, once the test lets that read land.
+    let land = () => {}
+    const landed = new Promise<void>(resolve => (land = resolve))
+    host.act.mockImplementation(async () => {
+      host.runCommand.mockImplementation(async () => {
+        await landed
+        return { ok: true, output: { ok: true, ticket: { ...ticket, priority: '5', content: 'Priority: 5\n\n# Rate limit\n' } } }
+      })
+      return { ok: true, output: { ok: true } }
+    })
+    renderWithHost(<TicketDetailPage projectId="p1" slug={slug} />, host)
+    await openMenu(await screen.findByRole('button', { name: 'More' }))
+    fireEvent.click(await screen.findByText('Edit ticket'))
+    type('Priority', '5')
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(host.act).toHaveBeenCalled())
+    await act(() => new Promise(resolve => setTimeout(resolve, 50)))
+    expect(screen.queryByText('Priority 3')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Saving…' })).toBeTruthy()
+    land()
+    expect(await screen.findByText('Priority 5')).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Edit ticket' })).toBeNull()
   })
 
   test('what a waiting ticket waits on is in its edit, and emptied, the wait is over: the line is gone, the rest kept', async () => {
