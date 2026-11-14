@@ -58,6 +58,12 @@ function divWith(html, marker) {
   assert.fail(`the element with ${marker} is not closed`)
 }
 
+test("the toggle is one group, named for what it switches, with the landing page as the lit side", () => {
+  const toggle = divWith(readFileSync(built('index'), 'utf8'), 'class="view-toggle"')
+  assert.match(toggle, /^<div class="view-toggle" role="group" aria-label="View"/)
+  assert.match(toggle, /<span aria-current="page"[^>]*>Landing page<\/span>/)
+})
+
 test('on a computer with OpenAgent installed, the landing page offers no command that tries or installs it', () => {
   const html = readFileSync(built('index'), 'utf8')
   const body = html.replace(/<head[\s\S]*?<\/head>/, ' ')

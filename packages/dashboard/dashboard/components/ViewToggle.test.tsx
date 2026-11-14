@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { ViewToggle } from './ViewToggle.js'
 
 afterEach(() => {
@@ -19,8 +19,9 @@ describe('ViewToggle', () => {
   test('with the cookie, at once: the landing page is a plain link, the dashboard the lit side', () => {
     document.cookie = 'openagent-view=dashboard; path=/'
     render(<ViewToggle />)
-    expect(screen.getByRole('link', { name: 'Landing page' }).getAttribute('href')).toBe('/_view/landing')
-    expect(screen.getByText('Dashboard').getAttribute('aria-current')).toBe('page')
+    const toggle = screen.getByRole('group', { name: 'View' })
+    expect(within(toggle).getByRole('link', { name: 'Landing page' }).getAttribute('href')).toBe('/_view/landing')
+    expect(within(toggle).getByText('Dashboard').getAttribute('aria-current')).toBe('page')
   })
 
   test('the switch takes the place of the page in the history, so Back leaves the dashboard, and names the page it leaves; a Ctrl+click is the browser\'s', () => {
