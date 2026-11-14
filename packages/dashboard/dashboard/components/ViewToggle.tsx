@@ -40,6 +40,7 @@ export function ViewToggle() {
 
 /**
  * The switch takes the place of the page it leaves in the history: both views are at `/`, so Back
- * could only show the view just left. A click with a modifier, or another button, is the browser's.
+ * could only show the view just left. It names that page, which the landing page's "Dashboard"
+ * opens again. A click with a modifier, or another button, is the browser's.
  */
-const switchInPlace = inPlace<HTMLAnchorElement>(event => location.replace(event.currentTarget.href))
+const switchInPlace = inPlace<HTMLAnchorElement>(event => location.replace(`${event.currentTarget.href}?back=${encodeURIComponent(`${location.pathname}${location.search}`)}`))

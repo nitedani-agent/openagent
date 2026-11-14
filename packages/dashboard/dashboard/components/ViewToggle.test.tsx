@@ -23,15 +23,15 @@ describe('ViewToggle', () => {
     expect(screen.getByText('Dashboard').getAttribute('aria-current')).toBe('page')
   })
 
-  test('the switch takes the place of the page in the history, so Back leaves the dashboard; a Ctrl+click is the browser\'s', () => {
+  test('the switch takes the place of the page in the history, so Back leaves the dashboard, and names the page it leaves; a Ctrl+click is the browser\'s', () => {
     document.cookie = 'openagent-view=dashboard; path=/'
     const replace = vi.fn()
-    vi.stubGlobal('location', { replace })
+    vi.stubGlobal('location', { replace, pathname: '/shop/tickets', search: '?q=dark' })
     render(<ViewToggle />)
     const landing = screen.getByRole('link', { name: 'Landing page' })
     expect(fireEvent.click(landing, { ctrlKey: true })).toBe(true)
     expect(replace).not.toHaveBeenCalled()
     expect(fireEvent.click(landing)).toBe(false)
-    expect(replace).toHaveBeenCalledWith(expect.stringMatching(/\/_view\/landing$/))
+    expect(replace).toHaveBeenCalledWith(expect.stringMatching(/\/_view\/landing\?back=%2Fshop%2Ftickets%3Fq%3Ddark$/))
   })
 })
