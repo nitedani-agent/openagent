@@ -4,7 +4,6 @@ import { useAction } from '../lib/use-action.js'
 import { useLoaded, usePolled } from '../lib/use-async.js'
 import { onSkillsSaved, skillsSaved } from '../lib/skills-saved.js'
 import { useSettingsHold } from '../lib/settings-hold.js'
-import { cn } from '../lib/utils.js'
 import { Button, buttonVariants } from './ui/button.js'
 import { Checkbox } from './ui/checkbox.js'
 import { Skeleton, useSkeleton } from './ui/skeleton.js'
@@ -236,8 +235,8 @@ function SkillCards({ projectId, skills, onDone }: { projectId: string; skills: 
       <div className="space-y-2 text-sm text-muted-foreground">
         {saved.written.length > 0 && (
           <p>
-            Wrote {count(saved.written.length, 'skill', 'skills')} in <code className="rounded bg-muted px-1">.agents/skills</code>, linked in{' '}
-            <code className="rounded bg-muted px-1">.claude/skills</code>: <span className="text-foreground">{saved.written.join(', ')}</span>.
+            Wrote {count(saved.written.length, 'skill', 'skills')} in <code className="rounded-sm bg-muted px-1">.agents/skills</code>, linked in{' '}
+            <code className="rounded-sm bg-muted px-1">.claude/skills</code>: <span className="text-foreground">{saved.written.join(', ')}</span>.
           </p>
         )}
         {saved.removed.length > 0 && (
@@ -249,7 +248,7 @@ function SkillCards({ projectId, skills, onDone }: { projectId: string; skills: 
         {saved.scheduler === 'off' && <p>The scheduler is off for this project on this machine, and stopped.</p>}
         {saved.left.map(({ path, reason }) => (
           <p key={path}>
-            Left as it is: <code className="rounded bg-muted px-1">{path}</code> ({reason}).
+            Left as it is: <code className="rounded-sm bg-muted px-1">{path}</code> ({reason}).
           </p>
         ))}
         {saved.schedulerError && <p className="text-danger">The scheduler was not switched: {saved.schedulerError}</p>}
@@ -271,7 +270,7 @@ function SkillCards({ projectId, skills, onDone }: { projectId: string; skills: 
         )}
         {sent?.ok && sent.sent === 'branch' && (
           <p>
-            {branch} took no push, so the change is on the branch <code className="rounded bg-muted px-1">{sent.branch}</code>. Merge it into {branch}, and your agents get it.
+            {branch} took no push, so the change is on the branch <code className="rounded-sm bg-muted px-1">{sent.branch}</code>. Merge it into {branch}, and your agents get it.
           </p>
         )}
         {error && <p className="text-danger">{saved.written.length + saved.removed.length > 0 ? `Saved in the project's folder, not sent: ${error}` : error}</p>}
@@ -296,19 +295,12 @@ function SkillCards({ projectId, skills, onDone }: { projectId: string; skills: 
       </p>
       {skills.groups.map(group => (
         <fieldset key={group.title}>
-          <legend className="mb-2 text-sm font-medium">{group.title}</legend>
-          <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+          <legend className="mb-3 text-xs font-medium text-muted-foreground">{group.title}</legend>
+          <div className={SKILL_TICKS_CLASS}>
             {group.skills.map(skill => {
               const notes = [NOTES[skill.standing], skill.waiting && skills.startBranch !== undefined ? `waiting to reach ${skills.startBranch}` : undefined].filter(Boolean)
               return (
-                <label key={skill.name} className={cn('flex cursor-pointer items-start gap-2.5 rounded-lg border bg-card p-3 transition-colors', ticked.has(skill.name) ? 'border-primary/60' : 'border-border hover:border-muted-foreground/40')}>
-                  <Checkbox checked={ticked.has(skill.name)} onCheckedChange={checked => tick(skill.name, checked === true)} disabled={busy} className="mt-0.5" aria-label={skill.name} />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">{skill.name}</span>
-                    {notes.length > 0 && <span className="block text-xs text-warning">{notes.join(' · ')}</span>}
-                    <span className="mt-0.5 block text-xs text-muted-foreground">{skill.description}</span>
-                  </span>
-                </label>
+                <SkillTick key={skill.name} name={skill.name} description={skill.description} note={notes.length > 0 ? notes.join(' · ') : undefined} checked={ticked.has(skill.name)} onChange={on => tick(skill.name, on)} disabled={busy} />
               )
             })}
           </div>
@@ -330,5 +322,22 @@ function SkillCards({ projectId, skills, onDone }: { projectId: string; skills: 
         </div>
       </div>
     </div>
+  )
+}
+
+/** The skills' ticks laid out: a column, two from a tablet up, 12 between rows. */
+export const SKILL_TICKS_CLASS = 'grid gap-x-6 gap-y-3 md:grid-cols-2'
+
+/** One skill to tick: the box, its name, and its sentence under it; a note, a warning, between them. No box around it. */
+export function SkillTick({ name, description, note, checked, onChange, disabled, label = name }: { name: string; description: string; note?: string | undefined; checked: boolean; onChange: (on: boolean) => void; disabled?: boolean | undefined; label?: string | undefined }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3">
+      <Checkbox checked={checked} onCheckedChange={next => onChange(next === true)} disabled={disabled} className="mt-0.5" aria-label={label} />
+      <span className="min-w-0">
+        <span className="block text-sm font-medium">{name}</span>
+        {note !== undefined && <span className="block text-xs text-warning">{note}</span>}
+        <span className="block text-xs text-muted-foreground">{description}</span>
+      </span>
+    </label>
   )
 }

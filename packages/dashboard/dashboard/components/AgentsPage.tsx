@@ -3,11 +3,11 @@ import { Bot, Check, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-rea
 import { onAgentLogins, onAgentsList, sendCopyAgentLogins, sendRemoveAgent, sendSaveAgent, type AgentAccountChoice, type AgentLoginsOn, type AgentRecord, type AgentsView } from '../rpc/agents.js'
 import { DEFAULT_AGENT } from '../../src/client.js'
 import { usePolled } from '../lib/use-async.js'
-import { cn } from '../lib/utils.js'
 import { useAddGitAccount } from './AddGitAccount.js'
 import { Button } from './ui/button.js'
 import { List, Row } from './ui/list.js'
 import { Checkbox } from './ui/checkbox.js'
+import { SKILL_TICKS_CLASS, SkillTick } from './ProjectSkills.js'
 import { ConfirmDialog } from './ui/confirm-dialog.js'
 import { Dialog } from './ui/dialog.js'
 import { Input } from './ui/input.js'
@@ -322,11 +322,11 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
             </p>
           )}
           <div className="flex items-center justify-end gap-2">
-            <Button variant="ghost" disabled={busy} onClick={() => void onDone(false)}>
+            <Button variant="secondary" disabled={busy} onClick={() => void onDone(false)}>
               Cancel
             </Button>
             <Button type="submit" form={formId} disabled={busy}>
-              {busy && <Loader2 className="size-3.5 animate-spin" aria-hidden />}
+              {busy && <Loader2 className="size-4 animate-spin" aria-hidden />}
               {busy ? 'Saving…' : 'Save'}
             </Button>
           </div>
@@ -341,7 +341,7 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
         </div>
       }
     >
-      <form id={formId} noValidate onSubmit={submit} className="space-y-5 pb-1">
+      <form id={formId} noValidate onSubmit={submit} className="space-y-6 pb-1">
         <div className="space-y-1.5">
           <Label htmlFor="agent-name">Name</Label>
           <Input
@@ -369,35 +369,29 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
             </p>
           )}
         </div>
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
             <p className="text-sm font-medium">Skills</p>
             <p className="text-xs text-muted-foreground">In a project, every run also gets the branches skill: where its work goes.</p>
           </div>
           {view.skills.map(group => (
-            <section key={group.title} aria-label={group.title} className="space-y-1.5">
-              <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{group.title}</h4>
-              <div className="grid gap-2 sm:grid-cols-2">
+            <section key={group.title} aria-label={group.title}>
+              <h4 className="mb-3 text-xs font-medium text-muted-foreground">{group.title}</h4>
+              <div className={SKILL_TICKS_CLASS}>
                 {group.skills.map(skill => (
-                  <label key={skill.name} className={cn('flex cursor-pointer items-start gap-2.5 rounded-lg border bg-card p-3 transition-colors', draft.skills.has(skill.name) ? 'border-primary/60' : 'border-border hover:border-muted-foreground/40')}>
-                    <Checkbox checked={draft.skills.has(skill.name)} onCheckedChange={checked => tick('skills', skill.name, checked === true)} disabled={busy} className="mt-0.5" aria-label={skill.name} />
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium">{skill.name}</span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">{skill.description}</span>
-                    </span>
-                  </label>
+                  <SkillTick key={skill.name} name={skill.name} description={skill.description} checked={draft.skills.has(skill.name)} onChange={on => tick('skills', skill.name, on)} disabled={busy} />
                 ))}
               </div>
             </section>
           ))}
           {/* Rom's first level: an agent set to never pick up the project's own skills. A session can still pick them. */}
-          <label className="flex cursor-pointer items-start gap-2.5 text-sm">
-            <Checkbox checked={draft.projectSkills} onCheckedChange={checked => setDraft(d => ({ ...d, projectSkills: checked === true }))} disabled={busy} className="mt-0.5" aria-label="Project skills" />
-            <span className="min-w-0">
-              <span className="block font-medium">Project skills</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">The skills a project keeps in its repo go to this agent&rsquo;s sessions too. Off, a session starts without them and can still pick them under the box.</span>
-            </span>
-          </label>
+          <SkillTick
+            name="Project skills"
+            description="The skills a project keeps in its repo go to this agent’s sessions too. Off, a session starts without them and can still pick them under the box."
+            checked={draft.projectSkills}
+            onChange={on => setDraft(d => ({ ...d, projectSkills: on }))}
+            disabled={busy}
+          />
         </div>
         <div className="space-y-3">
           <p className="text-sm font-medium">Accounts</p>
@@ -417,8 +411,8 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
                 </SelectContent>
               </Select>
               {view.github && (
-                <Button type="button" variant="outline" disabled={busy} onClick={() => addingAccount.add(view.github!.host)}>
-                  <Plus className="size-3.5" aria-hidden />
+                <Button type="button" variant="secondary" disabled={busy} onClick={() => addingAccount.add(view.github!.host)}>
+                  <Plus className="size-4" aria-hidden />
                   Add account
                 </Button>
               )}
