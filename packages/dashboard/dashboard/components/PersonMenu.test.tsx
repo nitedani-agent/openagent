@@ -14,7 +14,7 @@ vi.mock('../rpc/backup.js', () => backup)
 vi.mock('./ThemeSubmenu.js', () => ({ ThemeSubmenu: () => <div role="menuitem">Theme</div> }))
 vi.mock('./NotificationsSubmenu.js', () => ({ NotificationsSubmenu: () => <div role="menuitem">Notifications</div> }))
 
-const { PersonMenu, firstName, initials } = await import('./PersonMenu.js')
+const { PersonMenu, firstName } = await import('./PersonMenu.js')
 
 beforeEach(() => {
   accounts.onAgentAccounts.mockResolvedValue({ now: 0, accounts: [] })
@@ -85,11 +85,11 @@ describe('PersonMenu', () => {
     expect(firstName('suleimansh')).toBe('suleimansh')
   })
 
-  test('initials: the first and last word\'s, or one for one word', () => {
-    expect(initials('Suleiman Shahbari')).toBe('SS')
-    expect(initials('Ada King Lovelace')).toBe('AL')
-    expect(initials('octo')).toBe('O')
-    expect(initials('  ')).toBe('?')
+  test('with no picture, the two letters the person\u2019s runs are marked with: a one-word name is its first two', async () => {
+    onPerson.mockResolvedValue({ name: 'Demo' })
+    render(<PersonMenu onSettings={() => {}} />)
+    await screen.findByRole('button', { name: 'Demo: settings' })
+    expect(screen.getByText('DE')).toBeTruthy()
   })
 })
 
