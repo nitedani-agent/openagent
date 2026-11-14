@@ -410,7 +410,7 @@ describe('TicketsPage add the shown set to the AI queue', () => {
     expect(host.startRun).not.toHaveBeenCalled()
     // Done, the button says so and rests for this exact set…
     const queued = await screen.findByRole('button', { name: 'Queued' })
-    expect((queued as HTMLButtonElement).disabled).toBe(true)
+    expect(queued.getAttribute('aria-disabled')).toBe('true')
     // …and narrowing the shown set arms it again, counting the new set.
     fireEvent.change(screen.getByRole('textbox', { name: /search tickets/i }), { target: { value: 'First' } })
     expect(await screen.findByRole('button', { name: 'Add to queue: one ticket' })).toBeTruthy()
@@ -516,7 +516,7 @@ describe('TicketsPage queue plans for the shown set', () => {
     expect(handed('p1')).toEqual([[plan('a.md', 7), plan('b.md')]])
     expect(host.startRun).not.toHaveBeenCalled()
     const rested = await screen.findByRole('button', { name: 'Queued' })
-    expect((rested as HTMLButtonElement).disabled).toBe(true)
+    expect(rested.getAttribute('aria-disabled')).toBe('true')
   })
 
   test('planned and claimed tickets are skipped, and the label counts only what is left to plan', async () => {

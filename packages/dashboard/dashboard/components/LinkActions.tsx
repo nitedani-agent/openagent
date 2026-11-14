@@ -179,13 +179,16 @@ export function LinkActions({
             <span className="max-md:min-w-0 max-md:truncate">{label ? label(action) : action.label}</span>
           </>
         )
+        // Working or done, it keeps the focus it was pressed with: a disabled press would drop it to the page.
+        const held = running !== null || rested
         const props: ButtonProps = {
           variant,
           size,
           // On a phone the button gives up width, and its words are cut with an ellipsis.
-          className: 'gap-1.5 md:shrink-0 max-md:min-w-0',
-          disabled: disabled || down || running !== null || rested,
-          onClick: () => void run(action),
+          className: 'gap-1.5 md:shrink-0 max-md:min-w-0 aria-disabled:pointer-events-none aria-disabled:opacity-50',
+          disabled: disabled || down,
+          'aria-disabled': held || undefined,
+          onClick: () => void (held || run(action)),
         }
         return tooltip ? (
           <Tooltip key={action.key}>
