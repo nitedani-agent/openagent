@@ -50,7 +50,7 @@ const ok = (output: unknown): ModuleCommandResult => ({ ok: true, output })
 const theSwitch = (): Promise<HTMLElement> => screen.findByRole('switch', { name: 'On this Wi-Fi' })
 /** Add device › Phone or tablet, as a person picks it: the first of the kinds. */
 async function addPhone(): Promise<void> {
-  fireEvent.click(await screen.findByRole('button', { name: /^(Add device|Add phone)$/ }))
+  fireEvent.click(await screen.findByRole('button', { name: /^(Add device|Add a phone)$/ }))
   const go = screen.queryByRole('button', { name: 'Continue' })
   if (go) fireEvent.click(go)
 }
@@ -69,11 +69,11 @@ async function fromMenu(row: string, item: string): Promise<void> {
   fireEvent.click(await screen.findByRole('menuitem', { name: item }))
 }
 const open = async (name: string): Promise<void> => void fireEvent.click(within(await screen.findByRole('listitem', { name })).getByRole('button'))
-/** Add computer: from the start page's card, or Add device › Computer. */
+/** Add a computer: from the start page's card, or Add device › Computer. */
 async function addComputer(): Promise<void> {
-  const press = await screen.findByRole('button', { name: /^(Add computer|Add device)$/ })
+  const press = await screen.findByRole('button', { name: /^(Add a computer|Add device)$/ })
   fireEvent.click(press)
-  if (press.textContent === 'Add computer') return
+  if (press.textContent === 'Add a computer') return
   fireEvent.click(await screen.findByRole('radio', { name: /^Computer/ }))
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 }
@@ -149,7 +149,7 @@ describe('Settings › Devices: this computer, and how devices reach it', () => 
     expect(screen.queryByText(WARNING)).toBeNull()
   })
 
-  test('Add phone shows the code of the link by the name, and the number on request', async () => {
+  test('Add a phone shows the code of the link by the name, and the number on request', async () => {
     const { host } = door(args => (args[0] === 'add' ? ok(LINK) : ok(OPEN)))
     show(host)
     await addPhone()
@@ -290,7 +290,7 @@ describe('Settings › Devices: this computer, and how devices reach it', () => 
     expect((await screen.findByRole('alert')).textContent).toBe('Tailscale is not signed in on this computer. Sign in to Tailscale, then try again.')
   })
 
-  test('behind Tailscale with Serve off for the network: what is in the way is said, with a press to the page in Tailscale that turns it on; Add phone says the same', async () => {
+  test('behind Tailscale with Serve off for the network: what is in the way is said, with a press to the page in Tailscale that turns it on; Add a phone says the same', async () => {
     const OFF_THERE = { on: false, listening: false, tailscale: { address: 'laptop.tail1234.ts.net' }, problem: 'Serve is off on your Tailscale network. Turn it on once in your Tailscale account; the door opens by itself then.', fixAt: 'https://login.tailscale.com/f/serve?node=n1', devices: [PHONE], persons: [] }
     show(door(() => ok(OFF_THERE)).host)
     expect((await screen.findByRole('alert')).textContent).toBe(OFF_THERE.problem)
@@ -516,7 +516,7 @@ describe('Settings › Devices: another computer, once', () => {
     })
   }
 
-  test('Add computer with nothing found on this Wi-Fi after a while says so, and keeps looking', async () => {
+  test('Add a computer with nothing found on this Wi-Fi after a while says so, and keeps looking', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     try {
       const { host, runComputerCommand } = door(args => ok(args[0] === 'find' ? { found: [] } : OPEN))
@@ -532,7 +532,7 @@ describe('Settings › Devices: another computer, once', () => {
     }
   })
 
-  test('Add computer lists the computers found on this Wi-Fi; Connect shows the number to match there, and once allowed it is saved and let in here: runs go both ways', async () => {
+  test('Add a computer lists the computers found on this Wi-Fi; Connect shows the number to match there, and once allowed it is saved and let in here: runs go both ways', async () => {
     const { host, runComputerCommand } = pairing(OPEN, ['waiting', 'allowed'])
     show(host)
     await addComputer()
@@ -575,15 +575,15 @@ describe('Settings › Devices: another computer, once', () => {
     expect(screen.getByText('Your runs can go there.')).toBeTruthy()
   })
 
-  test('Add computer with no server offers to set one up, in place of a code nothing could give', async () => {
+  test('Add a computer with no server offers to set one up, in place of a code nothing could give', async () => {
     const { host } = pairing(OPEN, ['waiting'])
     show(host)
     await addComputer()
     const press = await screen.findByRole('button', { name: 'Set up a server' })
-    expect(press.closest('[role="dialog"]')?.textContent).toContain('Add computer')
+    expect(press.closest('[role="dialog"]')?.textContent).toContain('Add a computer')
     fireEvent.click(press)
     expect(await screen.findByRole('dialog', { name: 'Set up a server' })).toBeTruthy()
-    expect(screen.queryByRole('dialog', { name: 'Add computer' })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: 'Add a computer' })).toBeNull()
   })
 
   test('the box is read when the answer comes: unticked while it waits, the computer is saved one way only', async () => {

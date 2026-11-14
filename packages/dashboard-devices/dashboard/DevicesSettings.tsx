@@ -132,8 +132,8 @@ function Start({ d, onAdd }: { d: Devices; onAdd: (adding: Adding) => void }) {
         <p className="text-xs text-muted-foreground">Pick what you want to do. You can add the others later.</p>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Tile icon={Smartphone} title="Use it on your phone" words="Start runs and answer your agents from your phone, on the same Wi-Fi as this computer." button="Add phone" primary onClick={() => onAdd('phone')} />
-        <Tile icon={Monitor} title="Use another computer" words="Run agents on your other computer, on the same Wi-Fi as this one." button="Add computer" onClick={() => onAdd('computer')} />
+        <Tile icon={Smartphone} title="Use it on your phone" words="Start runs and answer your agents from your phone, on the same Wi-Fi as this computer." button="Add a phone" primary onClick={() => onAdd('phone')} />
+        <Tile icon={Monitor} title="Use another computer" words="Run agents on your other computer, on the same Wi-Fi as this one." button="Add a computer" onClick={() => onAdd('computer')} />
         {!d.isServer && <Tile icon={Server} title="Get a server" words="Always on. Your phone and computers reach each other from anywhere, and you can share it with people." button="Set up a server" onClick={() => onAdd('server')} />}
       </div>
       <p className="text-xs text-muted-foreground">

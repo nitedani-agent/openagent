@@ -86,7 +86,7 @@ export function Connecting({ d, computer, canBoth, onBack, onClose }: { d: Devic
 
   const name = computer.name
   return (
-    <Dialog open onOpenChange={open => !open && onClose()} title="Add computer">
+    <Dialog open onOpenChange={open => !open && onClose()} title="Add a computer">
       <div className="space-y-4">
         {phase.at === 'asking' || phase.at === 'saving' ? (
           <div role="status" className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">

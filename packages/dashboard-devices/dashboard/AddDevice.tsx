@@ -163,7 +163,7 @@ function AddPhone({ d, onClose }: { d: Devices; onClose: () => void }) {
 
   if (where === undefined)
     return (
-      <Dialog open onOpenChange={open => !open && onClose()} title="Add phone">
+      <Dialog open onOpenChange={open => !open && onClose()} title="Add a phone">
         <div className="space-y-4">
           <p className="text-sm">Where should it work?</p>
           <div role="radiogroup" aria-label="Where should it work?" className="space-y-2">
@@ -195,7 +195,7 @@ function AddPhone({ d, onClose }: { d: Devices; onClose: () => void }) {
   // Behind Tailscale with the door not served yet: what is in the way, and where the person clears it.
   if (where === '' && status?.tailscale && !status.listening)
     return (
-      <Dialog open onOpenChange={open => !open && onClose()} title="Add phone">
+      <Dialog open onOpenChange={open => !open && onClose()} title="Add a phone">
         <div className="space-y-4 text-sm">
           <p>{status.problem ?? 'The door on your Tailscale network is opening. One moment.'}</p>
           <div className="flex justify-end gap-2">
@@ -215,7 +215,7 @@ function AddPhone({ d, onClose }: { d: Devices; onClose: () => void }) {
   // On this Wi-Fi with the door shut: turned on first, after its warning.
   if (where === '' && !status?.https && !status?.listening)
     return (
-      <Dialog open onOpenChange={open => !open && onClose()} title="Add phone">
+      <Dialog open onOpenChange={open => !open && onClose()} title="Add a phone">
         <div className="space-y-4 text-sm">
           <p>{status?.on ? 'The door on this Wi-Fi is opening. One moment.' : 'Turning this on opens this computer to the phones on this Wi-Fi.'}</p>
           {!status?.on && <p className="text-xs text-muted-foreground">{WARNING}</p>}
@@ -248,7 +248,7 @@ function AddPhone({ d, onClose }: { d: Devices; onClose: () => void }) {
 
   return (
     <PhoneCode
-      title="Add phone"
+      title="Add a phone"
       // The person's own phone: at a server through its door, else at this computer's. Someone else's device is added with Add person.
       ask={server ? server.ask : () => addDevice(host)}
       {...(server ? { openHere: true } : {})}
@@ -327,7 +327,7 @@ function AddComputer({ d, onClose, onSetUpServer }: { d: Devices; onClose: () =>
   if (connecting) return <Connecting d={d} computer={connecting} canBoth={status?.listening === true} onBack={() => setConnecting(undefined)} onClose={onClose} />
 
   return (
-    <Dialog open onOpenChange={next => !next && onClose()} title="Add computer">
+    <Dialog open onOpenChange={next => !next && onClose()} title="Add a computer">
       <div className="space-y-3">
         <Waiting>{noneYet && !found?.length ? 'No computer found on this Wi-Fi yet. Still looking…' : 'Looking on this Wi-Fi…'}</Waiting>
         {error !== undefined && <Problem>{error}</Problem>}
