@@ -144,13 +144,13 @@ export function AgentComposer({
   const phone = useIsMobile()
   // A touch screen has no keys to name: its pointer is a finger.
   const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
-  const { busy, error, run } = useAction()
+  const { busy, error, run } = useAction(agentId)
   // The slot's Stop (#1455), its own action so a message send's busy beat cannot read as
   // "stopping". A landed Stop stays "Stopping…" until the end event flips `live`, so it cannot
   // be re-fired. Released the moment `live` drops, not only on an agent switch: a message continues
   // the SAME agent (#762), so a latch keyed to the agent id alone re-engaged on the continued
   // session and froze its Stop as a disabled spinner.
-  const { busy: stopBusy, error: stopError, run: runStop } = useAction()
+  const { busy: stopBusy, error: stopError, run: runStop } = useAction(agentId)
   const [stopRequested, setStopRequested] = useState(false)
   useEffect(() => setStopRequested(false), [agentId])
   useEffect(() => {

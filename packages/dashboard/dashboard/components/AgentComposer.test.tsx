@@ -283,6 +283,33 @@ describe('AgentComposer, live (#714)', () => {
   })
 })
 
+describe('AgentComposer, another session picked', () => {
+  const composer = (agentId: string) => <AgentComposer projectId="p1" agentId={agentId} live files={[]} />
+
+  test('a send going and its refusal are its own session’s, the refusal said there however late it comes back', async () => {
+    let answer: (outcome: unknown) => void = () => {}
+    sendMessage.mockReturnValueOnce(new Promise(resolve => (answer = resolve)))
+    const page = render(composer('run-1'))
+    fireEvent.click(screen.getByText('submit'))
+    expect((screen.getByText('submit') as HTMLButtonElement).disabled).toBe(true)
+    page.rerender(composer('run-2'))
+    expect((screen.getByText('submit') as HTMLButtonElement).disabled).toBe(false)
+    await act(async () => answer({ ok: false, error: 'session A refused it' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+    page.rerender(composer('run-1'))
+    expect(screen.getByRole('alert').textContent).toBe('session A refused it')
+  })
+
+  test('a Stop that failed is said in its own session, not in the next one picked', async () => {
+    sendStop.mockRejectedValueOnce(new Error('session A could not be stopped'))
+    const page = render(composer('run-1'))
+    fireEvent.click(screen.getByRole('button', { name: 'Stop agent' }))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('session A could not be stopped'))
+    page.rerender(composer('run-2'))
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+})
+
 describe('AgentComposer, given back what the run never read', () => {
   test('says the words were not sent, until the next message goes', async () => {
     const giveBack: { current: ((text: string) => void) | null } = { current: null }
