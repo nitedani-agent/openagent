@@ -35,8 +35,10 @@ describe('Settings › Profile', () => {
     fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'Suleiman S' } })
     person = { name: 'Suleiman S', own: true }
     const save = screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement
+    save.focus()
     fireEvent.click(save)
     expect((await screen.findByRole('status')).textContent).toBe('Saved.')
+    await waitFor(() => expect(document.activeElement).toBe(save))
     expect([save.disabled, save.getAttribute('aria-disabled')]).toEqual([false, 'true'])
     fireEvent.click(save)
     expect(sendSavePersonName).toHaveBeenCalledTimes(1)
