@@ -240,8 +240,8 @@ const COMPUTERS = ''
 
 /**
  * An agent edited, or a new one, in a dialog over the page: the name, the skills ticked, the
- * accounts picked; Save, or Enter in the name, writes it, Cancel leaves it, and Esc, the ✕, Back or a
- * reload ask first once something is changed. Its parts scroll under the title while Save
+ * accounts picked; Save, or Enter in the name, writes it, and Cancel, Esc, the ✕, Back or a reload
+ * ask first once something is changed. Its parts scroll under the title while Save
  * and Cancel stay in view, and a click beside it closes nothing: much is typed here. A GitHub
  * account OpenAgent does not have yet is added from here, in its own dialog over this one, and is
  * then the one picked; `onAccounts` reads the accounts again.
@@ -259,6 +259,7 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
     release.current = holdEntry(step => setLeaving(() => step))
     return release.current
   }, [changed])
+  const close = () => (changed ? setLeaving(() => () => void onDone(false)) : void onDone(false))
   const nameField = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | undefined>()
@@ -308,9 +309,7 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
       keepOnOutsidePress
       initialFocus={nameField}
       onOpenChange={open => {
-        if (open || busy) return
-        if (changed) setLeaving(() => () => void onDone(false))
-        else void onDone(false)
+        if (!open && !busy) close()
       }}
       title={agent ? `Editing ${agent.name}` : 'New agent'}
       footer={
@@ -321,7 +320,7 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
             </p>
           )}
           <div className="flex items-center justify-end gap-2">
-            <Button size="sm" variant="ghost" disabled={busy} onClick={() => void onDone(false)}>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={close}>
               Cancel
             </Button>
             <Button type="submit" form={formId} size="sm" disabled={busy}>

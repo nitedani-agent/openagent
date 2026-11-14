@@ -99,7 +99,7 @@ describe('the Agents page', () => {
     await waitFor(() => expect(rpc.sendSaveAgent).toHaveBeenCalledWith(expect.objectContaining({ name: 'Social media' })))
   })
 
-  test('Esc on an editor with something changed asks first: Cancel there keeps what was typed, Discard closes it; with nothing changed it closes at once', async () => {
+  test('Cancel, Esc or the ✕ on an editor with something changed asks first: Cancel there keeps what was typed, Discard closes it; with nothing changed it closes at once', async () => {
     render(<AgentsPage />)
     fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
     const editor = screen.getByRole('dialog', { name: 'New agent' })
@@ -109,6 +109,9 @@ describe('the Agents page', () => {
     fireEvent.click(within(asked).getByRole('button', { name: 'Cancel' }))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
     expect((within(screen.getByRole('dialog', { name: 'New agent' })).getByLabelText('Name') as HTMLInputElement).value).toBe('Reviewer two')
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'New agent' })).getByRole('button', { name: 'Cancel' }))
+    fireEvent.click(within(await screen.findByRole('alertdialog', { name: 'Discard the new agent?' })).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
     fireEvent.click(within(screen.getByRole('dialog', { name: 'New agent' })).getByRole('button', { name: 'Close' }))
     fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Discard' }))
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New agent' })).toBeNull())
@@ -182,6 +185,8 @@ describe('the Agents page', () => {
     expect((await within(editor).findByRole('alert')).textContent).toContain('no GitHub account stranger')
     // The default's name is not for editing.
     fireEvent.click(within(editor).getByRole('button', { name: 'Cancel' }))
+    fireEvent.click(within(await screen.findByRole('alertdialog', { name: 'Discard your changes to Reviewer?' })).getByRole('button', { name: 'Discard' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     fireEvent.click(screen.getByRole('button', { name: 'Edit Default' }))
     expect((screen.getByLabelText('Name') as HTMLInputElement).disabled).toBe(true)
     // An agent that names no account: one plain item, not the computer's account repeated.
@@ -258,6 +263,7 @@ describe('the Agents page', () => {
     await new Promise(resolve => setTimeout(resolve, 50))
     expect((within(screen.getByRole('dialog', { name: 'Editing Reviewer' })).getByLabelText('Name') as HTMLInputElement).value).toBe('Reviewer two')
     fireEvent.click(within(editor).getByRole('button', { name: 'Cancel' }))
+    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Discard' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(rpc.sendSaveAgent).not.toHaveBeenCalled()
   })
