@@ -1,11 +1,12 @@
 import { Minus, Plus } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@openagt/dashboard/module'
+import { Tooltip, TooltipContent, TooltipTrigger, cn } from '@openagt/dashboard/module'
 
 /** How many agents a project's batch starts, typed or stepped, from one to `max`: the Queue page's and the card's. */
-export function BatchCount({ count, max, onChange }: { count: number; max: number; onChange: (count: number) => void }) {
+/** `className`: its height, the press's beside it. */
+export function BatchCount({ count, max, onChange, className }: { count: number; max: number; onChange: (count: number) => void; className?: string }) {
   return (
     <Tooltip>
-      <TooltipTrigger render={<div role="group" aria-label="How many agents to start" className="flex h-7 shrink-0 items-center rounded-md border border-border text-xs tabular-nums" />}>
+      <TooltipTrigger render={<div role="group" aria-label="How many agents to start" className={cn('flex h-7 shrink-0 items-center rounded-md border border-border text-sm tabular-nums', className)} />}>
         <button type="button" aria-label="One agent fewer" disabled={count <= 1} onClick={() => onChange(count - 1)} className="flex h-full w-6 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40">
           <Minus className="h-3 w-3" aria-hidden />
         </button>

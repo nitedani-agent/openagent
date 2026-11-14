@@ -103,7 +103,7 @@ export function StartAgentButton({
   starting?: boolean | undefined
   /** There is nothing to act on at all (no project picked): both halves are out. */
   disabled?: boolean | undefined
-  variant?: 'default' | 'outline' | 'ghost' | undefined
+  variant?: 'default' | 'secondary' | 'outline' | 'ghost' | undefined
   size?: 'sm' | 'default' | 'icon-sm' | undefined
   /** Styling the two halves share, so the pair reads as one control rather than two buttons. */
   className?: string | undefined
@@ -146,6 +146,7 @@ export function StartAgentButton({
       {/* A filled pair has no border to tell its halves apart: a hairline does. An outline pair shares
           its border, and a ghost pair needs none — nothing is drawn between them until one is hovered. */}
       {variant === 'default' && <ButtonGroupSeparator className="bg-[var(--color-primary-foreground)]" />}
+      {variant === 'secondary' && <ButtonGroupSeparator />}
       {/* Never gated on `busy` or on OpenAgent not answering, only on `disabled`: this starts nothing, and
           being unable to go and look at the settings because a start is in flight would be the opposite of the point. */}
       <DropdownMenu>

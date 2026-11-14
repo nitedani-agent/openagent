@@ -5,7 +5,10 @@ import {
   ConfirmDialog,
   Input,
   FadeWhileStale,
+  List,
   Page,
+  Row,
+  Section,
   Select,
   SelectContent,
   SelectItem,
@@ -100,10 +103,16 @@ export function QueuePage({ projects }: ModulePageProps) {
   const names = useFileNames(reads.map(read => ({ projectId: read.project.id, paths: (read.entries ?? []).flatMap(placed => pathsIn(placed.entry)) })))
   const starts = useQueueStarts(host)
 
+  const total = reads.reduce((sum, read) => sum + (read.entries?.length ?? 0), 0)
+  // One project's page: its start is the page's one primary press.
+  const only = projects.length === 1 ? reads[0] : undefined
+
   return (
     <Page
       title="Queue"
+      count={state !== 'unknown' && total > 0 ? total : undefined}
       description={`What agents will work on next, from the top${projects.length > 1 ? ', one list per project' : ''}. A higher priority is taken first: 10 is the most urgent, 0 is only if there is capacity.`}
+      actions={only && <BatchStart read={only} primary starts={starts} />}
     >
       {state === 'unknown' && <p className="text-sm text-muted-foreground">Loading…</p>}
       {starts.error && (
@@ -111,83 +120,95 @@ export function QueuePage({ projects }: ModulePageProps) {
           {starts.error}
         </p>
       )}
-      <FadeWhileStale stale={state === 'kept'} className="space-y-6">
-        {reads.map(read => (
-          <ProjectQueue key={read.project.id} read={read} titled={projects.length > 1} schedule={schedule} names={names} starts={starts} reload={reload} />
-        ))}
+      <FadeWhileStale stale={state === 'kept'} className="space-y-8">
+        {reads.map(read =>
+          only ? (
+            <ProjectQueue key={read.project.id} read={read} schedule={schedule} names={names} starts={starts} reload={reload} />
+          ) : (
+            <Section key={read.project.id} title={read.project.name} count={read.entries?.length || undefined} action={<BatchStart read={read} primary={false} starts={starts} />}>
+              <ProjectQueue read={read} schedule={schedule} names={names} starts={starts} reload={reload} />
+            </Section>
+          ),
+        )}
       </FadeWhileStale>
     </Page>
   )
 }
 
-/** One project's queue: who takes from it, its batch start, its entries, and the field that adds one. */
-function ProjectQueue({ read, titled, schedule, names, starts, reload }: { read: ProjectRead; titled: boolean; schedule: Schedule; names: FileNames; starts: QueueStarts; reload: () => Promise<void> }) {
+/**
+ * A project's batch act, as one control: how many, then the press the count qualifies. The chevron
+ * sends the top entry alone: a launcher can only ever start one agent.
+ */
+function BatchStart({ read, primary, starts }: { read: ProjectRead; primary: boolean; starts: QueueStarts }) {
   const host = useModuleHost()
-  const { project, entries, error, working } = read
-  const raw = (entries ?? []).map(placed => placed.entry)
+  const { project } = read
   // An entry an agent is on gets no second one: the batch starts from the top of the others.
-  const free = unclaimedEntries(raw, working)
+  const free = unclaimedEntries((read.entries ?? []).map(placed => placed.entry), read.working)
+  if (free.length === 0) return null
   const count = starts.batchOf(project.id, free)
   return (
-    <section aria-label={project.name}>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        {titled && <h2 className="text-sm font-semibold">{project.name}</h2>}
-        {raw.length > 0 && <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">{raw.length === 1 ? '1 entry' : `${raw.length} entries`}</span>}
-        {free.length > 0 && (
-          <div className="ml-auto flex items-center gap-2">
-            {/* The project's batch act, as one control: how many, then the button the count qualifies.
-                The chevron sends the top entry alone: a launcher can only ever start one agent. */}
-            <StartAgentButton
-              size="sm"
-              leading={<BatchCount count={count} max={free.length} onChange={next => starts.setCount(project.id, next)} />}
-              icon={<FastForward className="h-3.5 w-3.5" aria-hidden />}
-              label={fanOutPress(count)}
-              menuAriaLabel={`Other ways to start agents on ${project.name}'s queue`}
-              tooltip={fanOutLabel(count)}
-              busy={starts.inFlight}
-              starting={starts.fanningOut(project.id)}
-              onStart={() => void starts.fanOutProject(project.id, free)}
-              onConfigure={() => host.configureRun(project.id, workOnEntryPrompt(free[0]!))}
-              prompt={workOnEntryPrompt(free[0]!)}
-              configureDescription="Opens the launcher with the top entry's prompt: one agent, not the batch."
-            />
-          </div>
-        )}
-      </div>
-      {error === undefined && <TakerLine schedule={schedule} projectId={project.id} />}
-      {error !== undefined ? (
-        <p role="alert" className="mt-2 text-sm text-danger">
-          Could not read the queue of {project.name}: {error}
-        </p>
-      ) : entries!.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing queued.</p>
+    <StartAgentButton
+      variant={primary ? 'default' : 'secondary'}
+      size="default"
+      leading={<BatchCount count={count} max={free.length} onChange={next => starts.setCount(project.id, next)} className="h-8" />}
+      icon={<FastForward className="size-4" aria-hidden />}
+      label={fanOutPress(count)}
+      menuAriaLabel={`Other ways to start agents on ${project.name}'s queue`}
+      tooltip={fanOutLabel(count)}
+      busy={starts.inFlight}
+      starting={starts.fanningOut(project.id)}
+      onStart={() => void starts.fanOutProject(project.id, free)}
+      onConfigure={() => host.configureRun(project.id, workOnEntryPrompt(free[0]!))}
+      prompt={workOnEntryPrompt(free[0]!)}
+      configureDescription="Opens the launcher with the top entry's prompt: one agent, not the batch."
+    />
+  )
+}
+
+/** One project's queue: who takes from it, its entries by priority, and the field that adds one. */
+function ProjectQueue({ read, schedule, names, starts, reload }: { read: ProjectRead; schedule: Schedule; names: FileNames; starts: QueueStarts; reload: () => Promise<void> }) {
+  const { project, entries, error, working } = read
+  if (error !== undefined)
+    return (
+      <p role="alert" className="text-sm text-danger">
+        Could not read the queue of {project.name}: {error}
+      </p>
+    )
+  return (
+    <div className="space-y-6">
+      <TakerLine schedule={schedule} projectId={project.id} />
+      {entries!.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nothing queued.</p>
       ) : (
         sections(entries!).map((section, index) => (
-          <div key={index} className="mt-4">
-            <SectionHeading priority={section.priority} />
-            {/* Counted on from the section before, so the number a screen reader says is the one shown. */}
-            <ol start={section.entries[0]!.place} className="mt-1.5 list-none divide-y divide-border rounded-md border border-border">
+          <Section key={index} title={<PriorityTitle priority={section.priority} />} count={section.entries.length === 1 ? '1 entry' : `${section.entries.length} entries`}>
+            <List>
               {section.entries.map(placed => (
                 <EntryRow key={`${placed.place}\n${placed.entry}`} project={project} placed={placed} agent={working.find(agent => isWorkingOn(agent.ask, placed.entry))} names={names} starts={starts} reload={reload} />
               ))}
-            </ol>
-          </div>
+            </List>
+          </Section>
         ))
       )}
-      {error === undefined && <AddEntry project={project} reload={reload} />}
-    </section>
+      <AddEntry project={project} reload={reload} />
+    </div>
   )
 }
 
 /** A run of entries' heading: the priority section they sit in, with what its number means at either end of the scale. */
-function SectionHeading({ priority }: { priority: number | undefined }) {
-  const meaning = priority === undefined ? undefined : priorityMeaning(priority)
+function PriorityTitle({ priority }: { priority: number | undefined }) {
+  if (priority === undefined) return 'No priority'
+  const meaning = priorityMeaning(priority)
   return (
-    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-      {priority === undefined ? 'No priority' : `Priority ${priority}`}
-      {meaning !== undefined && ' '}
-      {meaning !== undefined && <span className="ml-1 font-normal normal-case tracking-normal">{meaning}</span>}
-    </h3>
+    <>
+      Priority {priority}
+      {meaning !== undefined && (
+        <>
+          {' '}
+          <span className="font-normal text-muted-foreground">{meaning}</span>
+        </>
+      )}
+    </>
   )
 }
 
@@ -203,8 +224,8 @@ function TakerLine({ schedule, projectId }: { schedule: Schedule; projectId: str
   const taker = known.find(command => command.command === QUEUE_COMMAND)
   const page = schedule.page
   return (
-    <p role="status" aria-label="Who takes from the queue" className="mt-3 flex items-baseline gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
-      <span aria-hidden className={cn('h-1.5 w-1.5 shrink-0 -translate-y-0.5 rounded-full', taker?.on ? 'bg-success' : 'bg-muted-foreground/50')} />
+    <p role="status" aria-label="Who takes from the queue" className="flex items-baseline gap-2 text-sm text-muted-foreground">
+      <span aria-hidden className={cn('size-2 shrink-0 rounded-full', taker?.on ? 'bg-success' : 'bg-faint-foreground')} />
       <span className="min-w-0">
         {taker === undefined ? (
           'Nothing takes from this queue by itself: entries wait until you start them.'
@@ -215,13 +236,9 @@ function TakerLine({ schedule, projectId }: { schedule: Schedule; projectId: str
           </>
         )}
         {taker !== undefined && page && (
-          <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">
+          <span className="ml-2 whitespace-nowrap">
             Change it in{' '}
-            <a
-              href={page.href}
-              onClick={inPlace(schedule.open)}
-              className="underline hover:text-foreground"
-            >
+            <a href={page.href} onClick={inPlace(schedule.open)} className="text-primary hover:underline">
               {page.label}
             </a>
           </span>
@@ -242,52 +259,57 @@ function EntryRow({ project, placed, agent, names, starts, reload }: { project: 
     await reload()
   }
   return (
-    <li className="flex items-center py-2 text-sm md:gap-3 md:px-3 max-md:gap-1.5 max-md:px-2">
-      <span aria-hidden className="w-5 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
-        {place}.
-      </span>
-      <div className="min-w-0 flex-1">
-        <EntryTitle view={view} entry={entry} className={cn('block max-w-full text-left md:truncate max-md:line-clamp-2', (view.open ?? view.url) !== undefined && 'hover:underline')} />
-        {/* The line as written, under a name that stands in for it: it is what an agent is handed. */}
-        {view.renamed && <span className="block truncate font-mono text-xs text-muted-foreground">{entry}</span>}
-      </div>
-      {agent && <AgentOnEntry projectId={project.id} agent={agent} />}
-      {!agent && (
-        <StartAgentButton
-          variant="ghost"
-          size="icon-sm"
-          icon={<Play className="h-3.5 w-3.5" aria-hidden />}
-          ariaLabel={`Start an agent on entry ${place}`}
-          menuAriaLabel={`Other ways to run ${view.title}`}
-          tooltip="Start an agent working on this entry"
-          busy={starts.inFlight}
-          starting={starts.starting(project.id, entry)}
-          onStart={() => void starts.startEntry(project.id, entry)}
-          onConfigure={() => host.configureRun(project.id, workOnEntryPrompt(entry))}
-          prompt={workOnEntryPrompt(entry)}
-          configureDescription="Opens the launcher with this entry's prompt, so you can set the model and where it runs."
-          className="text-muted-foreground hover:text-foreground"
-        />
-      )}
-      <ConfirmDialog
-        trigger={
-          <Button variant="ghost" size="icon-sm" aria-label={`Remove entry ${place} from the queue`} title="Remove from the queue" className="shrink-0 text-muted-foreground hover:text-danger">
-            <Trash2 className="h-3.5 w-3.5" aria-hidden />
-          </Button>
-        }
-        title="Remove this entry from the queue?"
-        body={
-          <>
-            <span className="block break-words font-mono text-xs">{entry}</span>
-            <span className="mt-2 block">It is deleted from the queue of {project.name}, for everyone who shares it. Nothing else changes: no ticket is closed, and an agent already working on it goes on.</span>
-          </>
-        }
-        confirmLabel="Remove"
-        confirmBusyLabel="Removing…"
-        onConfirm={remove}
-        fallbackError="The entry was not removed."
-      />
-    </li>
+    <Row
+      stackOnPhone
+      leading={<span className="w-5 text-right text-xs tabular-nums">{place}.</span>}
+      title={
+        <>
+          <EntryTitle view={view} entry={entry} className={cn('block max-w-full truncate text-left max-md:line-clamp-2 max-md:whitespace-normal', (view.open ?? view.url) !== undefined && 'hover:underline')} />
+          {/* The line as written, under a name that stands in for it: it is what an agent is handed. */}
+          {view.renamed && <span className="block truncate font-mono text-xs font-normal text-muted-foreground">{entry}</span>}
+        </>
+      }
+      meta={agent && <AgentOnEntry projectId={project.id} agent={agent} />}
+      actions={
+        <>
+          {!agent && (
+            <StartAgentButton
+              variant="ghost"
+              size="icon-sm"
+              icon={<Play className="size-4" aria-hidden />}
+              ariaLabel={`Start an agent on entry ${place}`}
+              menuAriaLabel={`Other ways to run ${view.title}`}
+              tooltip="Start an agent working on this entry"
+              busy={starts.inFlight}
+              starting={starts.starting(project.id, entry)}
+              onStart={() => void starts.startEntry(project.id, entry)}
+              onConfigure={() => host.configureRun(project.id, workOnEntryPrompt(entry))}
+              prompt={workOnEntryPrompt(entry)}
+              configureDescription="Opens the launcher with this entry's prompt, so you can set the model and where it runs."
+              className="text-muted-foreground hover:text-foreground"
+            />
+          )}
+          <ConfirmDialog
+            trigger={
+              <Button variant="ghost" size="icon-sm" aria-label={`Remove entry ${place} from the queue`} title="Remove from the queue" className="text-muted-foreground hover:text-danger">
+                <Trash2 className="size-4" aria-hidden />
+              </Button>
+            }
+            title="Remove this entry from the queue?"
+            body={
+              <>
+                <span className="block break-words font-mono text-xs">{entry}</span>
+                <span className="mt-2 block">It is deleted from the queue of {project.name}, for everyone who shares it. Nothing else changes: no ticket is closed, and an agent already working on it goes on.</span>
+              </>
+            }
+            confirmLabel="Remove"
+            confirmBusyLabel="Removing…"
+            onConfirm={remove}
+            fallbackError="The entry was not removed."
+          />
+        </>
+      }
+    />
   )
 }
 
@@ -321,10 +343,9 @@ function AddEntry({ project, reload }: { project: ModuleProject; reload: () => P
         event.preventDefault()
         void add()
       }}
-      className="mt-4"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <Input ref={field} name="task" value={text} onChange={event => (setText(event.target.value), setFailed(undefined))} readOnly={adding} placeholder="Add a task: what an agent should do" aria-label="A task to add to the queue" className="h-8 min-w-48 flex-1 px-2" />
+        <Input ref={field} name="task" value={text} onChange={event => (setText(event.target.value), setFailed(undefined))} readOnly={adding} placeholder="Add a task: what an agent should do" aria-label="A task to add to the queue" className="min-w-48 flex-1 max-md:basis-full" />
         <Select items={items} value={String(priority)} disabled={adding} onValueChange={next => setPriority(Number(next))}>
           <SelectTrigger aria-label="Priority of the new task" className="w-32">
             <SelectValue />
@@ -338,12 +359,12 @@ function AddEntry({ project, reload }: { project: ModuleProject; reload: () => P
             ))}
           </SelectContent>
         </Select>
-        <Button type="submit" variant="outline" disabled={text.trim() === '' || adding || down}>
-          <Plus className="h-3.5 w-3.5" aria-hidden />
+        <Button type="submit" variant="secondary" disabled={text.trim() === '' || adding || down}>
+          <Plus className="size-4" aria-hidden />
           {adding ? 'Adding…' : 'Add to queue'}
         </Button>
       </div>
-      <p className="mt-1.5 text-xs text-muted-foreground">It goes to the end of its priority. The text is what an agent is handed, so write the whole task.</p>
+      <p className="mt-2 text-xs text-muted-foreground">It goes to the end of its priority. The text is what an agent is handed, so write the whole task.</p>
       {failed !== undefined && (
         <p role="alert" className="mt-1 text-xs text-danger">
           Not added: {failed}

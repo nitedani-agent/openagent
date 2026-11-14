@@ -39,23 +39,23 @@ function scheduling(commands: ModuleScheduledCommand[]): MountedModules {
   }
 }
 
-/** The section headers and entries, top to bottom, as the page shows them: an entry with its number. */
-const shown = () => [...document.querySelectorAll('h3, ol > li')].map(node => (node.tagName === 'H3' ? node.textContent : `${node.querySelector('span')?.textContent} ${node.querySelector('.min-w-0')?.textContent}`))
+/** The section headings with their counts and the entries, top to bottom, as the page shows them: an entry with its number. */
+const shown = () => [...document.querySelectorAll('h2, ul > li')].map(node => (node.tagName === 'H2' ? node.textContent : `${node.querySelector('span')?.textContent} ${node.querySelector('[title]')?.textContent}`))
 const taker = (): string => screen.getByRole('status', { name: 'Who takes from the queue' }).textContent ?? ''
 
 describe('QueuePage', () => {
   test('shows the entries in the order agents take them, numbered across the sections: an unranked entry above the sections is first', async () => {
     show()
     await screen.findByText('Hand-written on top')
-    expect(shown()).toEqual(['No priority', '1. Hand-written on top', 'Priority 8', '2. Urgent', '3. Also urgent', 'Priority 3', '4. Later'])
+    expect(shown()).toEqual(['No priority 1 entry', '1. Hand-written on top', 'Priority 8 2 entries', '2. Urgent', '3. Also urgent', 'Priority 3 1 entry', '4. Later'])
   })
 
   test('says what the two ends of the scale mean: on the page, and on a section at either end', async () => {
     show([{ entry: 'Now', priority: 10 }, { entry: 'Some day', priority: 0 }])
     await screen.findByText('Now')
     expect(screen.getByText(/10 is the most urgent, 0 is only if there is capacity/)).toBeTruthy()
-    expect(screen.getByRole('heading', { level: 3, name: 'Priority 10 most urgent' })).toBeTruthy()
-    expect(screen.getByRole('heading', { level: 3, name: 'Priority 0 only if there is capacity' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Priority 10 most urgent' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Priority 0 only if there is capacity' })).toBeTruthy()
   })
 
   describe('who takes from the queue', () => {
