@@ -664,6 +664,7 @@ export { ButtonGroup, ButtonGroupSeparator } from '../components/ui/button-group
 export { LinkActions, useLinkActions, type LinkActionOffer, type ProjectLinks, type LinkTargets } from '../components/LinkActions.js'
 export { MachineMark } from '../components/MachineMark.js'
 export { PersonMark, personName } from '../components/PersonMark.js'
+export { needsWord } from '../components/HumanQueueList.js'
 export { useGitHostPeople, personSaid } from '../lib/use-git-host-people.js'
 export { machineKind, machineName, runName, type MachineKind } from '../../src/client.js'
 export { SettingsSection, SettingsRow, SettingsSelectRow, type SettingsOption } from '../components/SettingsRows.js'

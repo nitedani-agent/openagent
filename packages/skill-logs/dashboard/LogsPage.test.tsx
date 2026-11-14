@@ -228,3 +228,28 @@ test('a project that gave the whole page of 50 runs has older ones: the page say
   await screen.findAllByText('run 48')
   expect(screen.queryByText(/^The last 50 runs/)).toBeNull()
 })
+
+test("a run whose work never left this machine says what it needs in the sidebar's words: a commit, else a push, or a pull request where the project can open one", async () => {
+  const host = hostWith(
+    [],
+    [
+      { id: 'r1', startedAt: at(now - 3000), endedAt: at(now), status: 'done', title: 'Committed a login page', name: 'agent-1', unpublished: 1 },
+      { id: 'r2', startedAt: at(now - 2000), endedAt: at(now), status: 'done', title: 'Left files', name: 'agent-2', uncommitted: 2, unpublished: 3 },
+      { id: 'r3', startedAt: at(now - 1000), endedAt: at(now), status: 'done', title: 'Pushed', name: 'agent-3' },
+    ],
+  )
+  const page = (gitHost: boolean) => (
+    <ModuleHostContext.Provider value={host}>
+      <LogsPage projects={[{ id: 'p1', name: 'alpha', gitHost }]} projectId={null} path={[]} />
+    </ModuleHostContext.Provider>
+  )
+  render(page(false))
+  const row = async (name: string) => (await screen.findAllByText(name))[0]!.closest('tr')!
+  expect((await row('Committed a login page')).textContent).toContain('Needs push · 1 commit')
+  expect((await row('Left files')).textContent).toContain('Needs commit · 2 files')
+  expect((await row('Pushed')).textContent).not.toMatch(/Needs/)
+  cleanup()
+  forgetRemembered()
+  render(page(true))
+  expect((await row('Committed a login page')).textContent).toContain('Needs PR · 1 commit')
+})

@@ -1,4 +1,4 @@
-import { FadeWhileStale, FilterChips, Page, PersonMark, STATUS_DOT, STATUS_RING, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, cn, formatDateTime, formatDuration, inPlace, personSaid, runName, useGitHostPeople, useModuleHost, usePolled, type ModuleAgent, type ModuleHostPerson, type ModulePageProps, type ModuleProject } from '@openagt/dashboard/module'
+import { FadeWhileStale, FilterChips, Page, PersonMark, STATUS_DOT, STATUS_RING, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, cn, formatDateTime, formatDuration, inPlace, needsWord, personSaid, runName, useGitHostPeople, useModuleHost, usePolled, type ModuleAgent, type ModuleHostPerson, type ModulePageProps, type ModuleProject } from '@openagt/dashboard/module'
 import type { RunCard } from '../src/run.js'
 
 /** How many runs each project lists: the command's own default page is 20; the page shows more. */
@@ -14,6 +14,9 @@ export interface Row {
     offline?: string
     /** Whose run it is, by the email its record is kept under; a very old card has none. */
     person?: string
+    /** Its work that never left this machine, as the dashboard lists it: files left uncommitted, commits never pushed. */
+    uncommitted?: number
+    unpublished?: number
   }
 }
 
@@ -57,6 +60,8 @@ function cardOf(run: ModuleAgent): Omit<Row['card'], 'id' | 'startedAt'> {
     ...(run.cost !== undefined ? { cost: run.cost } : {}),
     ...(run.driver ? { driver: run.driver } : {}),
     ...(run.model ? { model: run.model } : {}),
+    ...(run.uncommitted ? { uncommitted: run.uncommitted } : {}),
+    ...(run.unpublished ? { unpublished: run.unpublished } : {}),
     ...(run.status === 'unknown' ? { offline: `${run.machine ?? 'Its computer'} offline${run.seenAt ? ` · last seen ${formatDateTime(run.seenAt)}` : ''}` } : {}),
   }
 }
@@ -80,6 +85,13 @@ function Status({ status, offline }: { status: string; offline?: string | undefi
       {status === 'unknown' ? 'status unknown' : status}
     </span>
   )
+}
+
+/** What a run's work still needs before it leaves this machine, as its row in the sidebar says it: "Needs commit · 2 files", "Needs push · 1 commit". */
+export function leftWords(card: Pick<Row['card'], 'uncommitted' | 'unpublished'>, gitHost: boolean): string | undefined {
+  if (card.uncommitted) return `${needsWord('uncommitted')} · ${card.uncommitted} file${card.uncommitted === 1 ? '' : 's'}`
+  if (card.unpublished) return `${needsWord('unpushed', gitHost)} · ${card.unpublished} commit${card.unpublished === 1 ? '' : 's'}`
+  return undefined
 }
 
 /** The day a run started, as a heading says it: "Today", "Yesterday", else the weekday and the date. */
@@ -242,6 +254,7 @@ export function LogsPage({ projects, path }: ModulePageProps) {
                             {card.branch ?? '—'}
                           </span>
                         )}
+                        {leftWords(card, project.gitHost) && <span className="block text-xs text-muted-foreground">{leftWords(card, project.gitHost)}</span>}
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground tabular-nums">{took(card)}</TableCell>
                       <TableCell className="text-right tabular-nums">{card.cost !== undefined ? dollars(card.cost) : '—'}</TableCell>
@@ -275,6 +288,7 @@ export function LogsPage({ projects, path }: ModulePageProps) {
                             #{card.pr.number}
                           </a>
                         )}
+                        {leftWords(card, project.gitHost) && <span>{leftWords(card, project.gitHost)}</span>}
                         {card.cost !== undefined && <span className="tabular-nums">{dollars(card.cost)}</span>}
                         <span className="tabular-nums">{clock(card.startedAt)}</span>
                       </p>
