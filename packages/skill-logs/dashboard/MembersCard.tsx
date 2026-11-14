@@ -65,7 +65,7 @@ export function MembersCard({ projects }: ModuleCardProps) {
         <CardTitleLink icon={<Users className="h-4 w-4 text-muted-foreground" aria-hidden />} segment="logs" onOpen={() => host.openPage('logs')}>
           Members
         </CardTitleLink>
-        <p className="text-xs text-muted-foreground">Who worked here in the last 30 days: agents started, commits</p>
+        <p className="text-xs text-muted-foreground">Who started agents or made commits here in the last 30 days.</p>
       </CardHeader>
       <CardContent>
         {!loaded ? (
