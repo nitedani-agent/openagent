@@ -177,6 +177,16 @@ describe('AgentComposer slot control (#1455)', () => {
     expect((screen.getByRole('button', { name: 'Stop agent' }) as HTMLButtonElement).disabled).toBe(false)
   })
 
+  test('a Stop that failed says so and can be pressed again, by the button or by Esc', async () => {
+    sendStop.mockRejectedValueOnce('offline').mockResolvedValue(undefined)
+    renderComposer()
+    fireEvent.click(screen.getByRole('button', { name: 'Stop agent' }))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('Could not stop the agent.'))
+    expect((screen.getByRole('button', { name: 'Stop agent' }) as HTMLButtonElement).disabled).toBe(false)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => expect(sendStop).toHaveBeenCalledTimes(2))
+  })
+
   test('while OpenAgent is not answering, Stop is off, and Esc stops nothing', async () => {
     const { DaemonDown } = await import('../lib/use-daemon-health.js')
     render(

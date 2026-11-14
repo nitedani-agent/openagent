@@ -217,7 +217,7 @@ export function AgentComposer({
 
   const stopSession = () =>
     void runStop(() => sendStop(projectId, agentId).then(() => true), 'Could not stop the agent.').then(result => {
-      if (result) setStopRequested(true)
+      if (result.ok) setStopRequested(true)
     })
 
   // Esc stops the agent, as in Claude Code, also typed in the box, unless it closes something open
