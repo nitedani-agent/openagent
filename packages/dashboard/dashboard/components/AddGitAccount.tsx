@@ -70,6 +70,13 @@ function Adding({ host, onClose }: { host: string; onClose: (added?: string) => 
     if (p?.loggingIn) setSeen(true)
   }, [p?.loggingIn])
 
+  // The code shown: the link to open takes the focus the dialog opened with, on its ✕, but none the person put on a press here.
+  const body = useRef<HTMLDivElement>(null)
+  const openLink = useRef<HTMLAnchorElement>(null)
+  useEffect(() => {
+    if (openLink.current && !body.current?.contains(document.activeElement)) openLink.current.focus()
+  }, [underWay?.code])
+
   // Followed closely while open, whatever the page's own pace is: the person may sign in at any moment.
   const follow = useRef(reload)
   follow.current = reload
@@ -129,22 +136,24 @@ function Adding({ host, onClose }: { host: string; onClose: (added?: string) => 
       </div>
     )
   return (
-    <div className="space-y-3">
+    <div ref={body} className="space-y-3">
       {underWay ? (
-        <div role="status" className="space-y-3">
-          <p className="text-sm">
-            {'Open '}
-            <a href={underWay.url} target="_blank" rel="noreferrer" className="font-medium text-[var(--color-primary)] underline-offset-2 hover:underline">
-              {underWay.url.replace(/^https:\/\//, '')}
-            </a>
-            {' and enter this code:'}
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="rounded-md bg-muted px-3 py-1.5 font-mono text-lg font-medium tracking-widest">{underWay.code}</code>
-            <CopyButton text={underWay.code} label="Copy the code" />
+        <>
+          <div role="status" className="space-y-3">
+            <p className="text-sm">
+              {'Open '}
+              <a ref={openLink} href={underWay.url} target="_blank" rel="noreferrer" className="font-medium text-[var(--color-primary)] underline-offset-2 hover:underline">
+                {underWay.url.replace(/^https:\/\//, '')}
+              </a>
+              {' and enter this code:'}
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="rounded-md bg-muted px-3 py-1.5 font-mono text-lg font-medium tracking-widest">{underWay.code}</code>
+              <CopyButton text={underWay.code} label="Copy the code" />
+            </div>
           </div>
           <Waiting words={`Waiting for you at ${p.name}…`} />
-        </div>
+        </>
       ) : ended ? (
         <p className="text-sm text-muted-foreground">{`No account was added: the login was given up at ${p.name}, its code ran out, or OpenAgent has that account already.`}</p>
       ) : error === undefined ? (

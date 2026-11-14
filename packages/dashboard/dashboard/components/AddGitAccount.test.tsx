@@ -46,6 +46,14 @@ describe('the dialog that adds an account at a git host', () => {
     expect(logins.sendStopGitHostLogin).not.toHaveBeenCalled()
   })
 
+  test('once the code is shown, the link to open has the focus, and each of the dialog\u2019s live lines is said on its own', async () => {
+    render(<AddGitAccountDialog host="github.com" onClose={vi.fn()} />)
+    const dialog = await screen.findByRole('dialog', { name: 'Add a GitHub account' })
+    const link = await within(dialog).findByRole('link', { name: 'github.com/login/device' })
+    await waitFor(() => expect(document.activeElement).toBe(link))
+    expect(within(dialog).getAllByRole('status').map(line => line.textContent)).toEqual(['Open github.com/login/device and enter this code:ABCD-1234', 'Waiting for you at GitHub…'])
+  })
+
   test('a login the host no longer took, added again, is the account it added', async () => {
     logins.onGitHosts.mockResolvedValue(hosts({ accounts: [{ login: 'octo', runs: true, ok: false }] }))
     const onClose = vi.fn()
