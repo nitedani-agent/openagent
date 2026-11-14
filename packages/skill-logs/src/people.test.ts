@@ -32,7 +32,7 @@ test("a run's id says when it started", () => {
   assert.equal(startOfId('2026-10-25T00-36-42-115Z'), Date.parse('2026-10-25T00:36:42.115Z'))
 })
 
-test('each person who started runs, the busiest first: the runs of the last days, their cost, those going now, the last one; the person at this computer marked', async () => {
+test('each person who started runs, the busiest first: the runs of the last days, their cost, those going now, the last one; the person at this computer marked, and named by git when no commit names them', async () => {
   const reader = records({
     'ada@x.dev': [
       { at: NOW - 1 * DAY, status: 'done', cost: 0.5 },
@@ -41,9 +41,10 @@ test('each person who started runs, the busiest first: the runs of the last days
     ],
     'rom@y.dev': [{ at: NOW - 40 * DAY, status: 'done' }],
   })
-  const people = await peopleOf(reader, 'agents', NOW - 7 * DAY, 'ADA@x.dev')
+  const people = await peopleOf(reader, 'agents', NOW - 7 * DAY, { email: 'ADA@x.dev', name: 'Ada' })
   assert.deepEqual(people, [
-    { person: 'ada@x.dev', runs: 2, running: 1, cost: 0.75, commits: 0, lastAt: new Date(NOW - DAY).toISOString(), you: true },
+    // With no commit to give a name, the person at this computer has git's.
+    { person: 'ada@x.dev', name: 'Ada', runs: 2, running: 1, cost: 0.75, commits: 0, lastAt: new Date(NOW - DAY).toISOString(), you: true },
     { person: 'rom@y.dev', runs: 0, running: 0, cost: 0, commits: 0, lastAt: new Date(NOW - 40 * DAY).toISOString() },
   ])
   // Only the cards of those days are read: the older ones are passed over by their ids.

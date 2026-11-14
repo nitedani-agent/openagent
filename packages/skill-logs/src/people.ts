@@ -62,11 +62,12 @@ function toCents(usd: number): number {
 
 /**
  * Each person who started runs under `dir` or made commits among `commits`, the busiest first:
- * their runs and commits since `since`, when they last did either, and their name from the commits.
+ * their runs and commits since `since`, when they last did either, and their name from the commits;
+ * the person at this computer, `me` by git's email, by git's name when no commit gives one.
  */
-export async function peopleOf(reader: RecordsReader, dir: string, since: number, me: string | undefined, commits: CommitLine[] = []): Promise<PersonActivity[]> {
+export async function peopleOf(reader: RecordsReader, dir: string, since: number, me: { email: string; name?: string } | undefined, commits: CommitLine[] = []): Promise<PersonActivity[]> {
   const byEmail = new Map<string, PersonActivity>()
-  const isMe = (email: string): boolean => me !== undefined && email.toLowerCase() === me.toLowerCase()
+  const isMe = (email: string): boolean => me !== undefined && email.toLowerCase() === me.email.toLowerCase()
   const entry = (email: string, at: number): PersonActivity => {
     const key = email.toLowerCase()
     let person = byEmail.get(key)
@@ -99,6 +100,10 @@ export async function peopleOf(reader: RecordsReader, dir: string, since: number
       person.commits++
       if (new Date(commit.at).toISOString() > person.lastAt) person.lastAt = new Date(commit.at).toISOString()
     }
+  }
+  if (me?.name !== undefined) {
+    const you = byEmail.get(me.email.toLowerCase())
+    if (you) you.name ??= me.name
   }
   return [...byEmail.values()].sort(busiestFirst)
 }

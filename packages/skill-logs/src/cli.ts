@@ -102,7 +102,8 @@ const COMMANDS: Record<string, Command<[CliIo, GitRunner]>> = {
   async people(args, io, git) {
     const { values } = parseCommandArgs(args, DAYS_FLAGS, 0)
     const since = sinceDays(values.days)
-    const me = (await git(['config', 'user.email'], io.cwd).catch(() => '')).trim() || undefined
+    const [email, name] = await Promise.all(['user.email', 'user.name'].map(async key => (await git(['config', key], io.cwd).catch(() => '')).trim()))
+    const me = email ? { email, ...(name ? { name } : {}) } : undefined
     // The main branch's commits, newest first: the default branch as origin names it, else what is checked out.
     const main = (await git(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], io.cwd).catch(() => '')).trim() || 'HEAD'
     const commits = readCommitLines(await git(['log', main, '-n', '5000', '--format=%ae%x09%an%x09%at'], io.cwd).catch(() => ''))
