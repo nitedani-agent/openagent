@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Input, RadioGroup, RadioGroupOption, useOpenAgentDown, type ModuleCommandResult, type ModuleProject } from '@openagt/dashboard/module'
+import { Button, Input, RadioGroup, RadioGroupOption, useKeptDraft, useOpenAgentDown, type ModuleCommandResult, type ModuleProject } from '@openagt/dashboard/module'
 import { EMPTY_DRAFT, addArgs, draftProblem, draftSentence, isUntouched, nameProblem, ownPaceArgs, whatAndWhenProblem, savedFile, savedWords, whereHint, type AutomationDraft, type OwnPace } from './automation-form.js'
 import { PaceFields, SaidFields, Section } from './fields.js'
 import { DEFAULT_AGENT } from '../src/names.js'
@@ -33,7 +33,8 @@ export function AutomationForm({
   onClose: () => void
   onSaved: () => void
 }) {
-  const [draft, setDraft] = useState<AutomationDraft>(EMPTY_DRAFT)
+  // What is typed is kept in this browser until it is saved or put away with Cancel: a reload, or a closed tab, loses none of it.
+  const [draft, setDraft, forget] = useKeptDraft<AutomationDraft>(`automation:${project.id}`, EMPTY_DRAFT)
   const [saving, setSaving] = useState(false)
   const down = useOpenAgentDown()
   const [failed, setFailed] = useState<string | undefined>()
@@ -63,6 +64,7 @@ export function AutomationForm({
     // The time of day is this machine's: kept once the automation is there to keep it for.
     const kept = time[0] === 'skill' ? undefined : await run(['pace', draft.name.trim(), ...time])
     setSaving(false)
+    forget()
     setSaved({ command: draft.name.trim(), ...savedFile(answer.output), ...(kept && !kept.ok ? { timeNotKept: kept.error } : {}) })
     onSaved()
   }
@@ -163,7 +165,14 @@ export function AutomationForm({
       <div className="sticky bottom-0 -mx-3 flex flex-wrap items-center justify-between gap-3 bg-background px-3 py-3">
         <p className="min-w-0 flex-1 text-xs text-muted-foreground">{whereHint(draft, schedulerRuns)}</p>
         <div className="flex gap-2">
-          <Button variant="secondary" disabled={saving} onClick={onClose}>
+          <Button
+            variant="secondary"
+            disabled={saving}
+            onClick={() => {
+              forget()
+              onClose()
+            }}
+          >
             Cancel
           </Button>
           <Button disabled={saving || down || problem !== undefined} onClick={() => void save()}>

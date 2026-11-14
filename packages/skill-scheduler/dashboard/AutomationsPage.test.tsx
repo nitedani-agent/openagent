@@ -80,7 +80,11 @@ async function savedAgain(name: string): Promise<string> {
   return said
 }
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  // What a form keeps in this browser, a half-typed "New automation", is no test's but its own.
+  localStorage.clear()
+})
 
 describe('the Automations page: its rows', () => {
   test("one row per scheduled command: the command, what its skill says it does, where it stands, when it runs in the skill's plain words, how far its runs publish, and its switch", async () => {
@@ -1063,6 +1067,22 @@ describe("the Edit panel of a skill's row", () => {
     await gone('/post-merge-cleanup')
     expect(runCommand.mock.calls.filter(([, args]) => args[0] === 'status').length).toBeGreaterThan(statusReads)
     expect(saves(runCommand)).toEqual([['publish', 'post-merge-cleanup', 'pr']])
+  })
+
+  test('a half-typed "New automation" comes back after a reload; Cancel puts it away', async () => {
+    show(scheduler().host)
+    fireEvent.click(await screen.findByRole('button', { name: 'New automation in gemstack' }))
+    fireEvent.change(within(screen.getByRole('group', { name: 'New automation' })).getByRole('textbox', { name: 'Name' }), { target: { value: 'answer-comments' } })
+    fireEvent.change(screen.getByLabelText('What the agent is told'), { target: { value: 'Answer each new comment below.' } })
+    cleanup()
+    show(scheduler().host)
+    fireEvent.click(await screen.findByRole('button', { name: 'New automation in gemstack' }))
+    const form = screen.getByRole('group', { name: 'New automation' })
+    expect((within(form).getByRole('textbox', { name: 'Name' }) as HTMLInputElement).value).toBe('answer-comments')
+    expect((within(form).getByLabelText('What the agent is told') as HTMLTextAreaElement).value).toBe('Answer each new comment below.')
+    fireEvent.click(within(form).getByRole('button', { name: 'Cancel' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'New automation in gemstack' }))
+    expect((within(screen.getByRole('group', { name: 'New automation' })).getByRole('textbox', { name: 'Name' }) as HTMLInputElement).value).toBe('')
   })
 
   test('the "New automation" form, closed by Escape or Cancel, hands the keyboard back to its button', async () => {
