@@ -14,7 +14,7 @@ import { AGENT_DATA_ENTRY } from './AgentDataSettings.js'
 // that opens their menu (his pick, over a row of three icons): the theme, the notifications, and
 // Settings, under their whole name. The accounts a run takes are picked where the run is started,
 // beside the message box, for the computer it goes to: the agent's in the agent picker, the git
-// host's after the branch; not here a second time. A dot on the picture says something runs need is missing, or that the agents' data is not backed up; the menu says what. The gear at the row's end says what the row opens. The name and
+// host's after the branch; not here a second time. A dot on the picture says something runs need is missing, or that the agents' data is not backed up; the menu says what fixes it. The gear at the row's end says what the row opens. The name and
 // the picture are the person's own, set in Settings › Profile (`onPerson`); with no picture, their initials.
 
 /** The first word of a name: what the row says, the whole name being in the menu. */
@@ -76,13 +76,13 @@ export function PersonMenu({ onSettings }: { onSettings: (entry?: string) => voi
             {missing.map(item => (
               <DropdownMenuItem key={item.key} onClick={openPermissions} className="text-warning">
                 <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span className="flex-1 truncate">{item.words}</span>
+                <span className="flex-1 truncate">{item.action}</span>
               </DropdownMenuItem>
             ))}
             {notBackedUp && (
               <DropdownMenuItem onClick={() => onSettings(AGENT_DATA_ENTRY)} className="text-warning">
                 <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span className="flex-1 truncate">Agent data not backed up</span>
+                <span className="flex-1 truncate">Back up your agent data…</span>
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />

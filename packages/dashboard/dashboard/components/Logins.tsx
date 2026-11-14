@@ -207,6 +207,8 @@ export interface Missing {
   name: string
   /** What is missing, in words. */
   words: string
+  /** What fixes it, as a menu item that leads there says it: "Install Claude Code…". */
+  action: string
   /** The press that fixes it, for the coding agent: a git host's account is added in its dialog (`AddGitAccount.tsx`). */
   fix?: ReactNode
 }
@@ -225,6 +227,7 @@ export function useMissing(): { missing: Missing[]; loaded: boolean; reload: () 
       key: 'agent',
       name,
       words: agentWords(state),
+      action: agentLoginState(state) === 'not-installed' ? `Install ${name}…` : loggedOut(state) ? `Log ${name} in…` : `Set up ${name}…`,
       fix: <AgentFix state={state} onChanged={() => void reloadAgent()} />,
     })
   }
@@ -235,6 +238,7 @@ export function useMissing(): { missing: Missing[]; loaded: boolean; reload: () 
       key: `host:${row.host}`,
       name: p.name,
       words: hostWords(row),
+      action: !p.installed ? `Install ${p.tool}…` : p.accounts.length === 0 ? `Add a ${p.name} account…` : `Add your ${p.name} account again…`,
     })
   }
   return { missing, loaded: state !== undefined && view !== undefined, reload, hosts: view }
