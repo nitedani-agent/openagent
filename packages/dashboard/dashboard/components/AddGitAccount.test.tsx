@@ -80,17 +80,20 @@ describe('the dialog that adds an account at a git host', () => {
     await waitFor(() => expect(logins.sendStopGitHostLogin).toHaveBeenCalledWith('github.com'))
   })
 
-  test('a login that ended with no account more says so, and a press asks for a new code; a code the package refused says why', async () => {
+  test('a login that ended with no account more says so, and a press asks for a new code; a code the package refused says why, its address a link, and the press tries again', async () => {
     logins.onGitHosts.mockResolvedValue(hosts({ loggingIn: CODE }))
     render(<AddGitAccountDialog host="github.com" onClose={vi.fn()} />)
     const dialog = await screen.findByRole('dialog')
     expect(await within(dialog).findByText('ABCD-1234')).toBeTruthy()
     logins.onGitHosts.mockResolvedValue(hosts())
     expect(await within(dialog).findByText(/No account was added/, undefined, { timeout: 4000 })).toBeTruthy()
-    logins.sendGitHostLogin.mockResolvedValue({ ok: false, error: 'gh could not reach github.com.' })
+    logins.sendGitHostLogin.mockResolvedValue({ ok: false, error: 'error connecting to github.com; check your internet connection or https://githubstatus.com' })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Get a new code' }))
-    expect((await within(dialog).findByRole('alert')).textContent).toBe('gh could not reach github.com.')
-    expect(within(dialog).getByRole('button', { name: 'Get a new code' })).toBeTruthy()
+    const alert = await within(dialog).findByRole('alert')
+    expect(alert.textContent).toBe('Could not get a code from GitHub:\nerror connecting to github.com; check your internet connection or https://githubstatus.com')
+    expect(within(alert).getByRole('link', { name: 'https://githubstatus.com' }).getAttribute('href')).toBe('https://githubstatus.com')
+    // No code was shown this time: the press asks again, it gets no "new" code.
+    expect(within(dialog).getByRole('button', { name: 'Try again' })).toBeTruthy()
   })
 
   test('the tool not here: its install first, with the command; once it is here the code is asked for by itself', async () => {

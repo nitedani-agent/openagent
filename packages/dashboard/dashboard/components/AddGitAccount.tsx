@@ -4,7 +4,7 @@ import { sendGitHostInstall, sendGitHostLogin, sendStopGitHostLogin, type GitHos
 import { Button } from './ui/button.js'
 import { CopyButton } from './ui/copy-button.js'
 import { Dialog } from './ui/dialog.js'
-import { FixAction, hostWords, useGitHosts } from './Logins.js'
+import { FixAction, Linked, hostWords, useGitHosts } from './Logins.js'
 
 // Adding an account of OpenAgent's at a git host, the same dialog wherever one is added (his pick
 // over a code shown in each place's own layout): the Permissions page, the Overview's first steps,
@@ -161,7 +161,8 @@ function Adding({ host, onClose }: { host: string; onClose: (added?: string) => 
       ) : null}
       {error !== undefined && (
         <p role="alert" className="whitespace-pre-line text-xs text-danger">
-          {error}
+          {`Could not get a code from ${p.name}:\n`}
+          <Linked text={error} />
         </p>
       )}
       <div className="space-y-1 text-xs text-muted-foreground">
@@ -172,7 +173,7 @@ function Adding({ host, onClose }: { host: string; onClose: (added?: string) => 
       <div className="flex items-center justify-end gap-2">
         {(ended || error !== undefined) && (
           <Button size="sm" disabled={asking} onClick={() => void start()}>
-            Get a new code
+            {ended ? 'Get a new code' : 'Try again'}
           </Button>
         )}
         <Button size="sm" variant="ghost" onClick={() => onClose()}>
