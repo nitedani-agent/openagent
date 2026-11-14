@@ -570,6 +570,22 @@ describe('the Settings list', () => {
     expect(onClose).toHaveBeenCalledTimes(2)
   })
 
+  test('opened by its address and closed, the focus goes to the page\u2019s title, not to the page\u2019s body', async () => {
+    const Page = () => {
+      const [shown, setShown] = useState(true)
+      return (
+        <>
+          <h1>Agents</h1>
+          {shown && <SettingsDialog entry="" onEntry={() => {}} onClose={() => setShown(false)} scope={null} projects={[]} />}
+        </>
+      )
+    }
+    render(<Page />)
+    fireEvent.keyDown(await screen.findByRole('dialog'), { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Agents' })))
+  })
+
   test('on a phone the list is the whole dialog until an entry is picked, and an entry has a way back to it', () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: true, media: query, addEventListener: () => {}, removeEventListener: () => {} }))
     show('')

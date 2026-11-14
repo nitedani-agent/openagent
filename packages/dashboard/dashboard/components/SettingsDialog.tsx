@@ -84,6 +84,14 @@ export function SettingsDialog({
   const listOnly = phone && entry === ''
   // Opened, the dialog itself has the focus, not its first entry: a ring there read as a second pick.
   const popup = useRef<HTMLDivElement>(null)
+  // Opened by its address, nothing on the page opened it: closed, the focus goes to the page's title, not the page's body.
+  const opener = useRef(document.activeElement)
+  const finalFocus = (): HTMLElement | true => {
+    const title = document.querySelector<HTMLElement>('h1')
+    if (opener.current !== document.body || !title) return true
+    title.tabIndex = -1
+    return title
+  }
   // Skills opened from a project's page are that project's, whatever the sidebar has picked.
   const [picked, setPicked] = useState((entry === SKILLS_ENTRY || entry === PROJECT_AGENT_DATA_ENTRY ? openItem : undefined) ?? scope ?? ALL_PROJECTS)
   // A project removed while the dialog is open is no longer one to show.
@@ -168,6 +176,7 @@ export function SettingsDialog({
         <BaseDialog.Popup
           ref={popup}
           initialFocus={popup}
+          finalFocus={finalFocus}
           className={cn(
             'fixed z-50 flex overflow-hidden bg-background text-foreground outline-none',
             phone ? 'inset-0' : 'top-1/2 left-1/2 h-[min(40rem,calc(100dvh-2rem))] w-[min(56rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border shadow-lg',
