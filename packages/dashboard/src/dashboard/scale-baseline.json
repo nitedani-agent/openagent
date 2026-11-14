@@ -78,9 +78,6 @@
   "dashboard/dashboard/components/FadeWhileStale.tsx": {
     "duration-300": 1
   },
-  "dashboard/dashboard/components/FilterChips.tsx": {
-    "px-2.5": 1
-  },
   "dashboard/dashboard/components/Markdown.tsx": {
     "leading-[22px]": 1,
     "space-y-2.5": 2,
@@ -112,9 +109,5 @@
   "skill-browser/dashboard/BrowserPanel.tsx": {
     "text-[10px]": 1,
     "text-[11px]": 1
-  },
-  "skill-logs/dashboard/LogsPage.tsx": {
-    "gap-2.5": 2,
-    "text-[9px]": 1
   }
 }
