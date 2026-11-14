@@ -274,6 +274,30 @@ describe('ProjectPicker', () => {
     expect(screen.queryByText('Do you trust this repository?')).toBeNull()
   })
 
+  test('a project added is picked once the projects read again have it, after its panel has gone too, unless another was picked meanwhile', async () => {
+    sendAddProject.mockResolvedValue({ ok: true, alreadyActivated: false })
+    const VIKE_PROJECT = { id: 'vike-9', path: VIKE.path, name: 'vike', activated: true, gitHost: true }
+    const { onPick, props, rerender } = renderPicker()
+    await openMenu(trigger())
+    fireEvent.click(await screen.findByRole('option', { name: /vike/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'I trust it, add it' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Done' }))
+    expect(screen.queryByRole('dialog', { name: 'Add project' })).toBeNull()
+    rerender(<ProjectPicker {...props} projects={[ALPHA, VIKE_PROJECT]} />)
+    await waitFor(() => expect(onPick).toHaveBeenCalledWith('vike-9'))
+    cleanup()
+    // alpha opened before the projects are read again: alpha stays.
+    const second = renderPicker()
+    await openMenu(trigger())
+    fireEvent.click(await screen.findByRole('option', { name: /vike/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'I trust it, add it' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Done' }))
+    second.rerender(<ProjectPicker {...second.props} picked="alpha-1" />)
+    second.rerender(<ProjectPicker {...second.props} picked="alpha-1" projects={[ALPHA, VIKE_PROJECT]} />)
+    await new Promise(resolve => setTimeout(resolve, 50))
+    expect(second.onPick).not.toHaveBeenCalled()
+  })
+
   test('a repo the person does not trust stays a repo: Cancel adds nothing and opens nothing', async () => {
     const { onPick } = renderPicker()
     await openMenu(trigger())
