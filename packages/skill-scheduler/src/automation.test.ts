@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { mkdir, mkdtemp, readdir, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { addAutomation, automationProblem, editAutomation, removeAutomation, savedAutomation } from './automation.js'
+import { addAutomation, automationProblem, editAutomation, removeAutomation, savedAutomation, sharedInGit } from './automation.js'
 import { automationOf, automationSkill, type NewAutomation } from './automation-file.js'
 import { MAX_NAME } from './names.js'
 import { readSchedule, skillSchedule } from './schedule.js'
@@ -150,6 +150,24 @@ test('saving writes the skill file into the folder the coding agent reads, and t
     assert.deepEqual(await addAutomation(repo, { name: 'nothing-says-when', prompt: 'p' }, git), { ok: false, reason: 'bad-schedule', detail: 'neither every nor when says when' })
     assert.deepEqual((await readSchedule(repo)).commands.map(c => c.name), ['answer-comments'])
     assert.deepEqual((await readdir(join(repo, '.claude', 'skills'))).sort(), ['Loud', 'answer-comments', 'hollow', 'linked', 'work-queue'], 'no folder left behind by a save that was refused')
+  } finally {
+    await removeRepo(repo)
+  }
+})
+
+test("a shared automation's row knows whether a run of it can start: not before its file is on origin's default branch, as this clone last saw it, and with no remote not before it is committed", async () => {
+  const repo = await testRepo()
+  try {
+    await addAutomation(repo, ANSWER, git)
+    assert.deepEqual(await sharedInGit(repo, 'answer-comments', git), { notOn: 'origin/main' })
+    await git(['add', '-A'], repo)
+    await git(['commit', '-q', '-m', 'answer comments'], repo)
+    assert.deepEqual(await sharedInGit(repo, 'answer-comments', git), { notOn: 'origin/main' }, 'committed, not pushed: a checkout from origin/main has no such command')
+    await git(['push', '-q', 'origin', 'main'], repo)
+    assert.deepEqual(await sharedInGit(repo, 'answer-comments', git), {})
+    await git(['remote', 'remove', 'origin'], repo)
+    await addAutomation(repo, { ...ANSWER, name: 'answer-replies' }, git)
+    assert.deepEqual(await sharedInGit(repo, 'answer-replies', git), { notOn: 'HEAD' })
   } finally {
     await removeRepo(repo)
   }

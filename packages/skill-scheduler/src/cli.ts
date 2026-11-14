@@ -96,7 +96,7 @@ const COMMANDS: Record<string, Command<[CliIo, GitRunner]>> = {
   async status(args, io, git) {
     parseCommandArgs(args, {}, 0)
     const repo = await project(io.cwd, git)
-    return { ok: true, ...(await schedulerStatus(repo)) }
+    return { ok: true, ...(await schedulerStatus(repo, git)) }
   },
 
   async model(args, io, git) {

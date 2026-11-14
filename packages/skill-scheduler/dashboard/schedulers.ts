@@ -54,6 +54,8 @@ export interface SchedulerCommand {
   onThisMachine?: true
   /** Whether the command is a person's own automation as the tool wrote it: the page can open it to be saved again, and remove it. */
   editable?: true
+  /** A shared automation whose file is not where a run's checkout starts, as this machine last saw it: that start point. A run of it would start nothing. */
+  notOn?: string
   /** The command's last run, when it has one: which run, when it started, and whether it failed. */
   lastRun?: LastRun
   /** What the scheduler's last tick decided for the command, when it decided anything. */
@@ -245,6 +247,7 @@ export function schedulerRow(project: ModuleProject, output: unknown): Scheduler
       ...(row['each'] === true ? { each: true as const } : {}),
       ...(row['onThisMachine'] === true ? { onThisMachine: true as const } : {}),
       ...(row['editable'] === true ? { editable: true as const } : {}),
+      ...(typeof row['notOn'] === 'string' ? { notOn: row['notOn'] } : {}),
       ...(lastRunOf(row['lastRun']) ? { lastRun: lastRunOf(row['lastRun'])! } : {}),
       ...(decision ? { decision } : {}),
     })
@@ -499,11 +502,16 @@ function waitingWords(command: SchedulerCommand, now: Date): string | undefined 
   return nextStart(command, now)
 }
 
-/** That the coding agent a row's runs are on cannot run it at all, for a person: its skill is not in that agent's own skills folder. Nothing for a row it can run. */
-export function cannotRun(command: Pick<SchedulerCommand, 'home' | 'runsOn' | 'able'>): string | undefined {
+/** That a run of a row would start nothing, for a person: its skill is not in the own skills folder of the coding agent its runs are on, or, a shared automation, not yet where a run's checkout starts. Nothing for a row that can run. */
+export function cannotRun(command: Pick<SchedulerCommand, 'home' | 'runsOn' | 'able' | 'notOn'>): string | undefined {
   const agent = agentOf(command)
-  return command.able.includes(agent) ? undefined : notThere(AGENT_LABELS[agent], AGENT_SKILLS_DIR[agent])
+  if (!command.able.includes(agent)) return notThere(AGENT_LABELS[agent], AGENT_SKILLS_DIR[agent])
+  if (command.notOn !== undefined) return notYet(command.notOn, true)
+  return undefined
 }
+
+/** That a skill is not yet where a run's checkout starts: not committed, with no remote; else not on that branch, as this clone or this machine last saw it. */
+const notYet = (ref: string, lastSeen: boolean): string => (ref === 'HEAD' ? 'Cannot start yet: its skill is not committed' : `Cannot start yet: its skill is not on ${ref}${lastSeen ? ', as this machine last saw it' : ''}`)
 
 const notThere = (agent: string, dir: string): string => `Cannot start on ${agent}: its skill is not in ${dir}`
 
@@ -517,7 +525,7 @@ export function outcomeWords(outcome: string | undefined): string | undefined {
   if (elsewhere) return notThere(elsewhere[1]!, elsewhere[2]!)
   if (outcome === 'not due') return 'No work'
   const unpublished = /^not on (\S+?)( as this clone last saw it)?: /.exec(outcome)
-  if (unpublished) return unpublished[1] === 'HEAD' ? 'Cannot start yet: its skill is not committed' : `Cannot start yet: its skill is not on ${unpublished[1]}${unpublished[2] ? ', as this machine last saw it' : ''}`
+  if (unpublished) return notYet(unpublished[1]!, unpublished[2] !== undefined)
   const capped = /^cap reached \((\d+) in flight/.exec(outcome)
   if (capped) return capped[1] === '1' ? 'One is already running' : `${capped[1]} are already running`
   return sentence(outcome)

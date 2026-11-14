@@ -600,7 +600,8 @@ test("status lists the schedule as the project's files say it at that moment, wi
     assert.deepEqual([added.running, added.lastTick], [false, undefined])
     assert.deepEqual(added.schedule, [
       // Each with the coding agent it is made for and the ones that can run it: a shared one's skill is in Claude Code's folder alone, one kept on this machine is handed to any.
-      { command: 'answer-comments', every: '15m', when: 'gh api comments', waitsFor: 'when someone commented', description: 'Answer each new comment below.', editable: true, agent: 'claude-code', able: ['claude-code'] },
+      // A shared one is not yet where a run's checkout starts: not pushed to origin's default branch.
+      { command: 'answer-comments', every: '15m', when: 'gh api comments', waitsFor: 'when someone commented', description: 'Answer each new comment below.', editable: true, agent: 'claude-code', able: ['claude-code'], notOn: 'origin/main' },
       { command: 'tidy', every: '1d', description: 'Tidy up.', onThisMachine: true, editable: true, agent: 'claude-code', able: ['claude-code', 'codex'] },
     ])
     // Saved again: its new words and its new pace at once.

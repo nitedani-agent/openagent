@@ -243,6 +243,17 @@ describe('the Automations page: its rows', () => {
     }
   })
 
+  test("a shared automation whose file is not yet where a run's checkout starts says so before \"Run now\" is pressed, and its \"Run now\" is held: it would start nothing", async () => {
+    const status = { ...MINE, schedule: MINE.schedule.map(c => (c.command === 'answer-comments' ? { ...c, notOn: 'HEAD' } : c)) }
+    const { host } = hostAnswering((_, args) => (args[0] === 'status' ? { ok: true, output: status } : { ok: true, output: { ok: true } }))
+    show(host)
+    await screen.findByRole('region', { name: 'gemstack' })
+    expect(within(row('/answer-comments')).getByText('Cannot start yet: its skill is not committed').className).toMatch(/text-warning/)
+    expect(disabled(within(row('/answer-comments')).getByRole('button', { name: 'Run /answer-comments now' }))).toBe(true)
+    // One kept on this machine has nothing to commit.
+    expect(disabled(within(row('tidy')).getByRole('button', { name: 'Run tidy now' }))).toBe(false)
+  })
+
   test('a second visit opens with the last rows at once, while they are read again', async () => {
     show(scheduler().host)
     await screen.findByRole('listitem', { name: '/work-queue' })

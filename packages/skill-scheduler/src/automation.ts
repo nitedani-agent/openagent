@@ -6,7 +6,7 @@ import { MAX_NAME, OWN_AUTOMATIONS_DIR, OWN_TEXT_MAX, RUN_SKILLS_DIR, SKILL_FILE
 import { createHash } from 'node:crypto'
 import { FOLDER_LITTER, HALF_SAVED, automationOf, automationSkill, frontMatterOf, wellFormed, type NewAutomation } from './automation-file.js'
 import { readSchedule, skillFile, skillSchedule, whyUnlisted } from './schedule.js'
-import { startRef } from './start-point.js'
+import { isOnCommit, startRef } from './start-point.js'
 
 /**
  * A person's own automation: a prompt they wrote, saved as a command skill of the project, so it
@@ -281,4 +281,15 @@ export async function removeAutomation(repo: string, name: string, git: GitRunne
   // One line for the one file, its first letter what the index holds: `A` for a file added and never committed.
   const held = await git(['status', '--porcelain', '--', join(folder, SKILL_FILE)], repo).catch(() => undefined)
   return { ok: true, command: name, file: found.file, git: held === undefined ? 'unknown' : held.trim() === '' ? 'nothing' : held.startsWith('A') ? 'staged' : 'committed', startsFrom: await startRef(repo, git) }
+}
+
+/**
+ * Where a shared automation's file stands for a run, as `status` says it on its row: when it is
+ * not where a run's checkout starts as this clone last saw it, that start point (`notOn`), and a
+ * run of it would start nothing. Nothing is fetched; a commit that cannot be read says nothing.
+ */
+export async function sharedInGit(repo: string, name: string, git: GitRunner): Promise<{ notOn?: string }> {
+  const ref = await startRef(repo, git)
+  const there = (await isOnCommit(repo, ref, `${RUN_SKILLS_DIR}/${name}/${SKILL_FILE}`, git)) ?? true
+  return there ? {} : { notOn: ref }
 }
