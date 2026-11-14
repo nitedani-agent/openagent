@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { DRIVER_LABELS, type DriverName } from '../../src/client.js'
-import { onAgentState, onGitHosts, sendAgentFix, type AgentState, type GitHostRow, type GitHostsView } from '../rpc/logins.js'
+import { onAgentState, onGitHosts, sendAgentFix, sendStopAgentFix, type AgentState, type GitHostRow, type GitHostsView } from '../rpc/logins.js'
 import { useAskOn, usePolled } from '../lib/use-async.js'
 import { cn } from '../lib/utils.js'
 import { Button } from './ui/button.js'
@@ -99,8 +99,8 @@ export function hostWords(row: GitHostRow): string {
 /** How a fix's press is drawn: the page's primary by default, or a quieter press beside another's. */
 export type FixVariant = 'secondary' | undefined
 
-/** A press that fixes one thing: its button, what it is doing while it does, the command it runs, why it failed. With `words`, what is missing stands on the press's line, the press at its right edge. */
-export function FixAction({ label, busy, busyWords, command, failed, onPress, words, size = 'default', variant }: { label: string; busy: boolean; busyWords: string; command?: string; failed?: string; onPress: () => void; words?: ReactNode; size?: 'default' | 'sm' | undefined; variant?: FixVariant }) {
+/** A press that fixes one thing: its button, what it is doing while it does, the command it runs, why it failed. With `words`, what is missing stands on the press's line, the press at its right edge. While it is busy, `url` is the page it said to open, and `onCancel` stops it. */
+export function FixAction({ label, busy, busyWords, command, failed, onPress, words, url, onCancel, size = 'default', variant }: { label: string; busy: boolean; busyWords: string; command?: string; failed?: string; onPress: () => void; words?: ReactNode; url?: string | undefined; onCancel?: (() => void) | undefined; size?: 'default' | 'sm' | undefined; variant?: FixVariant }) {
   // Busy, the press stays with the focus it was pressed with, and says it is waiting under it.
   const press = (
     <Button size={size} variant={variant} aria-disabled={busy || undefined} className={cn(busy && 'opacity-50')} onClick={() => void (busy || onPress())}>
@@ -118,9 +118,25 @@ export function FixAction({ label, busy, busyWords, command, failed, onPress, wo
         </div>
       )}
       {busy && (
-        <p role="status" className="text-xs text-muted-foreground">
-          {busyWords}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <p role="status" className="min-w-0 grow basis-60 text-xs text-muted-foreground">
+            {busyWords}
+            {url !== undefined && (
+              <>
+                {' No page? '}
+                <a href={url} target="_blank" rel="noreferrer" className="focus-ring rounded-sm text-primary underline-offset-2 hover:underline">
+                  Open the sign-in page
+                </a>
+                .
+              </>
+            )}
+          </p>
+          {onCancel && (
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+        </div>
       )}
       {command && <CommandLine command={command} />}
       {failed && (
@@ -175,6 +191,9 @@ export function AgentFix({ state, onChanged, words, size, variant }: { state: Ag
       size={size}
       variant={variant}
       words={words}
+      url={state.url}
+      // A login waits on the person's yes, up to ten minutes: they can stop waiting. An install runs to its end.
+      onCancel={state.fixing === 'log-in' ? () => void sendStopAgentFix(state.driver).then(onChanged) : undefined}
       label={state.fix.kind === 'install' ? `Install ${name}` : `Log this computer in to ${name}`}
       busy={state.fixing !== undefined}
       busyWords={agentBusyWords(state)}

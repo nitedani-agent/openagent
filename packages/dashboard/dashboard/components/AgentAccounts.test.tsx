@@ -4,7 +4,7 @@ import { forgetRemembered } from '../lib/use-async.js'
 
 const accounts = vi.hoisted(() => ({ onAgentAccounts: vi.fn(), sendUseAgentAccountFirst: vi.fn() }))
 vi.mock('../rpc/accounts.js', () => accounts)
-const logins = vi.hoisted(() => ({ onAgentState: vi.fn(), sendAgentFix: vi.fn(), onGitHosts: vi.fn(), sendGitHostInstall: vi.fn(), sendGitHostLogin: vi.fn(), sendUseGitHostAccount: vi.fn() }))
+const logins = vi.hoisted(() => ({ onAgentState: vi.fn(), sendAgentFix: vi.fn(), sendStopAgentFix: vi.fn(), onGitHosts: vi.fn(), sendGitHostInstall: vi.fn(), sendGitHostLogin: vi.fn(), sendUseGitHostAccount: vi.fn() }))
 vi.mock('../rpc/logins.js', () => logins)
 const servers = vi.hoisted(() => ({ onServerLogins: vi.fn(), sendUseLoginsOn: vi.fn(), sendAllowLogins: vi.fn(), sendSettleLogin: vi.fn() }))
 vi.mock('../rpc/server-logins.js', () => servers)
@@ -84,6 +84,20 @@ describe('Agent accounts', () => {
     expect((await within(card).findByRole('status')).textContent).toMatch(/Say yes in the page/)
     expect(document.activeElement).toBe(press)
     expect(press.getAttribute('aria-disabled')).toBe('true')
+  })
+
+  test('a login that waits on the browser says where to sign in, and Cancel stops it', async () => {
+    views({ now: NOW, accounts: [{ id: 'This computer', name: 'This computer', own: true, windows: [] }] })
+    const out = { driver: 'claude-code', ready: false, problem: '`claude` is not logged in.', fix: { kind: 'log-in', command: 'claude auth login' } }
+    states({ ...out, fixing: 'log-in', url: 'https://claude.ai/oauth/authorize?code=1' })
+    logins.sendStopAgentFix.mockImplementation(async () => (states(out), { ok: true }))
+    render(<AccountsList />)
+    const card = await screen.findByRole('region', { name: 'Claude Code' })
+    expect((await within(card).findByRole('link', { name: 'Open the sign-in page' })).getAttribute('href')).toBe('https://claude.ai/oauth/authorize?code=1')
+    fireEvent.click(within(card).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(logins.sendStopAgentFix).toHaveBeenCalledWith('claude-code'))
+    await waitFor(() => expect(within(card).queryByRole('status')).toBeNull())
+    expect(within(card).getByRole('button', { name: 'Log this computer in to Claude Code' }).getAttribute('aria-disabled')).toBeNull()
   })
 
   test('once the press worked, the card says Claude Code is ready instead of going away', async () => {
