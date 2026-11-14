@@ -562,6 +562,18 @@ describe('the Settings list', () => {
     expect(screen.getByText('Nothing to set for your projects.')).toBeTruthy()
   })
 
+  test('opened with no entry, a computer shows Profile and its address says so; a phone shows the list, whose address is none', () => {
+    const onEntry = vi.fn()
+    const { unmount } = render(<SettingsDialog entry="" onEntry={onEntry} onClose={onClose} scope={null} projects={[]} />)
+    expect(onEntry).toHaveBeenCalledWith('profile')
+    unmount()
+    onEntry.mockClear()
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: true, media: query, addEventListener: () => {}, removeEventListener: () => {} }))
+    render(<SettingsDialog entry="" onEntry={onEntry} onClose={onClose} scope={null} projects={[]} />)
+    expect(screen.getByRole('navigation', { name: 'Settings' })).toBeTruthy()
+    expect(onEntry).not.toHaveBeenCalled()
+  })
+
   test('the ✕ and Escape close it', () => {
     show('')
     fireEvent.click(screen.getAllByRole('button', { name: 'Close settings' }).at(-1)!)

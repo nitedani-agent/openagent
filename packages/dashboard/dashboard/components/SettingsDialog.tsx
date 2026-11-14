@@ -1,4 +1,4 @@
-import { useCallback, useId, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type ComponentType, type ReactNode } from 'react'
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
 import { ArrowLeft, Bell, Bot, ChevronRight, Database, FolderGit2, Globe, Palette, Puzzle, UserRound, X, FolderSearch } from 'lucide-react'
 import { ACCENTS, DEFAULT_ACCENT_LABELS, accentOf, CODE_FONTS, DOCUMENT_FONTS, DRIVERS, DRIVER_LABELS, isDriverName, FONTS, PALETTES, PALETTE_LABELS, type Accent, type CodeFont, type DocumentFont, type Font, type Palette as ColourPalette } from '../../src/client.js'
@@ -140,6 +140,10 @@ export function SettingsDialog({
   const projectEntries = [...ownForProject, ...forProject.map(section => moduleEntry(section, project ? [project] : projects))]
   const shown = [...yours, ...projectEntries].find(e => e.id === entry)
   const current = shown ?? yours[0]!
+  // Opened with no entry, a computer shows the first: the address names it, as it names every other.
+  useEffect(() => {
+    if (!phone && entry === '') onEntry(current.id)
+  }, [phone, entry, current.id, onEntry])
   const inProject = projectEntries.includes(current)
   // With every project picked, an entry says which projects a change goes to.
   const savedTo = inProject && !project ? projectsHaving(forProject.find(s => s.id === current.id)?.projects ?? [], projects) : []
