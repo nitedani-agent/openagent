@@ -165,11 +165,14 @@ function Adding({ host, onClose }: { host: string; onClose: (added?: string) => 
           <Linked text={error} />
         </p>
       )}
-      <div className="space-y-1 text-xs text-muted-foreground">
-        <p>Sign in there as the account OpenAgent should use. Your own logins stay as they are.</p>
-        {/* Rom's advice, where the account is chosen: an agent's own account limits what a run can reach. */}
-        <p>An account of its own for your agents, with access to only what they need, is safer: name it like you-agent.</p>
-      </div>
+      {/* Said while there is a place to sign in at. */}
+      {underWay && (
+        <div className="space-y-1 text-xs text-muted-foreground">
+          <p>Sign in there as the account OpenAgent should use. Your own logins stay as they are.</p>
+          {/* Rom's advice, where the account is chosen: an agent's own account limits what a run can reach. */}
+          <p>An account of its own for your agents, with access to only what they need, is safer: name it like you-agent.</p>
+        </div>
+      )}
       <div className="flex items-center justify-end gap-2">
         {(ended || error !== undefined) && (
           <Button size="sm" disabled={asking} onClick={() => void start()}>
