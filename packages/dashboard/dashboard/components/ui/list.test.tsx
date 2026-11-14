@@ -53,4 +53,16 @@ describe('Section', () => {
     expect(screen.getByRole('region', { name: 'Runs' }).textContent).toContain('rows')
     expect(screen.getByRole('heading', { name: 'Runs 4 runs' })).toBeTruthy()
   })
+
+  test('inside another section, its heading is one level down', () => {
+    render(
+      <Section title="shop">
+        <Section title="Priority 8">
+          <p>rows</p>
+        </Section>
+      </Section>,
+    )
+    expect(screen.getByRole('heading', { name: 'shop', level: 2 })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Priority 8', level: 3 })).toBeTruthy()
+  })
 })
