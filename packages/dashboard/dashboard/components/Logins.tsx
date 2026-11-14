@@ -93,7 +93,7 @@ export function PackageLogo({ svg, className }: { svg: string | undefined; class
 const LONG = 72
 
 /** The command a press runs, under its button, so the person sees what is done on their computer. A long one is a line, whole on a press. */
-function CommandLine({ command }: { command: string }) {
+export function CommandLine({ command }: { command: string }) {
   const [whole, setWhole] = useState(false)
   const long = command.length > LONG
   return (
