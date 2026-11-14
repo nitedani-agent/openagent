@@ -66,13 +66,13 @@ test('the same person in several projects is one member, their runs added up; wh
 })
 
 test("a person's two emails on one account at the git host are one member, in one project too", () => {
-  const server = { person: '42+rom@users.noreply.github.com', runs: 1, running: 0, waiting: 0, cost: 0.24, commits: 0, lastAt: '2026-10-29T00:00:00.000Z' }
-  const laptop = { person: 'git@y.dev', name: 'Rom B', runs: 1, running: 1, waiting: 0, cost: 0, commits: 2, lastAt: '2026-10-30T00:00:00.000Z' }
+  const server = { person: '42+rom@users.noreply.github.com', runs: 1, running: 0, waiting: 1, cost: 0.24, commits: 0, lastAt: '2026-10-29T00:00:00.000Z' }
+  const laptop = { person: 'git@y.dev', name: 'Rom B', runs: 2, running: 1, waiting: 1, cost: 0, commits: 2, lastAt: '2026-10-30T00:00:00.000Z' }
   const other = { person: 'ada@x.dev', runs: 1, running: 0, waiting: 0, cost: 0, commits: 0, lastAt: '2026-10-28T00:00:00.000Z' }
   const accounts: Record<string, string> = { '42+rom@users.noreply.github.com': 'rom', 'git@y.dev': 'ROM' }
   const members = membersOf([{ project: 'alpha', people: [server, laptop, other] }], person => accounts[person])
   assert.deepEqual(members, [
-    { ...server, name: 'Rom B', runs: 2, running: 1, commits: 2, lastAt: '2026-10-30T00:00:00.000Z', projects: ['alpha'] },
+    { ...server, name: 'Rom B', runs: 3, running: 1, waiting: 2, commits: 2, lastAt: '2026-10-30T00:00:00.000Z', projects: ['alpha'] },
     { ...other, projects: ['alpha'] },
   ])
 })
