@@ -1,5 +1,6 @@
 import type { ActiveAgent, Intervention } from '../../src/index.js'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Inbox, SlidersHorizontal } from 'lucide-react'
 import { Quota } from './Quota.js'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card.js'
@@ -159,6 +160,20 @@ export function DashboardPage({
   // Arranging the page, on its cards themselves: the layout of this page (the picked project's, else
   // all projects'), changed at once as the person moves, sizes and hides the cards.
   const [editing, setEditing] = useState(false)
+  // Done, or Esc unless it closes something open first; the keyboard goes back to Customize, drawn in Done's place.
+  const customize = useRef<HTMLButtonElement>(null)
+  const done = (): void => {
+    flushSync(() => setEditing(false))
+    customize.current?.focus()
+  }
+  useEffect(() => {
+    if (!editing) return
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape' && !document.querySelector('[role="dialog"], [role="menu"], [role="listbox"]')) done()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editing])
   const scopeName = scope === null ? undefined : projects.find(project => project.id === scope)?.name
   const own = layouts?.[layoutKey] !== undefined
   const reset = (): void => {
@@ -179,13 +194,13 @@ export function DashboardPage({
               </Button>
             )}
             {/* Focused as it takes Customize's place, which the press took away from the keyboard. */}
-            <Button size="sm" autoFocus onClick={() => setEditing(false)}>
+            <Button size="sm" autoFocus onClick={done}>
               Done
             </Button>
           </>
         ) : (
           // Under the description on a phone: pulled back by its padding, so its icon lines up with the words above.
-          <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground max-sm:-ml-3" onClick={() => setEditing(true)}>
+          <Button ref={customize} variant="ghost" size="sm" className="gap-1.5 text-muted-foreground max-sm:-ml-3" onClick={() => setEditing(true)}>
             <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
             Customize
           </Button>
