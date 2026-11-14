@@ -284,10 +284,10 @@ describe('Settings › Devices: this computer, and how devices reach it', () => 
     expect(await screen.findByText(/open OpenAgent at https:\/\/laptop\.tail1234\.ts\.net, from anywhere/)).toBeTruthy()
     expect(screen.getByText('None yet. Add device: a phone or a computer on your Tailscale network.')).toBeTruthy()
     cleanup()
-    const signedOut = door(args => (args[0] === 'tailscale' ? { ok: false, error: 'Tailscale is not signed in on this computer. Sign in to Tailscale, then turn this on again.' } : ok(OFF)))
+    const signedOut = door(args => (args[0] === 'tailscale' ? { ok: false, error: 'Tailscale is not signed in on this computer. Sign in to Tailscale, then try again.' } : ok(OFF)))
     show(signedOut.host)
     fireEvent.click(await screen.findByRole('button', { name: 'Reach this computer on your Tailscale network' }))
-    expect((await screen.findByRole('alert')).textContent).toBe('Tailscale is not signed in on this computer. Sign in to Tailscale, then turn this on again.')
+    expect((await screen.findByRole('alert')).textContent).toBe('Tailscale is not signed in on this computer. Sign in to Tailscale, then try again.')
   })
 
   test('behind Tailscale with Serve off for the network: what is in the way is said, with a press to the page in Tailscale that turns it on; Add phone says the same', async () => {
