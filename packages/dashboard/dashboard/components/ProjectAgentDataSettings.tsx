@@ -111,7 +111,7 @@ export function ProjectAgentDataSettings({ projectId }: { projectId: string }) {
             git email. Everyone who can read the repository can read it.
           </>
         }
-        extra={data.accounts && <SendAs host={data.accounts} value={sendAs} onChange={setPicked} label="Push as" />}
+        extra={data.accounts && <SendAs host={data.accounts} value={sendAs} onChange={setPicked} />}
         confirmLabel="Move and push"
         confirmBusyLabel="Moving…"
         fallbackError="Could not move the agent data."
