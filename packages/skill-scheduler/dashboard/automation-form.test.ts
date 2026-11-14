@@ -193,6 +193,8 @@ describe('an automation opened from its row', () => {
       'Its skill file is deleted from your files in this project, and nothing is committed for you. Git can bring back only what you committed of it: a file never committed, or your last changes to it, cannot be brought back. Everyone else who has the project keeps the row until your deletion reaches them. Its switch and your picks for it go with it. The records of its past runs stay.',
     )
     expect(removeWarning({ onThisMachine: true })).toBe('Its file is deleted. It is kept on this machine alone, outside git, so it cannot be brought back. Its switch and your picks for it go with it. The records of its past runs stay.')
+    // A shared one git never had: nobody else has the row, so nobody else keeps it.
+    expect(removeWarning({ untracked: true })).toBe('Its skill file is deleted from your files in this project. It was never committed, so nobody else has it, and it cannot be brought back. Its switch and your picks for it go with it. The records of its past runs stay.')
     // In a commit: the deletion is the person's to commit.
     expect(removedWords('/answer-comments', { ok: true, command: 'answer-comments', file: FILE, git: 'committed', startsFrom: 'origin/main' })).toBe(`Removed /answer-comments: ${FILE} is deleted, and nothing was committed for you. Commit the deletion and bring it to origin/main: until then everyone else who has the project keeps the row.`)
     expect(removedWords('/answer-comments', { ok: true, file: FILE, git: 'committed', startsFrom: 'HEAD' })).toBe(`Removed /answer-comments: ${FILE} is deleted, and nothing was committed for you. Commit the deletion.`)

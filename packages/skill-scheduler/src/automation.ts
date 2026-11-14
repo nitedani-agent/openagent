@@ -284,12 +284,16 @@ export async function removeAutomation(repo: string, name: string, git: GitRunne
 }
 
 /**
- * Where a shared automation's file stands for a run, as `status` says it on its row: when it is
- * not where a run's checkout starts as this clone last saw it, that start point (`notOn`), and a
- * run of it would start nothing. Nothing is fetched; a commit that cannot be read says nothing.
+ * What git holds of a shared automation's file, as `status` says it on its row: whether git has
+ * it at all (a file never added is `untracked`: removing it takes it from nobody else), and, when
+ * it is not where a run's checkout starts as this clone last saw it, that start point (`notOn`):
+ * a run of it would start nothing. Nothing is fetched; a commit that cannot be read says nothing.
  */
-export async function sharedInGit(repo: string, name: string, git: GitRunner): Promise<{ notOn?: string }> {
+export async function sharedInGit(repo: string, name: string, git: GitRunner): Promise<{ untracked?: true; notOn?: string }> {
+  // Git is asked about the file where it really is: the skills folder may be a link to another one.
+  const file = join(await realpath(join(repo, RUN_SKILLS_DIR)), name, SKILL_FILE)
+  const untracked = (await git(['ls-files', '--', file], repo).catch(() => 'unknown')).trim() === ''
   const ref = await startRef(repo, git)
   const there = (await isOnCommit(repo, ref, `${RUN_SKILLS_DIR}/${name}/${SKILL_FILE}`, git)) ?? true
-  return there ? {} : { notOn: ref }
+  return { ...(untracked ? { untracked: true as const } : {}), ...(there ? {} : { notOn: ref }) }
 }

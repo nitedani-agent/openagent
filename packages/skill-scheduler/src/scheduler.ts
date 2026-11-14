@@ -272,8 +272,8 @@ export async function stopScheduler(repo: string, opts: { unlessKeepAlive?: bool
   return { ...stopped, kept: false }
 }
 
-/** A command as `status` lists it: what its file says, its last run when it has one, and, for a shared automation, whether a run of it can start yet ({@link sharedInGit}). */
-export type StatusCommand = ListedCommand & { lastRun?: LastRun; notOn?: string }
+/** A command as `status` lists it: what its file says, its last run when it has one, and, for a shared automation, what git holds of its file ({@link sharedInGit}). */
+export type StatusCommand = ListedCommand & { lastRun?: LastRun; untracked?: true; notOn?: string }
 
 /** What `status` answers: the state, whether its process is alive, and the schedule as the project's files say it now. */
 export type Status = State & { running: boolean; schedule: StatusCommand[]; unreadable: Unlisted[] }
