@@ -1,8 +1,7 @@
 import { Minus, Plus } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger, cn } from '@openagt/dashboard/module'
 
-/** How many agents a project's batch starts, typed or stepped, from one to `max`: the Queue page's and the card's. */
-/** `className`: its height, the press's beside it. */
+/** How many agents a project's batch starts, typed or stepped, from one to `max`: the Queue page's and the card's. `className` sets its height to the press beside it. */
 export function BatchCount({ count, max, onChange, className }: { count: number; max: number; onChange: (count: number) => void; className?: string }) {
   return (
     <Tooltip>
