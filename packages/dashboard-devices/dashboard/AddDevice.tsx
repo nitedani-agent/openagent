@@ -347,7 +347,7 @@ function AddComputer({ d, onClose, onSetUpServer }: { d: Devices; onClose: () =>
             ))}
           </ul>
         )}
-        <p className="text-xs text-muted-foreground">Don't see it? Open OpenAgent on it, on the same Wi-Fi, with "On this Wi-Fi" on there.</p>
+        <p className="text-xs text-muted-foreground">Don't see it? Open OpenAgent on it, on the same Wi-Fi, and turn on "On this Wi-Fi" in its Settings › Devices.</p>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
           <span className="text-sm">
             Somewhere else?

@@ -523,6 +523,8 @@ describe('Settings › Devices: another computer, once', () => {
       show(host)
       await addComputer()
       expect(await screen.findByText('Looking on this Wi-Fi…')).toBeTruthy()
+      // Where the switch is on the other computer, which this one has not shown yet.
+      expect(screen.getByText(/^Don't see it\?/).textContent).toBe('Don\'t see it? Open OpenAgent on it, on the same Wi-Fi, and turn on "On this Wi-Fi" in its Settings › Devices.')
       act(() => void vi.advanceTimersByTime(10_000))
       expect(await screen.findByText('No computer found on this Wi-Fi yet. Still looking…')).toBeTruthy()
       const looks = runComputerCommand.mock.calls.filter(([args]) => args[0] === 'find').length
