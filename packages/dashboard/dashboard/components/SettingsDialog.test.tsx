@@ -305,7 +305,7 @@ describe('Settings › Claude web (#1332)', () => {
     prefsRead.mockResolvedValueOnce({ bridge: true, bridgeBrowser: true })
     refreshPreferences()
     open('claude-web')
-    const daemon = await screen.findByRole('radio', { name: /A browser the daemon runs/ })
+    const daemon = await screen.findByRole('radio', { name: /A browser the dashboard runs/ })
     const own = screen.getByRole('radio', { name: 'Your own Chrome' })
     // One choice: the two are the radios of one group, named by the question.
     const group = screen.getByRole('radiogroup', { name: 'Which browser does the work?' })
@@ -324,13 +324,13 @@ describe('Settings › Claude web (#1332)', () => {
     fireEvent.click(await screen.findByRole('radio', { name: 'Your own Chrome' }))
     expect(saves()).toEqual([{ bridgeBrowser: false }])
     expect(checked(screen.getByRole('radio', { name: 'Your own Chrome' }))).toBe(true)
-    expect(checked(screen.getByRole('radio', { name: /A browser the daemon runs/ }))).toBe(false)
+    expect(checked(screen.getByRole('radio', { name: /A browser the dashboard runs/ }))).toBe(false)
     // The status of the daemon's browser goes with its option.
     expect(screen.queryByText(/The bridge browser is off/)).toBeNull()
     // The words are the radio's label: a click on them picks it too.
-    fireEvent.click(screen.getByText('A browser the daemon runs — recommended'))
+    fireEvent.click(screen.getByText('A browser the dashboard runs — recommended'))
     expect(saves()).toEqual([{ bridgeBrowser: false }, { bridgeBrowser: true }])
-    expect(checked(screen.getByRole('radio', { name: /A browser the daemon runs/ }))).toBe(true)
+    expect(checked(screen.getByRole('radio', { name: /A browser the dashboard runs/ }))).toBe(true)
   })
 
   test('with the bridge off there is no browser to choose, and switching the bridge on asks which', async () => {

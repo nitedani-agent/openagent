@@ -551,7 +551,7 @@ function BridgeBrowserChoice({ daemonBrowser, onChange }: { daemonBrowser: boole
       <RadioGroup aria-labelledby={question} value={daemonBrowser ? 'daemon' : 'own'} onValueChange={next => onChange(next === 'daemon')}>
         {option(
           true,
-          'A browser the daemon runs — recommended',
+          'A browser the dashboard runs — recommended',
           'Chrome for Testing, downloaded once, signed in once, kept minimized. Web runs work with your own Chrome closed.',
           <BridgeBrowserSettings />,
         )}
