@@ -243,7 +243,6 @@ export function App() {
   const projectName = project ? (labels.get(project.id) ?? project.name) : null
   // The Human Queue as the pages show it: the picked project's items, or every project's.
   const interventions = scope ? interventionsRead.items.filter(item => item.projectId === scope) : interventionsRead.items
-  useDocumentTitle(interventions.length, projectName ?? (scope ? (labels.get(scope) ?? null) : null))
   // A URL naming a project that is not registered (renamed, removed, mistyped). A non-empty list
   // is the answer, so this never fires while the first read is still out.
   const unknownProject = projectId !== null && !noProject && projects.length > 0 && !projects.some(p => p.id === projectId)
@@ -428,6 +427,18 @@ export function App() {
     reloadProjects()
     navigate({ projectId: null, agentId: null })
   }
+  const justStarted = agentId === agentStart.id
+  // The name the daemon had for the run just started, before the run's record has one.
+  const startedTitle = justStarted ? agentStart.title : undefined
+  const namesRuns = preferences.nameRuns !== false
+  // What a listed session's page is called, in its heading and its tab: a subagent by its task, as its rows are.
+  const sessionLabel = selectedAgent
+    ? selectedAgent.parent !== undefined
+      ? taskLabel(selectedAgent)
+      : awaitingName(selectedAgent, namesRuns)
+        ? startedTitle
+        : agentLabel(selectedAgent)
+    : undefined
   // Another computer's project is removed there, not here.
   const removableHere = project?.machine === undefined ? leaveRemovedProject : undefined
   const renderMain = () => {
@@ -507,10 +518,6 @@ export function App() {
         />
       )
     }
-    const justStarted = agentId === agentStart.id
-    // The name the daemon had for the run just started, before the run's record has one.
-    const startedTitle = justStarted ? agentStart.title : undefined
-    const namesRuns = preferences.nameRuns !== false
     // What an agent's page is given whether its run is listed yet or not.
     const agentPage = {
       projectId,
@@ -549,8 +556,7 @@ export function App() {
         {...agentPage}
         live={selectedAgent.status === 'running'}
         card={selectedAgent}
-        // A subagent's page is named as its rows are: by its task, not by its whole prompt.
-        label={selectedAgent.parent !== undefined ? taskLabel(selectedAgent) : awaitingName(selectedAgent, namesRuns) ? startedTitle : agentLabel(selectedAgent)}
+        label={sessionLabel}
         naming={selectedAgent.parent === undefined && awaitingName(selectedAgent, namesRuns) && startedTitle === undefined}
         target={selectedAgent.target}
         remoteLabel={selectedAgent.remoteLabel}
@@ -579,6 +585,18 @@ export function App() {
   // stays at the top; on a wider screen the sidebar stays beside it. A chat keeps its box at the
   // bottom, and only its own columns scroll.
   const pageScrolls = phoneTitle !== null
+  // The tab says the page first, as its heading does, then the project the count is scoped to (#1923).
+  const pageName =
+    route.settings !== undefined
+      ? 'Settings'
+      : pageSegment
+        ? (OWN_PAGES.get(pageSegment) ?? modulePage?.label ?? (addressesRead ? 'No such page' : null))
+        : unknownProject
+          ? 'No such project'
+          : sessionGone
+            ? 'No such session'
+            : (sessionLabel ?? startedTitle)
+  useDocumentTitle(interventions.length, projectName ?? (scope ? (labels.get(scope) ?? null) : null), pageName)
   // Every other page is pinned: only its own columns scroll.
   usePinnedPage(!pageScrolls)
 

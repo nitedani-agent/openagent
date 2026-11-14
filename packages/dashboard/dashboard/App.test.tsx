@@ -502,13 +502,14 @@ describe('the project select (#1513)', () => {
     expect(document.title).toBe('(1) site — OpenAgent')
   })
 
-  test('the pick rides along to a module page and Settings over it, and its row opens that project\'s agent', async () => {
+  test('the pick rides along to a module page and Settings over it, and its row opens that project\'s agent; the tab names each page first', async () => {
     answerTwo()
     window.history.replaceState(null, '', '/site/overview')
     render(<App />)
     fireEvent.click(await screen.findByRole('link', { name: 'Logs' }))
     expect(url()).toBe('/site/logs')
     expect(await screen.findByText('runs of site')).toBeTruthy()
+    expect(document.title).toBe('(1) Logs · site — OpenAgent')
     // The sidebar marks the page that is open, also with Settings open over it. The Overview row's
     // name carries its Human Queue count here, and the person's row ends in "settings", hence the patterns.
     const marked = () => ['Overview', 'Logs', 'Settings'].filter(name => screen.getByRole(name === 'Settings' ? 'button' : 'link', { name: name === 'Settings' ? /settings$/i : new RegExp(`^${name}`) }).getAttribute('aria-current') === 'page')
@@ -519,6 +520,7 @@ describe('the project select (#1513)', () => {
     expect(await screen.findByText("the settings dialog on ''")).toBeTruthy()
     expect(screen.getByText('runs of site')).toBeTruthy()
     expect(marked()).toEqual(['Logs'])
+    expect(document.title).toBe('(1) Settings · site — OpenAgent')
     // Another entry replaces the address, so Back leaves Settings rather than stepping through it.
     const steps = window.history.length
     fireEvent.click(screen.getByRole('button', { name: 'to Agent' }))
@@ -530,6 +532,7 @@ describe('the project select (#1513)', () => {
     expect(screen.queryByText(/the settings dialog/)).toBeNull()
     fireEvent.click(await screen.findByText('site ran'))
     expect(url()).toBe('/site/3-s')
+    await waitFor(() => expect(document.title).toBe('(1) site ran · site — OpenAgent'))
   })
 
   test.each([
