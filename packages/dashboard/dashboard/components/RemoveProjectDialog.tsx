@@ -4,6 +4,7 @@ import { AlertDialog } from '@base-ui/react/alert-dialog'
 import type { CleanupReport } from '../../src/index.js'
 import { sendRemoveProject } from '../rpc/projects.js'
 import { ProjectLabelsContext } from '../lib/project-labels.js'
+import { useMountedModules } from '../lib/use-modules.js'
 import { useAction } from '../lib/use-action.js'
 import { cn } from '../lib/utils.js'
 import { Button } from './ui/button.js'
@@ -34,6 +35,8 @@ export function RemoveProjectDialog({
   // It opens on Cancel, as the other confirmations do, never on the box that widens the deletion.
   const cancel = useRef<HTMLButtonElement>(null)
   const label = useContext(ProjectLabelsContext).get(projectId)
+  // Only a project that has the scheduler has one to stop.
+  const scheduled = useMountedModules().pages.some(page => page.package === '@openagt/skill-scheduler' && page.projects.includes(projectId))
 
   // Each time it opens the box is unticked and an old error is gone: the menu opens it from
   // outside, so the dialog is not told through its own open-change.
@@ -97,7 +100,7 @@ export function RemoveProjectDialog({
             <>
               <AlertDialog.Title className="text-sm font-semibold">{label ? `Remove the project ${label}?` : 'Remove this project?'}</AlertDialog.Title>
               <AlertDialog.Description className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                It leaves the dashboard&rsquo;s list, and its scheduler stops unless you set it to keep running.{' '}
+                It leaves the dashboard&rsquo;s list{scheduled && <>, and its scheduler stops unless you set it to keep running</>}.{' '}
                 {files ? (
                   <>Your files and your commits stay.</>
                 ) : (
