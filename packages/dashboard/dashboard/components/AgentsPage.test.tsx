@@ -65,6 +65,9 @@ describe('the Agents page', () => {
     // An agent set to never pick up the project's own skills says so after its list; the default does not.
     expect(within(cards[1]!).getByText('· no project skills')).toBeTruthy()
     expect(within(cards[0]!).queryByText('· no project skills')).toBeNull()
+    // One without a skill every agent starts with says so, in the skill's own words; the default has both.
+    expect(within(cards[1]!).getByText('Without github, which every agent starts with. Pull requests on GitHub.')).toBeTruthy()
+    expect(within(cards[0]!).queryByText(/^Without /)).toBeNull()
     // The default is never removed.
     expect(within(cards[0]!).queryByRole('button', { name: 'Remove Default' })).toBeNull()
     expect(within(cards[1]!).getByRole('button', { name: 'Remove Reviewer' })).toBeTruthy()

@@ -123,6 +123,8 @@ export function AgentsPage() {
 function AgentCard({ agent, view, devices, onChanged, onRemoved, editRef }: { agent: AgentRecord; view: AgentsView; devices: AgentLoginsOn[] | undefined; onChanged: () => Promise<void>; onRemoved: () => void; editRef?: Ref<HTMLButtonElement> }) {
   const [editing, setEditing] = useState(false)
   const isDefault = agent.id === DEFAULT_AGENT
+  // What a skill every agent starts with does is what this one goes without: the skill's own line says it.
+  const without = (view.skills[0]?.skills ?? []).filter(skill => !agent.skills.includes(skill.name))
   const accounts = [
     agent.accounts.github !== undefined ? `@${agent.accounts.github} on GitHub` : 'GitHub: whatever the computer uses',
     ...(agent.accounts.claude ? [`Claude: ${agent.accounts.claude.map(id => view.claude.find(account => account.id === id)?.name ?? id).join(', ')}`] : []),
@@ -176,6 +178,9 @@ function AgentCard({ agent, view, devices, onChanged, onRemoved, editRef }: { ag
           )}
           {!agent.projectSkills && <span className="text-muted-foreground">· no project skills</span>}
         </p>
+        {without.map(skill => (
+          <p key={skill.name} className="text-xs text-muted-foreground">{`Without ${skill.name}, which every agent starts with. ${skill.description}`}</p>
+        ))}
         <p className="text-muted-foreground">{accounts.join(' · ')}</p>
         {agent.accounts.github !== undefined && devices && devices.length > 0 && <OnDevices login={agent.accounts.github} devices={devices} onCopied={onChanged} />}
       </CardContent>
