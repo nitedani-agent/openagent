@@ -175,7 +175,7 @@ describe('what the module tells the other pages starts by itself', () => {
 
   test('a command the last look held back does not start by itself, and the note says why', async () => {
     const answer = await read({ ...RAN, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome: 'quota: Current week is 99% used' }] } })
-    expect(answer[0]).toEqual({ command: 'post-merge-cleanup', on: false, note: 'Quota: Current week is 99% used' })
+    expect(answer[0]).toEqual({ command: 'post-merge-cleanup', on: false, note: 'Waits for quota: Current week is 99% used' })
   })
 
   test('a scheduler that is off says so once, and not again as its last look\'s word', async () => {

@@ -381,8 +381,10 @@ describe('in words', () => {
     expect(said('not due (last start less than a minute ago, every 15m)', { every: '15m', lastRun: { id: 'r', at: new Date().toISOString() } })).toBe('Next start in 15 min')
     expect(said('cap reached (1 in flight: 2026-10-03T10-00-00-000Z on other-box)')).toBe('One is already running')
     expect(said('cap reached (3 in flight: a on x, b on y, c on z)')).toBe('3 are already running')
+    // The quota holds it back: that it waits, and why in the tool's words; a usage that could not be read, with what to check.
+    expect(said('quota: the week is 90% used')).toBe('Waits for quota: the week is 90% used')
+    expect(said('quota: the quota could not be read, so there is no way to tell what is spare')).toBe("Waits until Claude Code's usage can be read: check it is logged in and online")
     // A reason only the tool knows stays in the tool's words.
-    expect(said('quota: the week is 90% used')).toBe('Quota: the week is 90% used')
     expect(said('check failed: not found: queue')).toBe('Check failed: not found: queue')
     expect(said('not ready: `claude` is not logged in.')).toBe('Not ready: `claude` is not logged in.')
     // The row says when it last ran: a start is not said twice.
@@ -476,7 +478,7 @@ describe('when a row that is on starts next', () => {
     expect(said('not due')).toBe('Next start in 3h, if there is work')
     expect(said('started 2026-10-08T09-00-00-000Z')).toBe('Next start in 3h, if there is work')
     expect(said('cap reached (1 in flight, cap 1)')).toBe('One is already running')
-    expect(said('quota: 96% of the week used')).toBe('Quota: 96% of the week used')
+    expect(said('quota: 96% of the week used')).toBe('Waits for quota: 96% of the week used')
     expect(said('check failed: jq: not found')).toBe('Check failed: jq: not found')
     // A row its coding agent cannot run says so whatever the pace says.
     expect(startsNext({ ...row, runsOn: 'codex', able: ['claude-code'] }, now)).toBe('Cannot start on Codex: its skill is not in .agents/skills')

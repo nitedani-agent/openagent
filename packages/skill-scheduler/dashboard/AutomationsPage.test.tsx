@@ -559,7 +559,7 @@ describe('the Automations page: its rows', () => {
     for (const [outcome, words] of [
       ['not on HEAD: .claude/skills/post-merge-cleanup/SKILL.md is not committed', 'Cannot start yet: its skill is not committed'],
       ['not ready: Claude Code is not logged in.', 'Not ready: Claude Code is not logged in.'],
-      ['quota: Current week is 99% used', 'Quota: Current week is 99% used'],
+      ['quota: Current week is 99% used', 'Waits for quota: Current week is 99% used'],
     ] as const) {
       const { host } = hostAnswering(() => ({ ok: true, output: { ...STATUS, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome }] } } }))
       show(host)
@@ -2406,7 +2406,7 @@ describe('a row with each', () => {
     const quota = each({ lastTick: { at: '2026-10-03T10:00:00.000Z', decisions: [{ command: 'reply', outcome: 'no run for https://github.com/o/r/issues/5: quota: Current week is 99% used' }] } })
     show(quota.host)
     await screen.findByRole('region', { name: 'gemstack' })
-    expect(within(row('/reply')).getByText('Quota: Current week is 99% used')).toBeTruthy()
+    expect(within(row('/reply')).getByText('Waits for quota: Current week is 99% used')).toBeTruthy()
     cleanup()
     for (const [answer, said] of [[{ run: 'r1', resumed: true }, 'Resumed a run. Open it'], [{ run: 'r2' }, 'Started a run. Open it']] as const) {
       const { host, runCommand } = each({ lastTick: { at: '2026-10-03T10:00:00.000Z', decisions: [{ command: 'reply', outcome: 'resumed r1', run: 'r1' }] } }, args => (args[0] === 'now' ? { ok: true, output: { ok: true, command: 'reply', ...answer } } : { ok: true, output: { ok: true } }))
