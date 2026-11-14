@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { request } from 'node:https'
 import { createRequire } from 'node:module'
@@ -179,14 +180,23 @@ export async function uninstall(io: InstallIO = defaultIO, env: NodeJS.ProcessEn
     io.err('OpenAgent installs on a Mac or on Linux only, so there is nothing to take off here.')
     return 1
   }
+  const dir = secureAddressDir(env)
+  // Nothing of an install here: no password is asked for, and nothing is said to be taken off.
+  const asks = await platform.adminInstalled()
+  if (!asks && !existsSync(dir) && !platform.folders(env).some(folder => existsSync(folder))) {
+    await platform.removeDashboard(env)
+    io.out('◆ OpenAgent is not installed on this computer: there is nothing to take off.')
+    return 0
+  }
   const left = await platform.leftBehind(env)
   await platform.removeDashboard(env)
-  const dir = secureAddressDir(env)
   await platform.untrust(join(dir, CERTIFICATE_FILE), io, env)
-  const admin = await asAdmin(platform.adminUninstall(), io).then(
-    () => true,
-    () => false,
-  )
+  const admin =
+    !asks ||
+    (await asAdmin(platform.adminUninstall(), io).then(
+      () => true,
+      () => false,
+    ))
   await rm(dir, { recursive: true, force: true })
   for (const folder of platform.folders(env)) await rm(folder, { recursive: true, force: true })
   if (!admin) {
