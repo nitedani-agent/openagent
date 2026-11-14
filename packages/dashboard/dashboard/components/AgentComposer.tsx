@@ -5,6 +5,7 @@ import { Loader2, Square } from 'lucide-react'
 import { Composer, type ComposerHandle } from './Composer.js'
 import { sendMessage, sendStop } from '../rpc/control.js'
 import { useAction } from '../lib/use-action.js'
+import { keepDraft, keptDraft } from '../lib/draft-handoff.js'
 import { DaemonDown } from '../lib/use-daemon-health.js'
 import { Button } from './ui/button.js'
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip.js'
@@ -172,6 +173,9 @@ export function AgentComposer({
   useEffect(() => {
     if (picked === recorded) setPicked(null)
   }, [picked, recorded])
+  // The session shown now: a send's answer, back after another was picked, leaves that one's box and menus alone.
+  const shown = useRef(agentId)
+  shown.current = agentId
   /** Say `text` to the run, `later` for after its turn. Resolves whether it went through; a refusal's words are shown. */
   const say = async (text: string, later: boolean): Promise<boolean> => {
     const wasLive = live
@@ -186,7 +190,7 @@ export function AgentComposer({
       if (!wasLive) onSending?.(null)
       return false
     }
-    if (!wasLive) setPicked(null)
+    if (!wasLive && shown.current === agentId) setPicked(null)
     if (wasLive) onQueued?.({ id, text, later })
     // An ended run goes live again under the same id: tell the shell, which keeps its feed (#762).
     else onAgentStarted?.(text, agentId)
@@ -197,11 +201,18 @@ export function AgentComposer({
     if (busy) return
     // The box is emptied as the message goes, so what is typed meanwhile stays; a message refused comes back to it.
     composerRef.current?.clear()
-    if (await say(contextSet ? promptWithContext(text, contextSet.context) : text, later)) {
-      contextSet?.reset()
-      setNotSent(false)
-    } else composerRef.current?.append(text)
-    composerRef.current?.focus()
+    const went = await say(contextSet ? promptWithContext(text, contextSet.context) : text, later)
+    if (went) contextSet?.reset()
+    if (shown.current === agentId) {
+      if (went) setNotSent(false)
+      else composerRef.current?.append(text)
+      composerRef.current?.focus()
+    } else if (!went) {
+      // Another session's box is shown by now: the words go back to the one they were written in, after what it holds, as its append puts them.
+      const draftKey = `${projectId}:${agentId}`
+      const kept = keptDraft(draftKey)
+      keepDraft(draftKey, kept === undefined ? text : `${kept}\n\n${text}`)
+    }
   }
 
   const stopSession = () =>

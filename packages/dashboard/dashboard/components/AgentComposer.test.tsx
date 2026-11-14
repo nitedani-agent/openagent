@@ -53,6 +53,7 @@ vi.mock('./Composer.js', async () => {
 })
 
 const { AgentComposer } = await import('./AgentComposer.js')
+const { keepDraft, keptDraft } = await import('../lib/draft-handoff.js')
 
 function renderComposer(over: Partial<Parameters<typeof AgentComposer>[0]> = {}) {
   const onAgentStarted = vi.fn()
@@ -307,6 +308,23 @@ describe('AgentComposer, another session picked', () => {
     await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('session A could not be stopped'))
     page.rerender(composer('run-2'))
     expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  test('a send refused once another session is shown gives its words back to its own session’s box, after what it holds, and leaves the shown box and its focus alone', async () => {
+    let answer: (outcome: unknown) => void = () => {}
+    sendMessage.mockReturnValueOnce(new Promise(resolve => (answer = resolve)))
+    const page = render(composer('run-1'))
+    fireEvent.click(screen.getByText('submit'))
+    // Typed in run-1's box while the message went.
+    keepDraft('p1:run-1', 'and one more thing')
+    page.rerender(composer('run-2'))
+    box.append.mockClear()
+    box.focus.mockClear()
+    await act(async () => answer({ ok: false, error: 'session A refused it' }))
+    expect([box.append.mock.calls, box.focus.mock.calls]).toEqual([[], []])
+    page.rerender(composer('run-1'))
+    // What run-1's box opens with (Composer's own test).
+    expect(keptDraft('p1:run-1')).toBe('and one more thing\n\nhello')
   })
 })
 
