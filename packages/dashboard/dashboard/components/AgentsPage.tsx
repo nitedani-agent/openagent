@@ -265,6 +265,8 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
   const [error, setError] = useState<string | undefined>()
   const formId = useId()
   const [nameMissing, setNameMissing] = useState(false)
+  // The refusal said is the name's: the field is marked, and says it.
+  const [nameRefused, setNameRefused] = useState(false)
   const addingAccount = useAddGitAccount(async login => {
     setDraft(d => ({ ...d, github: login }))
     await onAccounts()
@@ -280,6 +282,7 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
   const save = async () => {
     setBusy(true)
     setError(undefined)
+    setNameRefused(false)
     try {
       const done = await sendSaveAgent({
         ...(draft.id !== undefined ? { id: draft.id } : {}),
@@ -288,8 +291,10 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
         accounts: { ...(draft.github !== undefined ? { github: draft.github } : {}), ...(draft.claude.size > 0 ? { claude: [...draft.claude] } : {}), ...(draft.codex.size > 0 ? { codex: [...draft.codex] } : {}) },
         projectSkills: draft.projectSkills,
       })
-      if (!done.ok) setError(done.error)
-      else await onDone(true)
+      if (!done.ok) {
+        setError(done.error)
+        setNameRefused(done.field === 'name')
+      } else await onDone(true)
     } finally {
       setBusy(false)
     }
@@ -315,7 +320,7 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
       footer={
         <div className="space-y-2">
           {error !== undefined && (
-            <p role="alert" className="text-xs text-danger">
+            <p id="agent-refused" role="alert" className="text-xs text-danger">
               {error}
             </p>
           )}
@@ -323,7 +328,8 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
             <Button size="sm" variant="ghost" disabled={busy} onClick={close}>
               Cancel
             </Button>
-            <Button type="submit" form={formId} size="sm" disabled={busy}>
+            {/* Saving, Save and the name keep the focus a press or Enter left on them: disabled, either would drop it to the page. */}
+            <Button type="submit" form={formId} size="sm" aria-disabled={busy || undefined} className={cn(busy && 'opacity-50')}>
               {busy && <Loader2 className="size-3.5 animate-spin" aria-hidden />}
               {busy ? 'Saving…' : 'Save'}
             </Button>
@@ -349,12 +355,14 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
             id="agent-name"
             ref={nameField}
             value={draft.name}
-            disabled={busy || isDefault}
+            disabled={isDefault}
+            readOnly={busy}
             placeholder="Social media"
-            aria-invalid={nameMissing}
-            {...(nameMissing ? { 'aria-describedby': 'agent-name-missing' } : isDefault ? { 'aria-describedby': 'agent-name-kept' } : {})}
+            aria-invalid={nameMissing || nameRefused}
+            {...(nameMissing ? { 'aria-describedby': 'agent-name-missing' } : nameRefused ? { 'aria-describedby': 'agent-refused' } : isDefault ? { 'aria-describedby': 'agent-name-kept' } : {})}
             onChange={event => {
               setNameMissing(false)
+              setNameRefused(false)
               setDraft(d => ({ ...d, name: event.target.value }))
             }}
             className="max-w-sm"

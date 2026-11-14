@@ -58,7 +58,7 @@ test('the agents, the skills to pick from and the accounts this computer knows; 
     const saved = await sendSaveAgent({ name: 'Social Media', skills: ['ask', 'reply'], accounts: { github: 'octo-agent', claude: ['Dani'] }, projectSkills: false })
     assert.deepEqual(saved, { ok: true, id: 'social-media' })
     assert.deepEqual(JSON.parse(readFileSync(join(dir, 'cfg', 'openagent', 'agents', 'social-media.json'), 'utf8')), { name: 'Social Media', skills: ['ask', 'reply'], accounts: { github: 'octo-agent', claude: ['Dani'] }, projectSkills: false })
-    assert.deepEqual(await sendSaveAgent({ name: 'social media!', skills: [], accounts: {}, projectSkills: true }), { ok: false, error: 'There is an agent Social Media already: pick another name.' })
+    assert.deepEqual(await sendSaveAgent({ name: 'social media!', skills: [], accounts: {}, projectSkills: true }), { ok: false, error: 'There is an agent Social Media already: pick another name.', field: 'name' })
     view = await onAgentsList()
     assert.deepEqual(view.agents.map(agent => agent.id), ['default', 'social-media'])
     // Edited under its own id, renamed too; the default keeps its name.

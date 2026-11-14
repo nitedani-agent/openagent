@@ -101,6 +101,32 @@ describe('the Agents page', () => {
     await waitFor(() => expect(rpc.sendSaveAgent).toHaveBeenCalledWith(expect.objectContaining({ name: 'Social media' })))
   })
 
+  test('a name OpenAgent refuses marks the field with the refusal; a refusal of something else leaves the field alone, and typing clears it; while it saves, the field and Save keep the focus, and Save sends nothing more', async () => {
+    let refuse = (_outcome: unknown) => {}
+    rpc.sendSaveAgent.mockReturnValue(new Promise(resolve => (refuse = resolve)))
+    render(<AgentsPage />)
+    fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
+    const editor = screen.getByRole('dialog', { name: 'New agent' })
+    const name = within(editor).getByLabelText('Name') as HTMLInputElement
+    fireEvent.change(name, { target: { value: 'Default!' } })
+    name.focus()
+    fireEvent.submit(name.form!)
+    const save = (await within(editor).findByRole('button', { name: 'Saving…' })) as HTMLButtonElement
+    expect([name.disabled, name.readOnly, save.disabled, save.getAttribute('aria-disabled')]).toEqual([false, true, false, 'true'])
+    fireEvent.click(save)
+    expect(rpc.sendSaveAgent).toHaveBeenCalledTimes(1)
+    refuse({ ok: false, error: 'There is an agent Default already: pick another name.', field: 'name' })
+    await waitFor(() => expect(name.getAttribute('aria-invalid')).toBe('true'))
+    expect(document.activeElement).toBe(name)
+    expect(document.getElementById(name.getAttribute('aria-describedby')!)!.textContent).toBe('There is an agent Default already: pick another name.')
+    fireEvent.change(name, { target: { value: 'Defaults' } })
+    expect(name.getAttribute('aria-invalid')).toBe('false')
+    rpc.sendSaveAgent.mockResolvedValue({ ok: false, error: 'OpenAgent has no GitHub account stranger on this computer.' })
+    fireEvent.submit(name.form!)
+    await screen.findByText('OpenAgent has no GitHub account stranger on this computer.')
+    expect(name.getAttribute('aria-invalid')).toBe('false')
+  })
+
   test('Cancel, Esc or the ✕ on an editor with something changed asks first: Cancel there keeps what was typed, Discard closes it; with nothing changed it closes at once', async () => {
     render(<AgentsPage />)
     fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
