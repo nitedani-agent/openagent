@@ -107,7 +107,10 @@ describe('the Automations card of the Overview', () => {
   test('a row the last look held back has no green dot, and says why as a warning', async () => {
     const { host } = hostAnswering(() => ({ ok: true, output: { ...RAN, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome: 'not ready: `claude` not found' }] } } }))
     show(host, [GEMSTACK])
-    expect((await screen.findByText(/^Not ready:/)).className).toMatch(/text-warning/)
+    const reason = (await screen.findByText(/^Not ready:/)).closest('span')!
+    expect(reason.className).toMatch(/text-warning/)
+    // Its backticked words as code, as on the page.
+    expect(within(reason).getByText('claude').tagName).toBe('CODE')
     expect(screen.getByText('/post-merge-cleanup').previousElementSibling!.className).not.toMatch(/bg-success/)
   })
 

@@ -138,7 +138,7 @@ function OnRow({ project, command, stopped, lookedAt, onOpenRun, reload }: { pro
       {/* While the scheduler is stopped a row has no next start: the line above says why. */}
       {!stopped && (
         <span title={startsNext(command)} className={cn('min-w-0 truncate text-xs', held ? 'text-warning' : 'text-muted-foreground')}>
-          {startsNext(command)}
+          <CodeWords text={startsNext(command)} />
         </span>
       )}
       {started !== undefined && started !== '' && (

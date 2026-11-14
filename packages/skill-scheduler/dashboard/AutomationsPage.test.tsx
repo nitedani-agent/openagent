@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { ModuleHostContext, forgetRemembered, type ModuleCommandResult, type ModuleHost, type ModuleProject } from '@openagt/dashboard/module'
 import { OpenAgentDown, fakeHost } from '@openagt/dashboard/module/testing'
 import { AutomationsPage } from './AutomationsPage.js'
+import { CodeWords } from './CodeWords.js'
 import { ANY_AGENT, ON_CLAUDE, STATUS, hostAnswering } from './fixtures.js'
 import { checked, choices, offered, openList, pick, queryRadio, radio, radioNames, showing } from '../../dashboard/dashboard/test-controls.js'
 
@@ -539,10 +540,25 @@ describe('the Automations page: its rows', () => {
     expect(disabled(await shown('not ready: `claude` not found', { running: false }))).toBe(false)
   })
 
+  test('what the last look said is set as the tool wrote it: its backticked words as code, its address a link that opens in a new tab, the sentence\'s full stop left out of it', async () => {
+    const notFound = 'not ready: `claude` not found — install Claude Code and make sure `claude` is on your PATH: https://claude.com/claude-code'
+    const { host } = hostAnswering(() => ({ ok: true, output: { ...STATUS, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome: notFound }] } } }))
+    show(host)
+    await screen.findByRole('region', { name: 'gemstack' })
+    const reason = within(row('/post-merge-cleanup'))
+    expect(reason.getAllByText('claude').map(code => code.tagName)).toEqual(['CODE', 'CODE'])
+    const link = reason.getByRole('link', { name: 'https://claude.com/claude-code' })
+    expect([link.getAttribute('href'), link.getAttribute('target')]).toEqual(['https://claude.com/claude-code', '_blank'])
+    expect(link.parentElement!.textContent).toBe('Not ready: claude not found — install Claude Code and make sure claude is on your PATH: https://claude.com/claude-code')
+    cleanup()
+    render(<CodeWords text="Read https://claude.com/claude-code." />)
+    expect(screen.getByRole('link').getAttribute('href')).toBe('https://claude.com/claude-code')
+  })
+
   test('a row switched on that the last look held back is not green either: its reason is a warning', async () => {
     for (const [outcome, words] of [
       ['not on HEAD: .claude/skills/post-merge-cleanup/SKILL.md is not committed', 'Cannot start yet: its skill is not committed'],
-      ['not ready: `claude` not found', 'Not ready: `claude` not found'],
+      ['not ready: Claude Code is not logged in.', 'Not ready: Claude Code is not logged in.'],
       ['quota: Current week is 99% used', 'Quota: Current week is 99% used'],
     ] as const) {
       const { host } = hostAnswering(() => ({ ok: true, output: { ...STATUS, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome }] } } }))

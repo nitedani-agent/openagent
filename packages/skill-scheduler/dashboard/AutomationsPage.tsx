@@ -428,7 +428,9 @@ function Stands({ host, project, scheduled, stopped }: { host: ModuleHost; proje
       </Next>
       {decision !== undefined && (
         <Next>
-          <span className={idle || held ? 'text-warning' : 'text-muted-foreground'}>{decision}</span>
+          <span className={idle || held ? 'text-warning' : 'text-muted-foreground'}>
+            <CodeWords text={decision} />
+          </span>
         </Next>
       )}
     </p>
