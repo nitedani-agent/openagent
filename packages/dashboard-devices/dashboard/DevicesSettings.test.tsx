@@ -968,6 +968,8 @@ describe('Settings › Devices: a code typed on another computer', () => {
     expect(await screen.findByText("At the office, at a friend's: it joins through my-vps.")).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Give it a code' }))
     const card = await screen.findByRole('group', { name: 'The code' })
+    // The path the other computer has, with no device yet as with some.
+    expect(screen.getByText(/^On the other computer, open/).textContent).toBe('On the other computer, open Settings › Devices, press Join with a code (or Add device › Join with a code), and type:')
     expect(host.machineCode).toHaveBeenCalledWith(VPS.id)
     expect(card.textContent).toContain('203.0.113.10')
     expect(card.textContent).toContain('K7P4-QX9M')

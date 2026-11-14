@@ -25,7 +25,7 @@ const KINDS: readonly { id: Exclude<Adding, 'choose'>; icon: ComponentType<{ cla
   { id: 'phone', icon: Smartphone, title: 'Phone or tablet', words: 'Scan a code with its camera.' },
   { id: 'computer', icon: Monitor, title: 'Computer', words: 'Another computer that runs OpenAgent.' },
   { id: 'server', icon: Server, title: 'Server', words: 'Install OpenAgent on a VPS, or on a PC that stays on.' },
-  { id: 'code', icon: Ticket, title: 'I have a code', words: 'Join a server of yours, or a computer someone shared with you.' },
+  { id: 'code', icon: Ticket, title: 'Join with a code', words: 'Join a server of yours, or a computer someone shared with you.' },
 ]
 
 /** A Tailscale address is reached the first time only once its certificate is fetched, which Safari may sit out as a black page. */
@@ -426,7 +426,7 @@ export function GiveCode({ d, server, onClose }: { d: Devices; server: ModuleMac
         ) : (
           <>
             <p className="text-sm">
-              On the other computer, open <span className="font-medium">Settings › Devices › Add device › I have a code</span>, and type:
+              On the other computer, open <span className="font-medium">Settings › Devices</span>, press <span className="font-medium">Join with a code</span> (or <span className="font-medium">Add device › Join with a code</span>), and type:
             </p>
             <CodeCard where={code.where} code={code.code} />
             {joined !== undefined ? (
