@@ -2387,6 +2387,14 @@ describe('a row with each', () => {
     expect(within(reply).getByText('When a maintainer wrote /agent')).toBeTruthy()
   })
 
+  test('a run the last look could not continue, its coding agent not ready, holds back that run alone: the row still runs now, beside a run it continued', async () => {
+    const decisions = [{ command: 'reply', outcome: 'run on-codex not resumed: not ready: codex is not logged in.' }, { command: 'reply', outcome: 'resumed on-opus', run: 'on-opus' }]
+    const { host } = each({ schedule: [STATUS.schedule[1], { ...EACH.schedule[1], able: ['claude-code', 'codex'] }], lastTick: { at: STATUS.lastTick.at, decisions } })
+    show(host)
+    await screen.findByRole('region', { name: 'gemstack' })
+    expect(disabled(within(row('/reply')).getByRole('button', { name: 'Run /reply now' }))).toBe(false)
+  })
+
   test('its panel picks an agent, a model and a publish level, for the runs it starts, and says a run it continues keeps its own', async () => {
     const { host, runCommand } = each()
     show(host)

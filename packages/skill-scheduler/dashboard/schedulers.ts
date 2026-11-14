@@ -511,10 +511,11 @@ const notThere = (agent: string, dir: string): string => `Cannot start on ${agen
 /**
  * What the scheduler's last look found holds a row back, whatever its pace: its skill is not where
  * a run's checkout starts, or its coding agent is not ready, which hold back "Run now" too; or the
- * quota, which holds back only the starts the scheduler makes by itself. Nothing for any other look.
+ * quota, which holds back only the starts the scheduler makes by itself. Nothing for any other look,
+ * nor for one run of a row with each: its own agent and quota are asked for it, and hold it alone.
  */
 export function heldBy(command: Pick<SchedulerCommand, 'decision'>): 'every start' | 'quota' | undefined {
-  const held = /^(?:(?:run \S+ not resumed|no run for \S+): )?(not on \S+|not ready: |quota: )/.exec(command.decision?.outcome ?? '')
+  const held = /^(not on \S+|not ready: |quota: )/.exec(command.decision?.outcome ?? '')
   if (!held) return undefined
   return held[1] === 'quota: ' ? 'quota' : 'every start'
 }
