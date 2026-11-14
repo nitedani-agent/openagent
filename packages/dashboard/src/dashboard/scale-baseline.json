@@ -125,8 +125,5 @@
   "skill-logs/dashboard/LogsPage.tsx": {
     "gap-2.5": 2,
     "text-[9px]": 1
-  },
-  "skill-scheduler/dashboard/CodeWords.tsx": {
-    "rounded": 2
   }
 }

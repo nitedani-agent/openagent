@@ -96,7 +96,6 @@ describe('the Automations page: its rows', () => {
 
     const cleanupRow = row('/post-merge-cleanup')
     expect(within(cleanupRow).getByText('Write up merged pull requests.')).toBeTruthy()
-    expect(within(cleanupRow).getByText('On').className).toMatch(/text-success/)
     expect(within(cleanupRow).getByText('Never ran')).toBeTruthy()
     expect(within(cleanupRow).getByText('Every day')).toBeTruthy()
     expect(within(cleanupRow).getByText('May commit, pushes nothing')).toBeTruthy()
@@ -107,7 +106,6 @@ describe('the Automations page: its rows', () => {
     expect(within(queueRow).getByText('Work one queued task.')).toBeTruthy()
     expect(within(queueRow).getByText('When the queue holds a task')).toBeTruthy()
     expect(within(queueRow).getByText('As its skill says')).toBeTruthy()
-    expect(within(queueRow).getByText('Off').className).toMatch(/text-muted-foreground/)
     expect(within(queueRow).getByRole('switch', { name: 'Run /work-queue by itself' }).getAttribute('aria-checked')).toBe('false')
     // The same three controls on every row.
     for (const name of ['/post-merge-cleanup', '/work-queue']) expect(within(row(name)).getAllByRole('button').map(b => b.textContent)).toEqual(['Run now', 'Edit'])
@@ -158,7 +156,7 @@ describe('the Automations page: its rows', () => {
     expect(within(gemstack).getAllByRole('group').map(g => g.getAttribute('aria-label'))).toEqual(['Your automations'])
   })
 
-  test('where a row stands, in one line: on or off; never ran, when it last ran, or that its last run failed, which opens that run; and what the scheduler last decided for it while it is on, in plain words', async () => {
+  test('where a row stands, in its line: never ran, when it last ran, or that its last run failed, which opens that run; and what the scheduler last decided for it while it is on, in plain words', async () => {
     const on = '2026-10-03T08:00:00.000Z'
     const status = {
       ...STATUS,
@@ -206,7 +204,7 @@ describe('the Automations page: its rows', () => {
     expect(failed.className).toMatch(/text-danger/)
     fireEvent.click(failed)
     expect(host.openAgent).toHaveBeenLastCalledWith('p1', '2026-10-03T09-00-00-000Z')
-    expect(within(off).getByText('Off')).toBeTruthy()
+    expect(within(off).getByRole('switch').getAttribute('aria-checked')).toBe('false')
     expect(within(off).queryByText(/switched off/i)).toBeNull()
     expect(within(off).queryByText('No work')).toBeNull()
     expect(within(row('/update-tickets')).queryByRole('button', { name: /^Last r/ })).toBeNull()
@@ -222,7 +220,7 @@ describe('the Automations page: its rows', () => {
       const link = within(row(name)).getByRole('link', { name: /^Running, started \d+s ago$/ })
       expect(link.getAttribute('href')).toBe('/p1/r9')
     }
-    expect(within(row('/work-queue')).getByText('Off')).toBeTruthy()
+    expect(within(row('/work-queue')).getByRole('switch').getAttribute('aria-checked')).toBe('false')
   })
 
   test('a row set to a coding agent that cannot read its skill says so whatever its switch, read off the files and not off the last look, and its "Run now" is held: it would start nothing', async () => {
@@ -343,7 +341,8 @@ describe('the Automations page: its rows', () => {
     )
     const gemstack = await screen.findByRole('region', { name: 'gemstack' })
     expect(disabled(within(row('/work-queue')).getByRole('switch', { name: 'Run /work-queue by itself' }))).toBe(true)
-    fireEvent.click(within(gemstack).getByRole('button', { name: 'New automation in gemstack' }))
+    // Its project is the only one shown: "New automation" is the page's own press, at its title.
+    fireEvent.click(screen.getByRole('button', { name: 'New automation in gemstack' }))
     const form = within(gemstack).getByRole('group', { name: 'New automation' })
     fireEvent.change(within(form).getByRole('textbox', { name: 'Name' }), { target: { value: 'answer-comments' } })
     fireEvent.change(within(form).getByLabelText('What the agent is told'), { target: { value: 'Answer each new comment below.' } })
@@ -511,11 +510,11 @@ describe('the Automations page: its rows', () => {
     expect(screen.getAllByRole('button', { name: 'Copy the start command' })).toHaveLength(1)
   })
 
-  test('a row switched on while the scheduler is off, or not running, is not green: it says it does not start', async () => {
+  test('a row switched on while the scheduler is off, or not running, says it does not start', async () => {
     const { host } = hostAnswering(projectId => ({ ok: true, output: projectId === 'p1' ? { ...STATUS, on: false, running: false } : { ...STATUS, running: false } }))
     show(host, [GEMSTACK, OTHER])
     const off = within(await screen.findByRole('region', { name: 'gemstack' })).getByRole('listitem', { name: '/post-merge-cleanup' })
-    expect(within(off).getByText('On').className).not.toMatch(/text-success/)
+    expect(within(off).getByRole('switch').getAttribute('aria-checked')).toBe('true')
     expect(within(off).getByText('Does not start: the scheduler is off').className).toMatch(/text-warning/)
     const notRunning = within(screen.getByRole('region', { name: 'other' })).getByRole('listitem', { name: '/post-merge-cleanup' })
     expect(within(notRunning).getByText('Does not start: the scheduler is on, but not running')).toBeTruthy()
@@ -2194,7 +2193,6 @@ describe("the rows are the project's files as they stand", () => {
     const yours = await screen.findByRole('group', { name: 'Your automations' })
     const shown = within(yours).getByRole('listitem', { name: '/answer-replies' })
     expect(within(shown).getByText('Answer each new reply.')).toBeTruthy()
-    expect(within(shown).getByText('Off')).toBeTruthy()
     expect(within(shown).getByRole('switch').getAttribute('aria-checked')).toBe('false')
     // The note is still up, and says where the row is.
     expect(screen.getByRole('group', { name: 'New automation' }).textContent).toContain('Its row is in the list now, switched off.')
