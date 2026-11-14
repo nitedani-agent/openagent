@@ -86,6 +86,17 @@ describe('the Agents page', () => {
     expect(screen.queryByRole('dialog', { name: 'New agent' })).toBeNull()
   })
 
+  test('after a new agent is saved, the focus goes to its card\u2019s Edit once the list is read with it', async () => {
+    render(<AgentsPage />)
+    await screen.findByRole('region', { name: 'Default' })
+    fireEvent.click(screen.getByRole('button', { name: 'New agent' }))
+    fireEvent.change(within(screen.getByRole('dialog', { name: 'New agent' })).getByLabelText('Name'), { target: { value: 'Social' } })
+    rpc.onAgentsList.mockResolvedValue({ ...VIEW, agents: [...VIEW.agents, { id: 'social', name: 'Social', skills: ['ask', 'github'], accounts: {}, projectSkills: true }] })
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'New agent' })).getByRole('button', { name: 'Save' }))
+    await screen.findByRole('region', { name: 'Social' })
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Edit Social' })))
+  })
+
   test('the editor is a form: Enter in the name saves; with no name, Save says what it needs under the field and saves nothing', async () => {
     render(<AgentsPage />)
     fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))

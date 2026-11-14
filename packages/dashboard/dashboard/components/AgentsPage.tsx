@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent, type Ref } from 'react'
 import { Bot, Check, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { onAgentLogins, onAgentsList, sendCopyAgentLogins, sendRemoveAgent, sendSaveAgent, type AgentAccountChoice, type AgentLoginsOn, type AgentRecord, type AgentsView } from '../rpc/agents.js'
 import { DEFAULT_AGENT } from '../../src/client.js'
@@ -78,7 +78,14 @@ export function AgentsPage() {
   const newAgent = useRef<HTMLButtonElement>(null)
   // The agent just removed: once the list is read without it, its Remove press is gone with its card, and the focus goes to "New agent".
   const removed = useRef<string | undefined>(undefined)
+  // The agent just made: once the list is read with it, the focus goes to its card's Edit.
+  const made = useRef<string | undefined>(undefined)
+  const madeEdit = useRef<HTMLButtonElement>(null)
   useEffect(() => {
+    if (made.current !== undefined && madeEdit.current) {
+      made.current = undefined
+      madeEdit.current.focus()
+    }
     if (removed.current === undefined || view?.agents.some(agent => agent.id === removed.current)) return
     removed.current = undefined
     newAgent.current?.focus()
@@ -102,9 +109,9 @@ export function AgentsPage() {
         <Skeleton className="h-32 w-full" />
       ) : (
         <div className="space-y-4">
-          {adding && <AgentEditor view={view} onAccounts={reload} onDone={async saved => (setAdding(false), saved ? changed() : undefined)} />}
+          {adding && <AgentEditor view={view} onAccounts={reload} onDone={async saved => (setAdding(false), saved ? ((made.current = saved), changed()) : undefined)} />}
           {view.agents.map(agent => (
-            <AgentCard key={agent.id} agent={agent} view={view} devices={devices} onChanged={changed} onRemoved={() => void (removed.current = agent.id)} />
+            <AgentCard key={agent.id} agent={agent} view={view} devices={devices} onChanged={changed} onRemoved={() => void (removed.current = agent.id)} {...(agent.id === made.current ? { editRef: madeEdit } : {})} />
           ))}
         </div>
       )}
@@ -113,7 +120,7 @@ export function AgentsPage() {
 }
 
 /** One agent: its name, skills and accounts, and the presses that edit or remove it; `onRemoved` is told before the list is read again without it. */
-function AgentCard({ agent, view, devices, onChanged, onRemoved }: { agent: AgentRecord; view: AgentsView; devices: AgentLoginsOn[] | undefined; onChanged: () => Promise<void>; onRemoved: () => void }) {
+function AgentCard({ agent, view, devices, onChanged, onRemoved, editRef }: { agent: AgentRecord; view: AgentsView; devices: AgentLoginsOn[] | undefined; onChanged: () => Promise<void>; onRemoved: () => void; editRef?: Ref<HTMLButtonElement> }) {
   const [editing, setEditing] = useState(false)
   const isDefault = agent.id === DEFAULT_AGENT
   const accounts = [
@@ -127,7 +134,7 @@ function AgentCard({ agent, view, devices, onChanged, onRemoved }: { agent: Agen
         <div className="flex items-center gap-2">
           <Bot className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <CardTitle level={2} className="min-w-0 flex-1 truncate text-base">{agent.name}</CardTitle>
-          <Button size="xs" variant="ghost" aria-label={`Edit ${agent.name}`} onClick={() => setEditing(true)}>
+          <Button ref={editRef} size="xs" variant="ghost" aria-label={`Edit ${agent.name}`} onClick={() => setEditing(true)}>
             <Pencil className="size-3.5" aria-hidden />
             Edit
           </Button>
@@ -246,7 +253,7 @@ const COMPUTERS = ''
  * account OpenAgent does not have yet is added from here, in its own dialog over this one, and is
  * then the one picked; `onAccounts` reads the accounts again.
  */
-function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord; view: AgentsView; onAccounts: () => Promise<void>; onDone: (saved: boolean) => Promise<void> | void }) {
+function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord; view: AgentsView; onAccounts: () => Promise<void>; onDone: (savedId: string | undefined) => Promise<void> | void }) {
   // What is being typed is the editor's own from its first frame: the page reading the agents again changes nothing in it.
   const [draft, setDraft] = useState<Draft>(() => draftOf(agent))
   const opened = useRef(draft).current
@@ -259,7 +266,7 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
     release.current = holdEntry(step => setLeaving(() => step))
     return release.current
   }, [changed])
-  const close = () => (changed ? setLeaving(() => () => void onDone(false)) : void onDone(false))
+  const close = () => (changed ? setLeaving(() => () => void onDone(undefined)) : void onDone(undefined))
   const nameField = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | undefined>()
@@ -294,7 +301,7 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
       if (!done.ok) {
         setError(done.error)
         setNameRefused(done.field === 'name')
-      } else await onDone(true)
+      } else await onDone(done.id)
     } finally {
       setBusy(false)
     }
