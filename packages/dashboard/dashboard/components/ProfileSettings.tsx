@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { sendRemovePersonPicture, sendSavePersonName, sendSyncPersonFromGitHub } from '../rpc/person.js'
 import { personChanged, usePerson } from '../lib/use-person.js'
 import { useAction } from '../lib/use-action.js'
+import { cn } from '../lib/utils.js'
 import { Button } from './ui/button.js'
 import { Input } from './ui/input.js'
 import { Avatar } from './PersonMenu.js'
@@ -53,6 +54,7 @@ export function ProfileSettings() {
   }
   const remove = () => void removing.run(() => sendRemovePersonPicture(), 'Could not remove the picture.').then(done)
   const changedName = name.trim() !== '' && (name.trim() !== person.name || !person.own)
+  const nothingToSave = saving.busy || !changedName
 
   return (
     <SettingsSection description="Your name and picture in OpenAgent, the same on each of your computers.">
@@ -61,7 +63,7 @@ export function ProfileSettings() {
           className="flex items-start justify-between gap-4"
           onSubmit={event => {
             event.preventDefault()
-            if (changedName) save()
+            if (!nothingToSave) save()
           }}
         >
           <div className="min-w-0">
@@ -82,7 +84,8 @@ export function ProfileSettings() {
               }}
               className="h-8 w-48"
             />
-            <Button type="submit" size="sm" disabled={saving.busy || !changedName} className="min-w-16">
+            {/* With nothing to save, it keeps the focus it was pressed with: a disabled press would drop it to the page. */}
+            <Button type="submit" size="sm" aria-disabled={nothingToSave || undefined} className={cn('min-w-16', nothingToSave && 'opacity-50')}>
               {saving.busy ? 'Saving…' : 'Save'}
             </Button>
           </div>
