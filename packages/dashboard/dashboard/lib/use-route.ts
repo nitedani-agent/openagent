@@ -59,6 +59,12 @@ function subscribe(listener: () => void): () => void {
   }
 }
 
+/** A new entry of another page opens at its top: only Back and Forward bring a page back to where it was scrolled. */
+function scrollToTop(): void {
+  stopRestore()
+  window.scrollTo(0, 0)
+}
+
 /** Where a history entry keeps how far its page was scrolled when it was left. */
 const SCROLL = 'openagent:scroll'
 
@@ -132,9 +138,11 @@ export function useRoute(projects: ProjectAddresses): {
     if (url === current) return
     if (options?.replace) window.history.replaceState(window.history.state, '', url)
     else {
-      // Settings over the page leaves the page mounted, scrolled where it was.
+      // Settings over the page leaves the page mounted, scrolled where it was, and so does a change of the query alone.
+      const otherPage = !options?.overPage && new URL(url, window.location.href).pathname !== window.location.pathname
       if (!options?.overPage) keepScroll()
       window.history.pushState(options?.overPage ? OVER_PAGE_STATE : null, '', url)
+      if (otherPage) scrollToTop()
     }
     notify()
   }
@@ -163,6 +171,7 @@ function openOwnPage(page: string): void {
   const { scope } = parseRoute(currentUrl(), addresses)
   keepScroll()
   window.history.pushState(null, '', formatRoute({ projectId: null, agentId: null, page, ...(scope ? { scope } : {}) }, addresses))
+  scrollToTop()
   notify()
 }
 
