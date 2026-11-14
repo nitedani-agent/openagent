@@ -13,7 +13,7 @@ import { CHECK_TIMEOUT_MS, GLANCE_MS, NOW_CHECK_TIMEOUT_MS, QUOTA_KEPT_MS, SCHED
 import { inFlight, lastRuns, lastStart, type LastRun } from './records.js'
 import { readSchedule, type Schedule, type ScheduledCommand, type Unlisted } from './schedule.js'
 import { isSwitchedOn, listed, namesGivenUp, readState, stateDir, updateState, withoutListed, withoutName, withoutPid, type ListedCommand, type State, type TickRecord } from './state.js'
-import { atStartOf } from './start-point.js'
+import { atStartOf, startRef } from './start-point.js'
 import { sharedInGit } from './automation.js'
 import { glance, startNow, tick, type StartedNow, type TickDeps } from './tick.js'
 import { runCheck } from './check.js'
@@ -287,11 +287,14 @@ export type Status = State & { running: boolean; schedule: StatusCommand[]; unre
 export async function schedulerStatus(repo: string, git: GitRunner): Promise<Status> {
   const [state, schedule] = await Promise.all([readState(repo), readSchedule(repo)])
   const last = await lastRuns(repo, schedule, hostname()).catch((): Record<string, LastRun> => ({}))
+  const shared = (command: ScheduledCommand): boolean => command.editable === true && command.text === undefined
+  // Where a run's checkout starts is asked once, and only where a shared automation is listed.
+  const ref = schedule.commands.some(shared) ? await startRef(repo, git) : undefined
   const commands = await Promise.all(
     schedule.commands.map(async (command): Promise<StatusCommand> => ({
       ...listed(command),
       ...(last[command.name] ? { lastRun: last[command.name]! } : {}),
-      ...(command.editable && command.text === undefined ? await sharedInGit(repo, command.name, git) : {}),
+      ...(ref !== undefined && shared(command) ? await sharedInGit(repo, command.name, ref, git) : {}),
     })),
   )
   return { ...state, running: state.pid !== undefined && isPidAlive(state.pid), schedule: commands, unreadable: schedule.unreadable }

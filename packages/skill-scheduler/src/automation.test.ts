@@ -7,6 +7,7 @@ import { addAutomation, automationProblem, editAutomation, removeAutomation, sav
 import { automationOf, automationSkill, type NewAutomation } from './automation-file.js'
 import { MAX_NAME } from './names.js'
 import { readSchedule, skillSchedule } from './schedule.js'
+import { startRef } from './start-point.js'
 import { RETRIED_RM, git, removeRepo, testRepo, writeSkill } from './test-repo.js'
 
 // A person's own automation: the skill file it becomes, what is refused, the file written into the project, and a check tried once.
@@ -159,16 +160,16 @@ test("a shared automation's row knows whether a run of it can start: not before 
   const repo = await testRepo()
   try {
     await addAutomation(repo, ANSWER, git)
-    assert.deepEqual(await sharedInGit(repo, 'answer-comments', git), { untracked: true, notOn: 'origin/main' })
+    assert.deepEqual(await sharedInGit(repo, 'answer-comments', await startRef(repo, git), git), { untracked: true, notOn: 'origin/main' })
     await git(['add', '-A'], repo)
-    assert.deepEqual(await sharedInGit(repo, 'answer-comments', git), { notOn: 'origin/main' }, 'staged: git has it')
+    assert.deepEqual(await sharedInGit(repo, 'answer-comments', await startRef(repo, git), git), { notOn: 'origin/main' }, 'staged: git has it')
     await git(['commit', '-q', '-m', 'answer comments'], repo)
-    assert.deepEqual(await sharedInGit(repo, 'answer-comments', git), { notOn: 'origin/main' }, 'committed, not pushed: a checkout from origin/main has no such command')
+    assert.deepEqual(await sharedInGit(repo, 'answer-comments', await startRef(repo, git), git), { notOn: 'origin/main' }, 'committed, not pushed: a checkout from origin/main has no such command')
     await git(['push', '-q', 'origin', 'main'], repo)
-    assert.deepEqual(await sharedInGit(repo, 'answer-comments', git), {})
+    assert.deepEqual(await sharedInGit(repo, 'answer-comments', await startRef(repo, git), git), {})
     await git(['remote', 'remove', 'origin'], repo)
     await addAutomation(repo, { ...ANSWER, name: 'answer-replies' }, git)
-    assert.deepEqual(await sharedInGit(repo, 'answer-replies', git), { untracked: true, notOn: 'HEAD' })
+    assert.deepEqual(await sharedInGit(repo, 'answer-replies', await startRef(repo, git), git), { untracked: true, notOn: 'HEAD' })
   } finally {
     await removeRepo(repo)
   }
