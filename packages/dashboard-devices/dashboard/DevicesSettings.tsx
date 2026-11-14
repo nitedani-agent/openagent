@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, Ellipsis, House, Loader2, Monitor, Plus, Server, Smartphone, Tablet, UserPlus, UserRound } from 'lucide-react'
-import { Button, ConfirmDialog, Dialog, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, formatDateTime, formatRelative, usePolled, useSettingsCrumb } from '@openagt/dashboard/module'
+import { Button, ConfirmDialog, Dialog, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input, cn, formatDateTime, formatRelative, usePolled, useSettingsCrumb } from '@openagt/dashboard/module'
 import { addDevice, keepPerson, loadMine, myName, nameOwner, removeDevice, removeMine, removePerson, renameDevice, setTailscale, type Answer, type DeviceRow, type DoorStatus, type LineRow, type PersonRow, type PersonThere } from './devices.js'
 import { installFailed, removeDevice as removeServerDevice } from './servers.js'
 import { AddDevice, useJoined, type Adding } from './AddDevice.js'
@@ -144,7 +144,8 @@ function Start({ d, onAdd }: { d: Devices; onAdd: (adding: Adding) => void }) {
       </p>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <p className="text-xs text-muted-foreground">On Tailscale? From anywhere, with no server:</p>
-        <Button size="sm" variant="outline" disabled={turning} onClick={() => void onTailscale()}>
+        {/* Busy, a press in this file keeps the focus it was pressed with: a disabled one would drop it to the page. */}
+        <Button size="sm" variant="outline" aria-disabled={turning || undefined} className={cn(turning && 'opacity-50')} onClick={() => void (turning || onTailscale())}>
           Reach this computer on your Tailscale network
         </Button>
       </div>
@@ -323,6 +324,7 @@ function PhoneRow({ d, item }: { d: Devices; item: PhoneItem }) {
             className="space-y-4"
             onSubmit={event => {
               event.preventDefault()
+              if (busy) return
               void act(() => d.changeDoor(() => renameDevice(host, item.door!.id, name.trim()))).then(done => done && setRenaming(false))
             }}
           >
@@ -331,7 +333,7 @@ function PhoneRow({ d, item }: { d: Devices; item: PhoneItem }) {
               <Button size="sm" type="button" variant="ghost" onClick={() => setRenaming(false)}>
                 Cancel
               </Button>
-              <Button size="sm" type="submit" disabled={busy || !name.trim()}>
+              <Button size="sm" type="submit" disabled={!name.trim()} aria-disabled={busy || undefined} className={cn(busy && 'opacity-50')}>
                 Save
               </Button>
             </div>
@@ -375,7 +377,7 @@ function DoorDevice({ device, mine, busy, onRemove }: { device: DeviceRow; mine:
           {device.line && <p className="text-xs text-muted-foreground">{`${device.person !== undefined && !mine ? `A computer of ${device.person}` : 'A computer of yours'}: runs can be started on it from here. Remove it and it is no longer in "Run on".`}</p>}
         </div>
       </div>
-      <Button size="sm" variant="ghost" disabled={busy} aria-label={`Remove ${device.name}`} onClick={onRemove}>
+      <Button size="sm" variant="ghost" aria-disabled={busy || undefined} className={cn(busy && 'opacity-50')} aria-label={`Remove ${device.name}`} onClick={() => busy || onRemove()}>
         Remove
       </Button>
     </li>
@@ -424,7 +426,7 @@ function DoorPeople({ d, persons, devices, lines }: { d: Devices; persons: Perso
               <div role="group" aria-label={`${person.name} was removed from ${nameAt(person.from)}`} className="flex flex-wrap items-center justify-between gap-2 pt-1">
                 <p className="text-xs text-warning">{`Removed from ${nameAt(person.from)}.`}</p>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" disabled={busy} onClick={() => void act(() => keepPerson(host, person.name))}>
+                  <Button size="sm" variant="outline" aria-disabled={busy || undefined} className={cn(busy && 'opacity-50')} onClick={() => void (busy || act(() => keepPerson(host, person.name)))}>
                     Keep, switched off
                   </Button>
                   <RemovePerson name={person.name} label="Remove" busy={busy} onConfirm={() => act(() => removePerson(host, person.name))} />

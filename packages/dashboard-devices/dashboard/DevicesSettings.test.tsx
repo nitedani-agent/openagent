@@ -290,6 +290,38 @@ describe('Settings › Devices: this computer, and how devices reach it', () => 
     expect((await screen.findByRole('alert')).textContent).toBe('Tailscale is not signed in on this computer. Sign in to Tailscale, then try again.')
   })
 
+  test('a press keeps the focus it was pressed with while what it started works, and sends nothing more until that is answered', async () => {
+    // Every command but the status waits here until it is answered.
+    let answer = (_result: ModuleCommandResult) => {}
+    const held = (): Promise<ModuleCommandResult> => new Promise(resolve => (answer = resolve))
+    const from = 'https://165.245.244.10'
+    const PEOPLE = { ...OPEN, persons: [{ name: 'Rom', owner: true }, { name: 'Kim', ready: true, from, removed: true }], devices: [{ ...PHONE, person: 'Rom' }], lines: [{ url: from, mode: 'full', name: 'OpenAgentVPS' }] }
+    const pressed = async (press: HTMLButtonElement, command: string, calls: ReturnType<typeof door>['runComputerCommand']): Promise<void> => {
+      press.focus()
+      fireEvent.click(press)
+      await waitFor(() => expect([press.disabled, press.getAttribute('aria-disabled')]).toEqual([false, 'true']))
+      fireEvent.click(press)
+      answer({ ok: false, error: `${command} could not be done` })
+      expect(await screen.findByText(`${command} could not be done`)).toBeTruthy()
+      expect(calls.mock.calls.filter(([args]) => args[0] === command)).toHaveLength(1)
+      expect(document.activeElement).toBe(press)
+    }
+    const start = door(args => (args[0] === 'tailscale' ? held() : ok(OFF)))
+    show(start.host)
+    await pressed((await screen.findByRole('button', { name: 'Reach this computer on your Tailscale network' })) as HTMLButtonElement, 'tailscale', start.runComputerCommand)
+    cleanup()
+    const phone = door(args => (args[0] === 'rename' ? held() : ok({ ...OPEN, devices: [PHONE] })))
+    show(phone.host)
+    await fromMenu('iPhone, Safari', 'Rename')
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Name' }), { target: { value: 'My phone' } })
+    await pressed(screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement, 'rename', phone.runComputerCommand)
+    cleanup()
+    const people = door(args => (args[0] === 'remove' || args[0] === 'keep' ? held() : ok(PEOPLE)))
+    show(people.host)
+    await pressed((await screen.findByRole('button', { name: 'Remove iPhone, Safari' })) as HTMLButtonElement, 'remove', people.runComputerCommand)
+    await pressed(screen.getByRole('button', { name: 'Keep, switched off' }) as HTMLButtonElement, 'keep', people.runComputerCommand)
+  })
+
   test('behind Tailscale with Serve off for the network: what is in the way is said, with a press to the page in Tailscale that turns it on; Add a phone says the same', async () => {
     const OFF_THERE = { on: false, listening: false, tailscale: { address: 'laptop.tail1234.ts.net' }, problem: 'Serve is off on your Tailscale network. Turn it on once in your Tailscale account; the door opens by itself then.', fixAt: 'https://login.tailscale.com/f/serve?node=n1', devices: [PHONE], persons: [] }
     show(door(() => ok(OFF_THERE)).host)
