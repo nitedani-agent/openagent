@@ -132,6 +132,18 @@ test('a run goes by the name every list gives it: with no short name and no prom
   expect(screen.getAllByRole('link', { name: 'r2' }).length).toBeGreaterThan(0)
 })
 
+test("a run's name, pointed at, says what it was asked, in the table and the narrow list alike; with no ask, its name", async () => {
+  render(
+    <ModuleHostContext.Provider value={hostWith([{ id: 'r1', startedAt: at(now - 1000), status: 'done', title: 'Login page', intent: 'make the login page' }, { id: 'r2', startedAt: at(now - 2000), status: 'done', title: 'Named only' }])}>
+      <LogsPage projects={[{ id: 'p1', name: 'alpha', gitHost: true }]} projectId={null} path={[]} />
+    </ModuleHostContext.Provider>,
+  )
+  const titles = (name: string) => screen.getAllByRole('link', { name }).map(link => link.getAttribute('title'))
+  expect(await screen.findAllByRole('link', { name: 'Login page' })).toHaveLength(2)
+  expect(titles('Login page')).toEqual(['make the login page', 'make the login page'])
+  expect(titles('Named only')).toEqual(['Named only', 'Named only'])
+})
+
 test('a second visit opens with the last list at once, while the runs are read again, faded once that read has been out a second', async () => {
   const page = (host: FakeHost) => (
     <ModuleHostContext.Provider value={host}>

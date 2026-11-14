@@ -242,7 +242,7 @@ export function LogsPage({ projects, path }: ModulePageProps) {
                         <div className="flex items-center gap-2.5">
                           <RunPerson person={card.person} account={accountOf(project.id, card.person)} />
                           <div className="min-w-0 flex-1">
-                            <RunName card={card} title={card.title ?? card.intent} href={host.agentHref(project.id, card.id)} onOpen={() => host.openAgent(project.id, card.id)} />
+                            <RunName card={card} href={host.agentHref(project.id, card.id)} onOpen={() => host.openAgent(project.id, card.id)} />
                             {card.title?.trim() && card.intent?.trim() && (
                               <p className="truncate text-xs text-muted-foreground" title={card.intent}>
                                 {card.intent}
@@ -287,7 +287,7 @@ export function LogsPage({ projects, path }: ModulePageProps) {
                   <li key={`${project.id}/${card.id}`} onClick={() => host.openAgent(project.id, card.id)} className="flex cursor-pointer items-center gap-2.5 border-b border-border py-2 hover:bg-accent">
                     <RunPerson person={card.person} account={accountOf(project.id, card.person)} />
                     <div className="min-w-0 flex-1">
-                      <RunName card={card} title={card.intent} href={host.agentHref(project.id, card.id)} onOpen={() => host.openAgent(project.id, card.id)} />
+                      <RunName card={card} href={host.agentHref(project.id, card.id)} onOpen={() => host.openAgent(project.id, card.id)} />
                       <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
                         <Status status={card.status} offline={card.offline} />
                         {many && <span>{project.name}</span>}
@@ -312,13 +312,13 @@ export function LogsPage({ projects, path }: ModulePageProps) {
   )
 }
 
-/** A run's name, a link to the run: what the keyboard reaches of a row the pointer opens anywhere, and what opens it in a new tab. */
-function RunName({ card, title, href, onOpen }: { card: Row['card']; title: string | undefined; href: string; onOpen: () => void }) {
+/** A run's name, a link to the run: what the keyboard reaches of a row the pointer opens anywhere, and what opens it in a new tab. Pointed at, it says what the run was asked, in the table and the narrow list alike. */
+function RunName({ card, href, onOpen }: { card: Row['card']; href: string; onOpen: () => void }) {
   const open = inPlace(onOpen)
   return (
     <a
       href={href}
-      title={title}
+      title={card.intent ?? card.title}
       onClick={event => {
         // Not the row's too: a click the browser takes opens the run in a new tab, not also here.
         event.stopPropagation()
