@@ -217,7 +217,8 @@ export function AgentComposer({
 
   const stopSession = () =>
     void runStop(() => sendStop(projectId, agentId).then(() => true), 'Could not stop the agent.').then(result => {
-      if (result.ok) setStopRequested(true)
+      // A Stop that lands once another session is shown latches nothing there: that one still works.
+      if (result.ok && shown.current === agentId) setStopRequested(true)
     })
 
   // Esc stops the agent, as in Claude Code, also typed in the box, unless it closes something open

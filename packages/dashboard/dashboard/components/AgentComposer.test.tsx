@@ -336,6 +336,18 @@ describe('AgentComposer, another session picked', () => {
     // What run-1's box opens with (Composer's own test).
     expect(keptDraft('p1:run-1')).toBe('and one more thing\n\nhello')
   })
+
+  test('a late successful Stop for A leaves B stoppable', async () => {
+    let finish!: () => void
+    sendStop.mockReturnValueOnce(new Promise<void>(resolve => { finish = resolve }))
+    const ui = (agentId: string) => <AgentComposer projectId="p1" agentId={agentId} live files={[]} />
+    const page = render(ui('A'))
+    fireEvent.click(screen.getByRole('button', { name: 'Stop agent' }))
+    page.rerender(ui('B'))
+    expect((screen.getByRole('button', { name: 'Stop agent' }) as HTMLButtonElement).disabled).toBe(false)
+    await act(async () => finish())
+    expect((screen.getByRole('button', { name: 'Stop agent' }) as HTMLButtonElement).disabled).toBe(false)
+  })
 })
 
 describe('AgentComposer, given back what the run never read', () => {
