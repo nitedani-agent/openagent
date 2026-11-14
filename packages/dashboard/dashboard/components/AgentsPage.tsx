@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Bot, Check, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { onAgentLogins, onAgentsList, sendCopyAgentLogins, sendRemoveAgent, sendSaveAgent, type AgentAccountChoice, type AgentLoginsOn, type AgentRecord, type AgentsView } from '../rpc/agents.js'
 import { DEFAULT_AGENT } from '../../src/client.js'
+import { holdEntry } from '../lib/use-route.js'
 import { usePolled } from '../lib/use-async.js'
 import { cn } from '../lib/utils.js'
 import { useAddGitAccount } from './AddGitAccount.js'
@@ -239,8 +240,8 @@ const COMPUTERS = ''
 
 /**
  * An agent edited, or a new one, in a dialog over the page: the name, the skills ticked, the
- * accounts picked; Save, or Enter in the name, writes it, Cancel leaves it, and Esc or the ✕ ask first
- * once something is changed. Its parts scroll under the title while Save
+ * accounts picked; Save, or Enter in the name, writes it, Cancel leaves it, and Esc, the ✕, Back or a
+ * reload ask first once something is changed. Its parts scroll under the title while Save
  * and Cancel stay in view, and a click beside it closes nothing: much is typed here. A GitHub
  * account OpenAgent does not have yet is added from here, in its own dialog over this one, and is
  * then the one picked; `onAccounts` reads the accounts again.
@@ -249,7 +250,15 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
   // What is being typed is the editor's own from its first frame: the page reading the agents again changes nothing in it.
   const [draft, setDraft] = useState<Draft>(() => draftOf(agent))
   const opened = useRef(draft).current
-  const [leaving, setLeaving] = useState(false)
+  const changed = !sameDraft(draft, opened)
+  // Leaving what is changed asks first, and the step asked about waits here.
+  const [leaving, setLeaving] = useState<(() => void) | undefined>()
+  const release = useRef(() => {})
+  useEffect(() => {
+    if (!changed) return
+    release.current = holdEntry(step => setLeaving(() => step))
+    return release.current
+  }, [changed])
   const nameField = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | undefined>()
@@ -300,8 +309,8 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
       initialFocus={nameField}
       onOpenChange={open => {
         if (open || busy) return
-        if (sameDraft(draft, opened)) void onDone(false)
-        else setLeaving(true)
+        if (changed) setLeaving(() => () => void onDone(false))
+        else void onDone(false)
       }}
       title={agent ? `Editing ${agent.name}` : 'New agent'}
       footer={
@@ -321,12 +330,15 @@ function AgentEditor({ agent, view, onAccounts, onDone }: { agent?: AgentRecord;
             </Button>
           </div>
           <ConfirmDialog
-            open={leaving}
-            onOpenChange={setLeaving}
+            open={leaving !== undefined}
+            onOpenChange={open => !open && setLeaving(undefined)}
             title={agent ? `Discard your changes to ${agent.name}?` : 'Discard the new agent?'}
             body="What you typed and ticked here is not saved."
             confirmLabel="Discard"
-            onSuccess={() => void onDone(false)}
+            onSuccess={() => {
+              release.current()
+              leaving?.()
+            }}
           />
         </div>
       }

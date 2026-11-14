@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { forgetRemembered } from '../lib/use-async.js'
 import { DaemonDown } from '../lib/use-daemon-health.js'
 
@@ -8,7 +8,8 @@ vi.mock('../rpc/agents.js', () => rpc)
 const logins = vi.hoisted(() => ({ onGitHosts: vi.fn(), sendGitHostLogin: vi.fn(), sendStopGitHostLogin: vi.fn(), sendGitHostInstall: vi.fn(), onAgentState: vi.fn(), sendAgentFix: vi.fn() }))
 vi.mock('../rpc/logins.js', () => logins)
 const route = vi.hoisted(() => ({ openAgents: vi.fn() }))
-vi.mock('../lib/use-route.js', () => route)
+// The real leave guard: Back and a reload are the browser's.
+vi.mock('../lib/use-route.js', async () => ({ holdEntry: (await vi.importActual<typeof import('../lib/use-route.js')>('../lib/use-route.js')).holdEntry, ...route }))
 // The tooltip's words are on the page.
 vi.mock('./ui/tooltip.js', async () => {
   const { cloneElement } = await import('react')
@@ -116,6 +117,42 @@ describe('the Agents page', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(screen.queryByRole('alertdialog')).toBeNull()
     expect(rpc.sendSaveAgent).not.toHaveBeenCalled()
+  })
+
+  test('Back or a reload with a name typed asks first, and the address stays: Cancel keeps the name, Discard goes back and holds nothing more', async () => {
+    window.history.replaceState(null, '', '/permissions')
+    window.history.pushState(null, '', '/agents')
+    const { useRoute } = await vi.importActual<typeof import('../lib/use-route.js')>('../lib/use-route.js')
+    const { NO_PROJECTS } = await import('../../src/project-address.js')
+    // The app's route, which follows Back.
+    const Routed = () => (useRoute(NO_PROJECTS), null)
+    render(<><Routed /><AgentsPage /></>)
+    const back = async () => {
+      const popped = new Promise(resolve => window.addEventListener('popstate', resolve, { once: true }))
+      window.history.back()
+      await act(async () => void (await popped))
+    }
+    // "New agent" is a press once the agents are read.
+    await screen.findByRole('region', { name: 'Default' })
+    fireEvent.click(screen.getByRole('button', { name: 'New agent' }))
+    fireEvent.change(within(screen.getByRole('dialog', { name: 'New agent' })).getByLabelText('Name'), { target: { value: 'Backtest' } })
+    const reload = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(reload)
+    expect(reload.defaultPrevented).toBe(true)
+    await back()
+    const asked = await screen.findByRole('alertdialog', { name: 'Discard the new agent?' })
+    expect(window.location.pathname).toBe('/agents')
+    fireEvent.click(within(asked).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    expect((within(screen.getByRole('dialog', { name: 'New agent' })).getByLabelText('Name') as HTMLInputElement).value).toBe('Backtest')
+    await back()
+    const popped = new Promise(resolve => window.addEventListener('popstate', resolve, { once: true }))
+    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Discard' }))
+    await act(async () => void (await popped))
+    expect(window.location.pathname).toBe('/permissions')
+    const after = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(after)
+    expect(after.defaultPrevented).toBe(false)
   })
 
   test('with OpenAgent not answering after a name is typed, Discard still closes the editor: it sends nothing', async () => {
