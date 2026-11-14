@@ -16,7 +16,6 @@ import { sendNow, withdrawMessage } from '../rpc/control.js'
 import type { WaitingMessage } from './EventList.js'
 import { AgentWorkBar } from './AgentWorkBar.js'
 import { useWorkBarAway } from '../lib/work-bar-away.js'
-import { useAction } from '../lib/use-action.js'
 import { keepSending, keepWaiting, keptSending, keptWaiting, onKeptWaiting } from '../lib/draft-handoff.js'
 import { AgentFeed } from './AgentFeed.js'
 import { IssueLinks } from './Markdown.js'
@@ -602,11 +601,22 @@ function useMessagesOnTheirWay(
   // Cancel and edit puts the message back in the box; the composer says how.
   const editInBox = useRef<((text: string) => void) | null>(null)
   // Send now asks the run to read every message it has not yet: one press, under the last of them, which says how it went.
-  const now = useAction()
+  // Said per run: an answer that comes back once another run is shown is its own run's.
+  const [saidNow, setSaidNow] = useState<Partial<Record<string, { busy: boolean; refused?: string }>>>({})
+  const now = saidNow[agentId]
+  const onSendNow = (): void => {
+    const run = agentId
+    const answered = (refused: string | undefined): void => setSaidNow(was => ({ ...was, [run]: refused === undefined ? undefined : { busy: false, refused } }))
+    setSaidNow(was => ({ ...was, [run]: { busy: true } }))
+    void sendNow(projectId, run).then(
+      result => answered(result.ok ? undefined : result.error),
+      (err: unknown) => answered(err instanceof Error ? err.message : 'Could not send it now.'),
+    )
+  }
   const sendsNow = [...unread].reverse().find(message => !message.later)?.id
   const waiting: WaitingMessage[] = unread.map(({ prompts: _prompts, ...message }) => ({
     ...message,
-    ...(message.id === sendsNow ? { onSendNow: () => void now.run(() => sendNow(projectId, agentId), 'Could not send it now.'), sendingNow: now.busy, refused: now.error ?? undefined } : {}),
+    ...(message.id === sendsNow ? { onSendNow, sendingNow: now?.busy ?? false, refused: now?.refused } : {}),
     onEdit: () => {
       setQueued(was => was.filter(other => other.id !== message.id))
       void withdrawMessage(projectId, agentId, message.id)

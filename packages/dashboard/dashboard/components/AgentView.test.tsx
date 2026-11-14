@@ -742,6 +742,26 @@ describe('a message sent while the agent works', () => {
     expect((await screen.findByRole('alert')).textContent).toBe('could not reach the machine')
   })
 
+  test('what Send now said is the session’s it was pressed in: another session picked shows its own, and an answer that comes back later shows in its session alone', async () => {
+    sendNow.mockResolvedValueOnce({ ok: false, error: 'session A could not be reached' })
+    const page = render(view({ live: true, events: [start('go'), text] }))
+    fireEvent.click(screen.getByText('queue-one'))
+    fireEvent.click(screen.getByRole('button', { name: 'Send now' }))
+    expect((await screen.findByRole('alert')).textContent).toBe('session A could not be reached')
+    page.rerender(view({ agentId: 'run-2', live: true, events: [start('go'), text] }))
+    fireEvent.click(screen.getByText('queue-one'))
+    expect(screen.queryByRole('alert')).toBeNull()
+    let answer: (outcome: unknown) => void = () => {}
+    sendNow.mockReturnValueOnce(new Promise(resolve => (answer = resolve)))
+    fireEvent.click(screen.getByRole('button', { name: 'Send now' }))
+    page.rerender(view({ live: true, events: [start('go'), text] }))
+    expect(screen.getByRole('button', { name: 'Send now' })).toBeTruthy()
+    await act(async () => answer({ ok: false, error: 'session B refused it late' }))
+    expect(screen.getByRole('alert').textContent).toBe('session A could not be reached')
+    page.rerender(view({ agentId: 'run-2', live: true, events: [start('go'), text] }))
+    expect(screen.getByRole('alert').textContent).toBe('session B refused it late')
+  })
+
   test('it is still waiting after the page is left or reloaded, with Send now and Cancel and edit, until the agent reads it', () => {
     const before = [start('go'), text]
     render(view({ live: true, events: before }))
