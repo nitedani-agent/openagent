@@ -558,7 +558,7 @@ function BridgeBrowserChoice({ daemonBrowser, onChange }: { daemonBrowser: boole
         {option(
           false,
           'Your own Chrome',
-          'Install the extension, open its options and paste the token. Web runs need your Chrome open.',
+          'Install the extension from the folder below, open its options and paste the token. Web runs need your Chrome open.',
           <BridgeSettings />,
         )}
       </RadioGroup>
