@@ -214,7 +214,7 @@ test("each run says whose it is: their picture where the project's git host know
   expect(vi.mocked(host.gitHostPeople).mock.calls.at(-1)).toEqual(['p1', ['ada@x.dev', 'git@brillout.com']])
 })
 
-test('a project that gave the whole page of 50 runs has older ones: the page says it lists the last 50; one with fewer lists every run', async () => {
+test('a project that gave the whole page of 50 runs has older ones: the page says it lists the last 50; one with fewer lists every run; the one project shown is named', async () => {
   const cards = (count: number) => Array.from({ length: count }, (_, index) => ({ id: `r${index}`, startedAt: at(now - index * 1000), endedAt: at(now - index * 1000 + 500), status: 'done', intent: `run ${index}` }))
   const page = (host: FakeHost) => (
     <ModuleHostContext.Provider value={host}>
@@ -222,11 +222,11 @@ test('a project that gave the whole page of 50 runs has older ones: the page say
     </ModuleHostContext.Provider>
   )
   render(page(hostWith(cards(50))))
-  expect(await screen.findByText('The last 50 runs recorded in this project, newest first.')).toBeTruthy()
+  expect(await screen.findByText('The last 50 runs recorded in alpha, newest first.')).toBeTruthy()
   cleanup()
   forgetRemembered()
   render(page(hostWith(cards(49))))
-  expect(await screen.findByText('Every run recorded in this project, newest first.')).toBeTruthy()
+  expect(await screen.findByText('Every run recorded in alpha, newest first.')).toBeTruthy()
   await screen.findAllByText('run 48')
   expect(screen.queryByText(/^The last 50 runs/)).toBeNull()
 })
