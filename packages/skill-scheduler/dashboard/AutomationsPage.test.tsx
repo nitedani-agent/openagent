@@ -523,6 +523,26 @@ describe('the Automations page: its rows', () => {
     expect(within(within(screen.getByRole('region', { name: 'gemstack' })).getByRole('listitem', { name: '/work-queue' })).queryByText(/Does not start/)).toBeNull()
   })
 
+  test('a row switched on that the last look held back is not green either: its reason is a warning', async () => {
+    for (const [outcome, words] of [
+      ['not on HEAD: .claude/skills/post-merge-cleanup/SKILL.md is not committed', 'Cannot start yet: its skill is not committed'],
+      ['not ready: `claude` not found', 'Not ready: `claude` not found'],
+      ['quota: Current week is 99% used', 'Quota: Current week is 99% used'],
+    ] as const) {
+      const { host } = hostAnswering(() => ({ ok: true, output: { ...STATUS, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome }] } } }))
+      show(host)
+      await screen.findByRole('region', { name: 'gemstack' })
+      expect(within(row('/post-merge-cleanup')).getByText('On').className, outcome).not.toMatch(/text-success/)
+      expect(within(row('/post-merge-cleanup')).getByText(words).className, outcome).toMatch(/text-warning/)
+      cleanup()
+    }
+    // A look that found no work holds nothing back.
+    const { host } = hostAnswering(() => ({ ok: true, output: { ...STATUS, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome: 'not due' }] } } }))
+    show(host)
+    await screen.findByRole('region', { name: 'gemstack' })
+    expect(within(row('/post-merge-cleanup')).getByText('On').className).toMatch(/text-success/)
+  })
+
   test('a skill whose schedule cannot be read is named with the reason, and an automation kept on this machine that the scheduler does not list is said so in its own words', async () => {
     const status = { ...STATUS, unreadable: [{ skill: 'triage', reason: 'row 2: unknown key evry' }, { skill: 'tidy', reason: 'it has no schedule', own: true }] }
     const { host } = hostAnswering((_, args) => (args[0] === 'status' ? { ok: true, output: status } : { ok: true, output: { ok: true } }))

@@ -6,7 +6,7 @@ import { CodeWords, Command } from './CodeWords.js'
 import { EditPanel } from './EditPanel.js'
 import { openedAutomation, type OpenedAutomation } from './automation-form.js'
 import { DEFAULT_AGENT } from '../src/names.js'
-import { atOnce, atOnceWords, cannotRun, decided, notAsked, startedNow, type Answered, isOwn, modelLabel, ownPace, pace, publishes, readSchedulers, schedulersKey, rowTitle, runsOnWords, saysAtOnce, schedulerStatus, schedulerStopped, unlistedWords, type AgentModels, type SchedulerCommand, type SchedulerRow } from './schedulers.js'
+import { atOnce, atOnceWords, cannotRun, decided, heldBy, notAsked, startedNow, type Answered, isOwn, modelLabel, ownPace, pace, publishes, readSchedulers, schedulersKey, rowTitle, runsOnWords, saysAtOnce, schedulerStatus, schedulerStopped, unlistedWords, type AgentModels, type SchedulerCommand, type SchedulerRow } from './schedulers.js'
 
 // The Automations page: what starts by itself while nobody is at the keyboard. One part per
 // project the page is given (every project that has this package, or the one picked in the
@@ -401,7 +401,9 @@ function Stands({ host, project, scheduled, stopped }: { host: ModuleHost; proje
   const last = scheduled.lastRun
   const idle = scheduled.on && stopped !== undefined && cannotRun(scheduled) === undefined
   const decision = idle ? `Does not start: ${stopped.charAt(0).toLowerCase()}${stopped.slice(1)}` : decided(scheduled)
-  const starts = scheduled.on && !idle
+  // Switched on, and still not starting: said as a stopped scheduler is, never as a green "On".
+  const held = cannotRun(scheduled) !== undefined || (scheduled.on && heldBy(scheduled) !== undefined)
+  const starts = scheduled.on && !idle && !held
   return (
     <p className={cn(LINE, 'mt-1 items-center text-xs')}>
       <Next>
@@ -424,7 +426,7 @@ function Stands({ host, project, scheduled, stopped }: { host: ModuleHost; proje
       </Next>
       {decision !== undefined && (
         <Next>
-          <span className={idle || cannotRun(scheduled) ? 'text-warning' : 'text-muted-foreground'}>{decision}</span>
+          <span className={idle || held ? 'text-warning' : 'text-muted-foreground'}>{decision}</span>
         </Next>
       )}
     </p>

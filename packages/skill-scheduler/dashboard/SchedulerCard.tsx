@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CalendarClock } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitleLink, Tooltip, TooltipContent, TooltipTrigger, cn, formatAge, inPlace, formatDateTime, useModuleHost, useOpenAgentDown, usePolled, type ModuleCardProps, type ModuleProject } from '@openagt/dashboard/module'
 import { CodeWords } from './CodeWords.js'
-import { cannotRun, notAsked, readSchedulers, schedulersKey, rowTitle, schedulerStatus, schedulerStopped, startedNow, startsNext, unlistedWords, type Answered, type SchedulerCommand, type SchedulerRow } from './schedulers.js'
+import { cannotRun, heldBy, notAsked, readSchedulers, schedulersKey, rowTitle, schedulerStatus, schedulerStopped, startedNow, startsNext, unlistedWords, type Answered, type SchedulerCommand, type SchedulerRow } from './schedulers.js'
 
 // The Overview's Automations card: what starts by itself in every project that has this package,
 // read with `scheduler status` every 10 seconds. It is called what its page is called, and
@@ -119,6 +119,8 @@ function OnRow({ project, command, stopped, lookedAt, onOpenRun, reload }: { pro
   const [busy, setBusy] = useState(false)
   const [said, setSaid] = useState<Answered>()
   const started = said?.started || command.decision?.run
+  // Switched on, and still not starting: no green dot, and why in the warning colour.
+  const held = cannotRun(command) !== undefined || heldBy(command) !== undefined
   const runNow = async (): Promise<void> => {
     setBusy(true)
     setSaid(undefined)
@@ -131,11 +133,11 @@ function OnRow({ project, command, stopped, lookedAt, onOpenRun, reload }: { pro
     // One line, whatever the card's width: the name whole, when it starts next cut short (and said
     // whole on hover), never a second line that leaves the rows at uneven gaps.
     <li className="group/row relative -mx-2 flex h-8 items-center gap-3 rounded-md px-2 text-sm hover:bg-accent/60">
-      <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', stopped ? 'bg-muted-foreground/50' : 'bg-success')} />
+      <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', stopped || held ? 'bg-muted-foreground/50' : 'bg-success')} />
       <span className="shrink-0 font-mono text-[13px]">{rowTitle(command)}</span>
       {/* While the scheduler is stopped a row has no next start: the line above says why. */}
       {!stopped && (
-        <span title={startsNext(command)} className="min-w-0 truncate text-xs text-muted-foreground">
+        <span title={startsNext(command)} className={cn('min-w-0 truncate text-xs', held ? 'text-warning' : 'text-muted-foreground')}>
           {startsNext(command)}
         </span>
       )}

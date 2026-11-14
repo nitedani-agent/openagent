@@ -507,6 +507,17 @@ export function cannotRun(command: Pick<SchedulerCommand, 'home' | 'runsOn' | 'a
 
 const notThere = (agent: string, dir: string): string => `Cannot start on ${agent}: its skill is not in ${dir}`
 
+/**
+ * What the scheduler's last look found holds a row back, whatever its pace: its skill is not where
+ * a run's checkout starts, or its coding agent is not ready, which hold back "Run now" too; or the
+ * quota, which holds back only the starts the scheduler makes by itself. Nothing for any other look.
+ */
+export function heldBy(command: Pick<SchedulerCommand, 'decision'>): 'every start' | 'quota' | undefined {
+  const held = /^(?:(?:run \S+ not resumed|no run for \S+): )?(not on \S+|not ready: |quota: )/.exec(command.decision?.outcome ?? '')
+  if (!held) return undefined
+  return held[1] === 'quota: ' ? 'quota' : 'every start'
+}
+
 /** One decision of the scheduler, a tick's or the answer to "Run now", for a person; nothing for one the row already says in another place: that it is switched off, that it started. A wait that is not over is said by {@link decided}, which knows the row. */
 export function outcomeWords(outcome: string | undefined): string | undefined {
   if (outcome === undefined || outcome === 'switched off on this machine' || outcome.startsWith('started ') || outcome.startsWith('resumed ')) return undefined

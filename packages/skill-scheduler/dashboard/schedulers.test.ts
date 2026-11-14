@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { STATUS, hostAnswering } from './fixtures.js'
-import { agentOf, modelLabel, modelOf, runsOnWords, agentsArgs, agentsDraftOf, atOnce, atOnceWords, saysAtOnce, cannotRun, decided, draftOf, isOwn, outcomeWords, loosestSpendOffset, nextWords, offsetsThatDiffer, ownPace, pace, paceArgs, paceProblem, publishChoices, publishLabel, publishes, readSchedulers, saveSpendOffset, schedulerRow, schedulerStatus, schedulerStopped, nextStart, startsNext, spelled, typedOffset, withDraft, rowTitle, unlistedWords } from './schedulers.js'
+import { agentOf, modelLabel, modelOf, runsOnWords, agentsArgs, agentsDraftOf, atOnce, atOnceWords, saysAtOnce, cannotRun, decided, draftOf, heldBy, isOwn, outcomeWords, loosestSpendOffset, nextWords, offsetsThatDiffer, ownPace, pace, paceArgs, paceProblem, publishChoices, publishLabel, publishes, readSchedulers, saveSpendOffset, schedulerRow, schedulerStatus, schedulerStopped, nextStart, startsNext, spelled, typedOffset, withDraft, rowTitle, unlistedWords } from './schedulers.js'
 
 const GEMSTACK = { id: 'p1', name: 'gemstack', gitHost: true }
 const OTHER = { id: 'p2', name: 'other', gitHost: false }
@@ -412,6 +412,16 @@ describe('in words', () => {
     expect(said("not on HEAD: a run's checkout starts from HEAD, and the command's skill is not there")).toBe('Cannot start yet: its skill is not committed')
     // The same words for what "Run now" answered, which is a decision with no row's switch to read.
     expect([outcomeWords('not due'), outcomeWords(unpublished), outcomeWords(elsewhere), outcomeWords('agent-data could not be pulled: offline'), outcomeWords(undefined)]).toEqual(['No work', 'Cannot start yet: its skill is not on origin/main', 'Cannot start on Codex: its skill is not in .agents/skills', 'Agent-data could not be pulled: offline', undefined])
+  })
+
+  test('what the last look held a row back by: a skill not where a run starts and an agent not ready hold every start, the quota only the scheduler\'s own; a run of a row with each the same', () => {
+    const by = (outcome: string) => heldBy({ decision: { command: 'a', outcome } })
+    expect(by("not on HEAD: a run's checkout starts from HEAD, and the command's skill is not there")).toBe('every start')
+    expect(by('not ready: `claude` not found')).toBe('every start')
+    expect(by('quota: Current week is 99% used')).toBe('quota')
+    expect(by('no run for https://github.com/o/r/issues/5: quota: Current week is 99% used')).toBe('quota')
+    expect(by('run r2 not resumed: not ready: `claude` not found')).toBe('every start')
+    expect([by('not due'), by('started r1'), by('cap reached (1 in flight: r1 on this-box)'), heldBy({})]).toEqual([undefined, undefined, undefined, undefined])
   })
 
   test('the publish menu: every pick with a git host package, no level, Commit and Publish branch without; the pick in force is listed even when not offered', () => {

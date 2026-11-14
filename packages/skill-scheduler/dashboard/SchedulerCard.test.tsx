@@ -104,6 +104,13 @@ describe('the Automations card of the Overview', () => {
     expect(screen.queryByText(/Next start|Starts /)).toBeNull()
   })
 
+  test('a row the last look held back has no green dot, and says why as a warning', async () => {
+    const { host } = hostAnswering(() => ({ ok: true, output: { ...RAN, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome: 'not ready: `claude` not found' }] } } }))
+    show(host, [GEMSTACK])
+    expect((await screen.findByText(/^Not ready:/)).className).toMatch(/text-warning/)
+    expect(screen.getByText('/post-merge-cleanup').previousElementSibling!.className).not.toMatch(/bg-success/)
+  })
+
   test('a look that decided nothing says why', async () => {
     const { host } = hostAnswering(() => ({ ok: true, output: { ...STATUS, schedule: [], lastTick: { at: STATUS.lastTick.at, decisions: [], note: 'no skill of this project schedules a command' } } }))
     show(host, [GEMSTACK])
@@ -151,6 +158,11 @@ describe('what the module tells the other pages starts by itself', () => {
   test('a command whose coding agent cannot run it does not start by itself, whatever its switch, and the note says why', async () => {
     const answer = await read({ ...RAN, runsOn: { 'post-merge-cleanup': 'codex' } })
     expect(answer[0]).toEqual({ command: 'post-merge-cleanup', on: false, note: 'Cannot start on Codex: its skill is not in .agents/skills' })
+  })
+
+  test('a command the last look held back does not start by itself, and the note says why', async () => {
+    const answer = await read({ ...RAN, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome: 'quota: Current week is 99% used' }] } })
+    expect(answer[0]).toEqual({ command: 'post-merge-cleanup', on: false, note: 'Quota: Current week is 99% used' })
   })
 
   test('a scheduler that is off says so once, and not again as its last look\'s word', async () => {
