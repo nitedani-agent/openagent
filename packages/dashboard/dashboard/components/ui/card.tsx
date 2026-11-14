@@ -14,8 +14,10 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
   return <div className={cn('flex flex-col gap-1 px-4 pt-4', className)} {...props} />
 }
 
-export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('text-sm font-semibold', className)} {...props} />
+/** A card's title: a third-level heading, or a second-level one for a card right under the page's own title. */
+export function CardTitle({ className, level = 3, ...props }: HTMLAttributes<HTMLHeadingElement> & { level?: 2 | 3 }) {
+  const Heading = level === 2 ? 'h2' : 'h3'
+  return <Heading className={cn('text-sm font-semibold', className)} {...props} />
 }
 
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {

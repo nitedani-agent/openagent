@@ -126,7 +126,7 @@ function AgentCard({ agent, view, devices, onChanged, onRemoved }: { agent: Agen
       <CardHeader>
         <div className="flex items-center gap-2">
           <Bot className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-          <CardTitle className="min-w-0 flex-1 truncate text-base">{agent.name}</CardTitle>
+          <CardTitle level={2} className="min-w-0 flex-1 truncate text-base">{agent.name}</CardTitle>
           <Button size="xs" variant="ghost" aria-label={`Edit ${agent.name}`} onClick={() => setEditing(true)}>
             <Pencil className="size-3.5" aria-hidden />
             Edit
