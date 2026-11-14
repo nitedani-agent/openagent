@@ -50,6 +50,13 @@ afterEach(() => {
   route.openAgents.mockReset()
 })
 
+/** "New agent", once the agents are read: before, it is there and takes no press. */
+async function newAgentPress(): Promise<HTMLElement> {
+  const press = await screen.findByRole('button', { name: 'New agent' })
+  await waitFor(() => expect((press as HTMLButtonElement).disabled).toBe(false))
+  return press
+}
+
 describe('the Agents page', () => {
   test('one card per agent, the default first and marked; each with its skills and the accounts it works as, the computer’s where it names none', async () => {
     render(<AgentsPage />)
@@ -69,7 +76,7 @@ describe('the Agents page', () => {
 
   test('a new agent: its name, typed at once, the skills ticked from the list, the two every agent starts with ticked already; saved as the dashboard’s call, and the list read again', async () => {
     render(<AgentsPage />)
-    fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
+    fireEvent.click(await newAgentPress())
     const editor = screen.getByRole('dialog', { name: 'New agent' })
     // What is typed first goes to the name.
     await waitFor(() => expect(document.activeElement).toBe(within(editor).getByLabelText('Name')))
@@ -85,7 +92,7 @@ describe('the Agents page', () => {
 
   test('the editor is a form: Enter in the name saves; with no name, Save says what it needs under the field and saves nothing', async () => {
     render(<AgentsPage />)
-    fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
+    fireEvent.click(await newAgentPress())
     const editor = screen.getByRole('dialog', { name: 'New agent' })
     const name = within(editor).getByLabelText('Name') as HTMLInputElement
     fireEvent.click(within(editor).getByRole('button', { name: 'Save' }))
@@ -100,7 +107,7 @@ describe('the Agents page', () => {
 
   test('Esc on an editor with something changed asks first: Cancel there keeps what was typed, Discard closes it; with nothing changed it closes at once', async () => {
     render(<AgentsPage />)
-    fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
+    fireEvent.click(await newAgentPress())
     const editor = screen.getByRole('dialog', { name: 'New agent' })
     fireEvent.change(within(editor).getByLabelText('Name'), { target: { value: 'Reviewer two' } })
     fireEvent.keyDown(within(editor).getByLabelText('Name'), { key: 'Escape' })
@@ -120,7 +127,7 @@ describe('the Agents page', () => {
 
   test('with OpenAgent not answering after a name is typed, Discard still closes the editor: it sends nothing', async () => {
     const page = render(<DaemonDown.Provider value={false}><AgentsPage /></DaemonDown.Provider>)
-    fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
+    fireEvent.click(await newAgentPress())
     fireEvent.change(within(screen.getByRole('dialog', { name: 'New agent' })).getByLabelText('Name'), { target: { value: 'Offline draft' } })
     page.rerender(<DaemonDown.Provider value={true}><AgentsPage /></DaemonDown.Provider>)
     fireEvent.click(within(screen.getByRole('dialog', { name: 'New agent' })).getByRole('button', { name: 'Close' }))
@@ -170,7 +177,7 @@ describe('the Agents page', () => {
     const claude = [{ id: 'This computer', name: 'Claude login on Studio', loggedOut: true }, { id: 'Dani', name: 'Dani' }]
     rpc.onAgentsList.mockResolvedValue({ ...VIEW, agents: [DEFAULT, { ...REVIEWER, accounts: { claude: ['This computer'] } }], claude })
     render(<AgentsPage />)
-    fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
+    fireEvent.click(await newAgentPress())
     const editor = screen.getByRole('dialog', { name: 'New agent' })
     expect(within(editor).queryByLabelText(/Claude login on Studio/)).toBeNull()
     expect(within(editor).getByLabelText('Claude account Dani')).toBeTruthy()
@@ -187,7 +194,7 @@ describe('the Agents page', () => {
     logins.sendGitHostLogin.mockResolvedValue({ ok: true, code: 'ABCD-1234', url: 'https://github.com/login/device' })
     logins.sendStopGitHostLogin.mockResolvedValue({ ok: true })
     render(<AgentsPage />)
-    fireEvent.click(await screen.findByRole('button', { name: 'New agent' }))
+    fireEvent.click(await newAgentPress())
     const editor = screen.getByRole('dialog', { name: 'New agent' })
     fireEvent.change(within(editor).getByLabelText('Name'), { target: { value: 'Social media' } })
     expect(within(editor).getByRole('combobox', { name: 'GitHub account' }).textContent).toContain('None')

@@ -106,12 +106,13 @@ export function AgentsPage() {
         <Skeleton className="h-32 w-full" />
       ) : (
         <div className="space-y-4">
-          {adding && <AgentEditor view={view} onAccounts={reload} onDone={async saved => (setAdding(false), saved ? changed() : undefined)} />}
           {view.agents.map(agent => (
             <AgentCard key={agent.id} agent={agent} view={view} devices={devices} onChanged={changed} onRemoved={() => void (removed.current = agent.id)} />
           ))}
         </div>
       )}
+      {/* Over the page, so it opens at the press even while the list's skeleton still holds. */}
+      {adding && view && <AgentEditor view={view} onAccounts={reload} onDone={async saved => (setAdding(false), saved ? changed() : undefined)} />}
     </Page>
   )
 }
