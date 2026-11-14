@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button, Input, RadioGroup, RadioGroupOption, useKeptDraft, useOpenAgentDown, type ModuleCommandResult, type ModuleProject } from '@openagt/dashboard/module'
 import { EMPTY_DRAFT, addArgs, draftProblem, draftSentence, isUntouched, nameProblem, ownPaceArgs, whatAndWhenProblem, savedFile, savedWords, whereHint, type AutomationDraft, type OwnPace } from './automation-form.js'
-import { PaceFields, SaidFields, Section } from './fields.js'
+import { PaceFields, SaidFields, SaveWords, Section } from './fields.js'
 import { DEFAULT_AGENT } from '../src/names.js'
 
 // The "New automation" form of the Automations page: a person's own prompt, saved as a command of
@@ -176,7 +176,7 @@ export function AutomationForm({
             Cancel
           </Button>
           <Button disabled={saving || down || problem !== undefined} onClick={() => void save()}>
-            Save
+            <SaveWords saving={saving} />
           </Button>
         </div>
       </div>

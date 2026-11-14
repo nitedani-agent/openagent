@@ -1052,7 +1052,8 @@ describe("the Edit panel of a skill's row", () => {
     await pick(publish(editor), 'Open PR')
     fireEvent.click(within(editor).getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(runCommand).toHaveBeenCalledWith('p1', ['publish', 'post-merge-cleanup', 'pr']))
-    expect(disabled(within(editor).getByRole('button', { name: 'Save' }))).toBe(true)
+    // It says it saves, at the press.
+    expect(disabled(within(editor).getByRole('button', { name: 'Saving…' }))).toBe(true)
     expect(disabled(within(editor).getByRole('button', { name: 'Cancel' }))).toBe(true)
     expect(disabled(publish(editor))).toBe(true)
     // Every control says so itself: a Base UI radio or select is not held by a fieldset around it.
@@ -2083,7 +2084,8 @@ describe('the "New automation" form', () => {
     fireEvent.change(within(form).getByRole('textbox', { name: 'Name' }), { target: { value: 'daily-notes' } })
     fireEvent.change(within(form).getByLabelText('What the agent is told'), { target: { value: 'Write the notes.' } })
     fireEvent.click(within(form).getByRole('button', { name: 'Save' }))
-    await waitFor(() => expect(disabled(within(form).getByRole('button', { name: 'Save' }))).toBe(true))
+    // It says it saves, at the press.
+    await waitFor(() => expect(disabled(within(form).getByRole('button', { name: 'Saving…' }))).toBe(true))
     expect(disabled(within(form).getByRole('button', { name: 'Cancel' }))).toBe(true)
     expect((within(form).getByRole('textbox', { name: 'Name' }).closest('fieldset') as HTMLFieldSetElement).disabled).toBe(true)
     fireEvent.keyDown(form, { key: 'Escape' })

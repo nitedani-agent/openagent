@@ -26,6 +26,20 @@ export function Section({ title, children }: { title: string; children: ReactNod
   )
 }
 
+/** A save press's words: "Saving…" while it saves, in the room the longer of the two takes, so the press keeps its width. */
+export function SaveWords({ saving }: { saving: boolean }) {
+  return (
+    <span className="inline-grid *:col-start-1 *:row-start-1">
+      <span aria-hidden={saving || undefined} className={cn(saving && 'invisible')}>
+        Save
+      </span>
+      <span aria-hidden={!saving || undefined} className={cn(!saving && 'invisible')}>
+        Saving…
+      </span>
+    </span>
+  )
+}
+
 /** What a person's own automation says, as typed: what the agent is told, its shell line, and what the line waits for. */
 export interface Said {
   prompt: string

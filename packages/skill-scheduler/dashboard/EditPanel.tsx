@@ -4,7 +4,7 @@ import type { PublishPick } from '../src/state.js'
 import { MAX_AGENTS, OWN_AUTOMATIONS_DIR, type AgentName } from '../src/names.js'
 import { parseInterval, parseTimeOfDay } from '../src/pace.js'
 import { atRowsPace, draftProblem, draftRow, editArgs, editedWords, keptWhereHint, ownPaceArgs, removeWarning, removedWords, savedFile, saysTheSame, type AutomationDraft, type OpenedAutomation, type OwnPace } from './automation-form.js'
-import { AgentsFields, PaceFields, PublishField, RunsOnFields, SaidFields, SaidShown, Section, type ModelDraft } from './fields.js'
+import { AgentsFields, PaceFields, PublishField, RunsOnFields, SaidFields, SaidShown, SaveWords, Section, type ModelDraft } from './fields.js'
 import { EACH_KEEPS_OWN, agentOf, agentsArgs, agentsDraftOf, atOnce, atOnceWords, draftOf, isOwn, pace, runsOnWords, paceArgs, paceProblem, publishes, rowTitle, saysAtOnce, spelled, stopped, withDraft, type AgentModels, type AgentsDraft, type PaceDraft, type SchedulerCommand } from './schedulers.js'
 
 // The Edit panel of the Automations page: one panel, with the same parts in the same order, for
@@ -336,7 +336,7 @@ export function EditPanel({
             Cancel
           </Button>
           <Button disabled={saving || down || problem !== undefined || !dirty} onClick={() => void save()}>
-            Save
+            <SaveWords saving={saving} />
           </Button>
         </div>
       </div>
