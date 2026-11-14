@@ -1530,10 +1530,12 @@ describe('the Edit panel of a row a person made', () => {
     fireEvent.click(within(asked).getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByRole('group', { name: 'Removing /answer-comments' })).toBeNull()
     expect((within(editing('/answer-comments')).getByLabelText('What the agent is told') as HTMLTextAreaElement).value).toBe('Typed before asking.')
+    // Back on Remove, which asked.
+    await waitFor(() => expect(document.activeElement).toBe(within(editing('/answer-comments')).getByRole('button', { name: 'Remove' })))
     fireEvent.click(within(editing('/answer-comments')).getByRole('button', { name: 'Remove' }))
     fireEvent.keyDown(within(own).getByRole('group', { name: 'Removing /answer-comments' }), { key: 'Escape' })
     expect(screen.queryByRole('group', { name: 'Removing /answer-comments' })).toBeNull()
-    expect(editing('/answer-comments')).toBeTruthy()
+    await waitFor(() => expect(document.activeElement).toBe(within(editing('/answer-comments')).getByRole('button', { name: 'Remove' })))
     expect(saves(runCommand)).toEqual([])
 
     fireEvent.click(within(editing('/answer-comments')).getByRole('button', { name: 'Remove' }))
