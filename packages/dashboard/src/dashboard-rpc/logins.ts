@@ -271,16 +271,21 @@ export async function sendAgentFix(driver: string): Promise<AccountResult> {
   const fix = (await loginsWiring.ready(driver)).fix
   if (!fix) return { ok: false, error: 'Nothing to fix by a press: see the line it says.' }
   const stop = new AbortController()
-  const going = { fixing: fix.kind, stop }
-  fixes.set(driver, going)
+  fixes.set(driver, { fixing: fix.kind, stop })
+  // Only while this fix is the one going on: a fix the person stopped is out of the table, so its late end
+  // says nothing, and takes nothing from a fix pressed after it.
+  const mine = (): boolean => fixes.get(driver)?.stop === stop
   void loginsWiring
     .fix(fix.command, stop.signal, url => {
-      if (fixes.get(driver) === going) fixes.set(driver, { ...going, url })
+      if (mine()) fixes.set(driver, { fixing: fix.kind, stop, url })
     })
     .then(
-      () => fixes.delete(driver),
-      // A fix the person stopped failed at nothing: it says nothing.
-      (err: unknown) => (stop.signal.aborted ? fixes.delete(driver) : fixes.set(driver, { failed: err instanceof Error ? err.message : String(err) })),
+      () => {
+        if (mine()) fixes.delete(driver)
+      },
+      (err: unknown) => {
+        if (mine()) fixes.set(driver, { failed: err instanceof Error ? err.message : String(err) })
+      },
     )
   return { ok: true }
 }

@@ -201,6 +201,29 @@ test('a login the person will not finish is stopped with Cancel, with what it st
   }
 })
 
+test('a stopped login that ends late takes nothing from the one pressed after it', async () => {
+  const before = { ...loginsWiring }
+  const headless = accountsWiring.headless
+  accountsWiring.headless = () => false
+  const ends: Array<(err: Error) => void> = []
+  Object.assign(loginsWiring, {
+    ready: async () => ({ problems: ['`claude` is not logged in.'], warnings: [], fix: { kind: 'log-in', command: 'claude auth login' } }),
+    fix: () => new Promise<void>((_, reject) => ends.push(reject)),
+  })
+  try {
+    assert.equal((await sendAgentFix('claude-code')).ok, true)
+    await sendStopAgentFix('claude-code')
+    assert.equal((await sendAgentFix('claude-code')).ok, true)
+    ends[0]!(new Error('Terminated'))
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal((await onAgentState('claude-code')).fixing, 'log-in')
+    await sendStopAgentFix('claude-code')
+  } finally {
+    Object.assign(loginsWiring, before)
+    accountsWiring.headless = headless
+  }
+})
+
 test('a fix the dashboard started ends as it stops, with what the fix started: a login waiting on a browser does not outlive it', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'oa-fix-'))
   const said = join(dir, 'pid')
