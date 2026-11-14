@@ -41,6 +41,8 @@ export interface LinkActionOffer {
   done: boolean
   /** How many links of the targets the module does not read as done, what a click adds: 0 for targets read only on click. */
   left: number
+  /** How many links of the targets are on the projects the module acts on, done or not. */
+  total: number
 }
 
 /**
@@ -88,7 +90,8 @@ export function useLinkActions(
   const offer = (action: MountedLinkAction): LinkActionOffer => {
     const mine = groups.filter(group => action.projects.includes(group.projectId))
     const left = mine.reduce((sum, { projectId, links }) => sum + links.filter(link => !(doneOn[`${keyOf(action)}\n${projectId}`]?.(link) ?? false)).length, 0)
-    return { key: keyOf(action), label: action.label, busyLabel: action.busyLabel, doneLabel: action.doneLabel, icon: action.icon, done: mine.length > 0 && left === 0, left }
+    const total = mine.reduce((sum, { links }) => sum + links.length, 0)
+    return { key: keyOf(action), label: action.label, busyLabel: action.busyLabel, doneLabel: action.doneLabel, icon: action.icon, done: mine.length > 0 && left === 0, left, total }
   }
 
   const actions = mounted.map(offer)

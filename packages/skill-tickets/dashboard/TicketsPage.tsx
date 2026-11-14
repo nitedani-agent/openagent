@@ -155,9 +155,9 @@ export function TicketsPage({ projects }: { projects: ModuleProject[] }) {
   const queueKey = targets.map(r => `${r.projectId}/${r.ticket.file}`).join('\n')
   const planKey = planTargets.map(r => `${r.projectId}/${r.ticket.file}`).join('\n')
   // The labels count what the click adds, never a ticket it will skip or one already added, each
-  // the object of the module's own verb: "Add to queue: 5 tickets". Done, they say what it did to the whole set: "Queued: 5 tickets".
-  const queueLabel = (action: LinkActionOffer, done: boolean) => (done ? `${action.doneLabel ?? action.label}: ${counted(targets.length, 'ticket')}` : `${action.label}: ${counted(action.left, 'ticket')}`)
-  const planLabel = (action: LinkActionOffer, done: boolean) => (done ? `${action.doneLabel ?? action.label}: ${counted(planTargets.length, 'plan')}` : `${action.label}: ${counted(action.left, 'plan')}`)
+  // the object of the module's own verb: "Add to queue: 5 tickets". Done, they say what it did to the whole set on its projects: "Queued: 5 tickets".
+  const queueLabel = (action: LinkActionOffer, done: boolean) => (done ? `${action.doneLabel ?? action.label}: ${counted(action.total, 'ticket')}` : `${action.label}: ${counted(action.left, 'ticket')}`)
+  const planLabel = (action: LinkActionOffer, done: boolean) => (done ? `${action.doneLabel ?? action.label}: ${counted(action.total, 'plan')}` : `${action.label}: ${counted(action.left, 'plan')}`)
   const projectsShown = [...new Set(scope.map(r => r.projectId))]
 
   return (

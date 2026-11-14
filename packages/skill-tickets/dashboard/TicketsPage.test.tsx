@@ -572,6 +572,19 @@ describe('TicketsPage queue plans for the shown set', () => {
     await screen.findByText('First')
     expect(screen.queryByRole('button', { name: /add to queue/i })).toBeNull()
   })
+
+  test.each(['ticket', 'plan'])('across projects, the %s add done counts what it added, on the projects with a queue alone', async kind => {
+    onAllTickets.mockResolvedValue([
+      { projectId: 'p1', projectName: 'Alpha', tickets: [ticket({ file: 'a.md', title: 'First' })] },
+      { projectId: 'p2', projectName: 'Beta', tickets: [ticket({ file: 'b.md', title: 'Second' })] },
+    ])
+    await controls()
+    render(modules(['p1']))
+    fireEvent.click(await screen.findByRole('button', { name: `Add to queue: 1 ${kind}` }))
+    await waitFor(() => expect(addToQueue).toHaveBeenCalledTimes(1))
+    expect([handed('p1'), handed('p2')]).toEqual([[[kind === 'plan' ? plan('a.md') : link('First', 'a.md')]], []])
+    expect(await screen.findByRole('button', { name: `Queued: 1 ${kind}` })).toBeTruthy()
+  })
 })
 
 // Row selection (the list idiom of issue trackers): every row carries a checkbox, and while any is ticked the
