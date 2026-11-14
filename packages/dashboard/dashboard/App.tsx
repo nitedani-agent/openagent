@@ -585,7 +585,7 @@ export function App() {
   // stays at the top; on a wider screen the sidebar stays beside it. A chat keeps its box at the
   // bottom, and only its own columns scroll.
   const pageScrolls = phoneTitle !== null
-  // The tab says the page first, as its heading does, then the project the count is scoped to (#1923).
+  // The tab says the page first, as its heading or the sidebar names it, then the project the count is scoped to (#1923).
   const pageName =
     route.settings !== undefined
       ? 'Settings'
@@ -595,7 +595,11 @@ export function App() {
           ? 'No such project'
           : sessionGone
             ? 'No such session'
-            : (sessionLabel ?? startedTitle)
+            : projectId === null
+              ? 'Overview'
+              : agentId === null
+                ? 'New agent session'
+                : (sessionLabel ?? startedTitle)
   useDocumentTitle(interventions.length, projectName ?? (scope ? (labels.get(scope) ?? null) : null), pageName)
   // Every other page is pinned: only its own columns scroll.
   usePinnedPage(!pageScrolls)

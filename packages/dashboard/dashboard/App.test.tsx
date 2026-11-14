@@ -499,7 +499,7 @@ describe('the project select (#1513)', () => {
     expect(screen.queryByText('app works')).toBeNull()
     expect(await screen.findByText('site ran')).toBeTruthy()
     await waitFor(() => expect(screen.queryByText('app ran')).toBeNull())
-    expect(document.title).toBe('(1) site — OpenAgent')
+    expect(document.title).toBe('(1) Overview · site — OpenAgent')
   })
 
   test('the pick rides along to a module page and Settings over it, and its row opens that project\'s agent; the tab names each page first', async () => {
@@ -592,6 +592,7 @@ describe('the project select (#1513)', () => {
     fireEvent.click(await screen.findByText('New agent session'))
     expect(url()).toBe('/site')
     expect(await screen.findByText('the launcher of site')).toBeTruthy()
+    expect(document.title).toBe('(1) New agent session · site — OpenAgent')
     await pick('site', /app/)
     expect(url()).toBe('/app')
     await pick('app', /All projects/)
