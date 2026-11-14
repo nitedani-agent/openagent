@@ -567,12 +567,23 @@ describe('Settings › Devices: another computer, once', () => {
     const { host } = pairing(OFF, ['allowed'])
     show(host)
     await addComputer()
-    expect((await screen.findByRole('button', { name: 'Give it a code' }) as HTMLButtonElement).disabled).toBe(true)
-    expect(screen.getByText("At the office, at a friend's: it joins through a server. Add a server first.")).toBeTruthy()
+    expect(await screen.findByText("At the office, at a friend's: it joins through a server. Add a server first.")).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Give it a code' })).toBeNull()
     fireEvent.click(await screen.findByRole('button', { name: 'Connect Studio Mac' }))
     await screen.findByText('Studio Mac is connected.')
     expect(host.letMachineIn).not.toHaveBeenCalled()
     expect(screen.getByText('Your runs can go there.')).toBeTruthy()
+  })
+
+  test('Add computer with no server offers to set one up, in place of a code nothing could give', async () => {
+    const { host } = pairing(OPEN, ['waiting'])
+    show(host)
+    await addComputer()
+    const press = await screen.findByRole('button', { name: 'Set up a server' })
+    expect(press.closest('[role="dialog"]')?.textContent).toContain('Add computer')
+    fireEvent.click(press)
+    expect(await screen.findByRole('dialog', { name: 'Set up a server' })).toBeTruthy()
+    expect(screen.queryByRole('dialog', { name: 'Add computer' })).toBeNull()
   })
 
   test('the box is read when the answer comes: unticked while it waits, the computer is saved one way only', async () => {

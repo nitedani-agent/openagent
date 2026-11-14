@@ -64,7 +64,7 @@ export function AddDevice({ d, start, isServer, onClose, onInvite, onJoined }: {
   const [adding, setAdding] = useState<Adding>(start)
   if (adding === 'choose') return <Choose kinds={isServer ? KINDS.filter(kind => kind.id !== 'server') : KINDS} onPicked={setAdding} onClose={onClose} />
   if (adding === 'phone') return <AddPhone d={d} onClose={onClose} />
-  if (adding === 'computer') return <AddComputer d={d} onClose={onClose} />
+  if (adding === 'computer') return <AddComputer d={d} onClose={onClose} {...(isServer ? {} : { onSetUpServer: () => setAdding('server') })} />
   if (adding === 'server') return <ConnectServer d={d} onClose={onClose} onInvite={onInvite} />
   return <JoinDialog d={d} onClose={onClose} onJoined={onJoined} />
 }
@@ -310,7 +310,7 @@ function useFound(d: Devices, looking: boolean): { found: FoundComputer[] | unde
   return { found, error }
 }
 
-function AddComputer({ d, onClose }: { d: Devices; onClose: () => void }) {
+function AddComputer({ d, onClose, onSetUpServer }: { d: Devices; onClose: () => void; /** Set up a server, in place of this dialog: what a computer somewhere else joins through. None on a server. */ onSetUpServer?: () => void }) {
   const status = d.door?.ok ? d.door.value : undefined
   const [giving, setGiving] = useState(false)
   const [connecting, setConnecting] = useState<FoundComputer | undefined>()
@@ -353,10 +353,17 @@ function AddComputer({ d, onClose }: { d: Devices; onClose: () => void }) {
             Somewhere else?
             <span className="block text-xs text-muted-foreground">{server ? `At the office, at a friend's: it joins through ${server.label}.` : "At the office, at a friend's: it joins through a server. Add a server first."}</span>
           </span>
-          <Button size="sm" type="button" variant="outline" disabled={!server} onClick={() => setGiving(true)}>
-            <Ticket className="h-3.5 w-3.5" aria-hidden />
-            Give it a code
-          </Button>
+          {server || !onSetUpServer ? (
+            <Button size="sm" type="button" variant="outline" disabled={!server} onClick={() => setGiving(true)}>
+              <Ticket className="h-3.5 w-3.5" aria-hidden />
+              Give it a code
+            </Button>
+          ) : (
+            <Button size="sm" type="button" variant="outline" onClick={onSetUpServer}>
+              <Server className="h-3.5 w-3.5" aria-hidden />
+              Set up a server
+            </Button>
+          )}
         </div>
       </div>
     </Dialog>
