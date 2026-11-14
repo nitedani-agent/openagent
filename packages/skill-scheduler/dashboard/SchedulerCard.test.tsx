@@ -111,6 +111,16 @@ describe('the Automations card of the Overview', () => {
     expect(screen.getByText('/post-merge-cleanup').previousElementSibling!.className).not.toMatch(/bg-success/)
   })
 
+  test('"Run now" is offered on a row only where the last look did not hold every start back; the quota holds back only the scheduler\'s own', async () => {
+    for (const [outcome, offered] of [['not ready: `claude` not found', false], ["not on HEAD: a run's checkout starts from HEAD, and the command's skill is not there", false], ['quota: Current week is 99% used', true]] as const) {
+      const { host } = hostAnswering(() => ({ ok: true, output: { ...RAN, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome }] } } }))
+      show(host, [GEMSTACK])
+      await screen.findByText('/post-merge-cleanup')
+      expect(screen.queryByRole('button', { name: 'Run /post-merge-cleanup now' }) !== null, outcome).toBe(offered)
+      cleanup()
+    }
+  })
+
   test('a look that decided nothing says why', async () => {
     const { host } = hostAnswering(() => ({ ok: true, output: { ...STATUS, schedule: [], lastTick: { at: STATUS.lastTick.at, decisions: [], note: 'no skill of this project schedules a command' } } }))
     show(host, [GEMSTACK])

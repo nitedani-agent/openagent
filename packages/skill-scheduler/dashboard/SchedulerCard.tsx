@@ -157,7 +157,8 @@ function OnRow({ project, command, stopped, lookedAt, onOpenRun, reload }: { pro
         </span>
       )}
       {/* Under the pointer, or with the keyboard on it; a phone has no hover, and there it always shows. */}
-      {cannotRun(command) === undefined && (
+      {/* Not where it would start nothing: what held every start back at the last look holds this one too. */}
+      {cannotRun(command) === undefined && (stopped || heldBy(command) !== 'every start') && (
         <Button
           variant="ghost"
           size="xs"

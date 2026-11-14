@@ -263,6 +263,8 @@ export function AutomationsPage({ projects }: ModulePageProps) {
                           const saving = busy.includes(id)
                           const shown = panel?.id === id ? panel : undefined
                           const says = said?.id === id ? said : undefined
+                          // What held every start back at the scheduler's last look holds one asked for now too: it would start nothing.
+                          const unstartable = cannotRun(scheduled) !== undefined || (schedulerStopped(row) === undefined && heldBy(scheduled) === 'every start')
                           return (
                             <li key={id} aria-label={title} className={cn('p-4', saving && 'opacity-60')}>
                               {/* On a phone the buttons go under the words, which need the whole width. */}
@@ -280,7 +282,7 @@ export function AutomationsPage({ projects }: ModulePageProps) {
                                   <Button
                                     variant="outline"
                                     size="xs"
-                                    disabled={saving || down || cannotRun(scheduled) !== undefined}
+                                    disabled={saving || down || unstartable}
                                     onClick={() => void startNow(id, row.project, scheduled.command)}
                                     aria-label={`Run ${title} now`}
                                   >

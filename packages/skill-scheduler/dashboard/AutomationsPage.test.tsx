@@ -523,6 +523,22 @@ describe('the Automations page: its rows', () => {
     expect(within(within(screen.getByRole('region', { name: 'gemstack' })).getByRole('listitem', { name: '/work-queue' })).queryByText(/Does not start/)).toBeNull()
   })
 
+  test('"Run now" is held where the last look held every start back, a person\'s too, while the scheduler looks; not for the quota, which a run asked for now does not wait for', async () => {
+    const shown = async (outcome: string, over: object = {}): Promise<HTMLElement> => {
+      cleanup()
+      const { host } = hostAnswering(() => ({ ok: true, output: { ...STATUS, ...over, lastTick: { at: STATUS.lastTick.at, decisions: [{ command: 'post-merge-cleanup', outcome }] } } }))
+      show(host)
+      await screen.findByRole('region', { name: 'gemstack' })
+      return within(row('/post-merge-cleanup')).getByRole('button', { name: 'Run /post-merge-cleanup now' })
+    }
+    expect(disabled(await shown('not ready: `claude` not found'))).toBe(true)
+    expect(disabled(await shown("not on HEAD: a run's checkout starts from HEAD, and the command's skill is not there"))).toBe(true)
+    expect(disabled(await shown('quota: Current week is 99% used'))).toBe(false)
+    expect(disabled(await shown('not due'))).toBe(false)
+    // A stopped scheduler's last look is old: what it said may be fixed since.
+    expect(disabled(await shown('not ready: `claude` not found', { running: false }))).toBe(false)
+  })
+
   test('a row switched on that the last look held back is not green either: its reason is a warning', async () => {
     for (const [outcome, words] of [
       ['not on HEAD: .claude/skills/post-merge-cleanup/SKILL.md is not committed', 'Cannot start yet: its skill is not committed'],
