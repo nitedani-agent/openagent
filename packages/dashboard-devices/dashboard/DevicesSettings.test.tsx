@@ -924,6 +924,19 @@ describe('Settings › Devices: a code typed on another computer', () => {
     await waitFor(() => expect(host.addMachine).toHaveBeenCalledWith('http://192.168.1.5:4280/_devices/enter#K7P4QX9M'))
   })
 
+  test('Join with a code opens with the caret in Where, and Escape gives the focus back to its press', async () => {
+    const { host } = door(() => ok(OFF), [], () => ok({ servers: [] }))
+    show(host)
+    const press = await screen.findByRole('button', { name: 'Join with a code' })
+    press.focus()
+    fireEvent.click(press)
+    const where = await screen.findByRole('textbox', { name: 'Where' })
+    await waitFor(() => expect(document.activeElement).toBe(where))
+    fireEvent.keyDown(where, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Where' })).toBeNull())
+    await waitFor(() => expect(document.activeElement).toBe(press))
+  })
+
   test('Join with a code says why a code did not work, and keeps what was typed; unticked, this computer keeps no line there', async () => {
     const saved: ModuleMachine[] = []
     const { host, serverCommand } = door(() => ok(OFF), saved, () => ok({ servers: [] }))

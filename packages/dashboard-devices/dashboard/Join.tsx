@@ -125,7 +125,7 @@ export function JoinDialog({ d, onClose, onJoined }: { d: Devices; onClose: () =
   }
 
   return (
-    <Dialog open onOpenChange={open => !open && onClose()} title="Join with a code">
+    <Dialog open onOpenChange={open => !open && onClose()} title="Join with a code" initialFocus={whereField}>
       <form className="space-y-4" onSubmit={event => void join(event)}>
         <p className="text-xs text-muted-foreground">Type what the other device shows.</p>
         <label className="block space-y-1">
@@ -133,7 +133,6 @@ export function JoinDialog({ d, onClose, onJoined }: { d: Devices; onClose: () =
           <Input
             ref={whereField}
             name="pairing-address"
-            autoFocus
             aria-label="Where"
             placeholder="203.0.113.10"
             value={where}
