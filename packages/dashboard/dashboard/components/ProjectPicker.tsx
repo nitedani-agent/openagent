@@ -192,7 +192,8 @@ export function ProjectPicker({
   const [typed, setTyped] = useState('')
   const [adding, setAdding] = useState<{ folder: string } | { address: string } | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
-  // The folder just added, until the projects read again have it: then it is picked.
+  // The folder just added, until the projects read again have it: then it is picked, and the panel
+  // stays to say it was added, until it closes itself or Done closes it.
   const [added, setAdded] = useState<string | null>(null)
   const [folderError, setFolderError] = useState<string | null>(null)
   // Read again after a folder is added: the daemon has crawled it by then.
@@ -210,7 +211,6 @@ export function ProjectPicker({
     const project = projects.find(p => p.path === added && p.machine === undefined)
     if (!project) return
     setAdded(null)
-    setAdding(null)
     onPick(project.id)
   }, [added, projects, onPick])
 

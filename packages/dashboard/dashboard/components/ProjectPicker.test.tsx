@@ -125,6 +125,10 @@ describe('ProjectPicker', () => {
     await waitFor(() => expect(onProjectAdded).toHaveBeenCalledTimes(1))
     rerender(<ProjectPicker {...props} projects={[ALPHA, { id: 'shop-5', path: '/home/me/projects/shop', name: 'shop', activated: true, gitHost: true }]} />)
     await waitFor(() => expect(onPick).toHaveBeenCalledWith('shop-5'))
+    // Picked, it still says it was added, until Done.
+    expect(screen.getByRole('status').textContent).toBe('Project added')
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+    expect(screen.queryByRole('dialog', { name: 'Add project' })).toBeNull()
   })
 
   test("the git hosts' repos follow the ones on this computer, with their address and why they are listed; picked, one is cloned the way a typed address is", async () => {
