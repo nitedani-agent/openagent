@@ -169,6 +169,7 @@ export const mac: Platform = {
     const sha1 = new X509Certificate(pem).fingerprint.replaceAll(':', '')
     await run('security', ['delete-certificate', '-Z', sha1, places(env).keychain]).catch(() => {})
   },
+  dashboardInstalled: env => existsSync(places(env).agent),
   adminInstalled: async () => (await hasHostsLine('/etc/hosts')) || existsSync(PORT_PLIST),
   adminUninstall: () => ({
     says: `your password as the administrator, once: the hosts line for ${ADDRESS} and its port rule are taken off.`,

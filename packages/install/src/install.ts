@@ -181,10 +181,9 @@ export async function uninstall(io: InstallIO = defaultIO, env: NodeJS.ProcessEn
     return 1
   }
   const dir = secureAddressDir(env)
-  // Nothing of an install here: no password is asked for, and nothing is said to be taken off.
+  // Nothing of an install here: no password is asked for, and nothing is touched.
   const asks = await platform.adminInstalled()
-  if (!asks && !existsSync(dir) && !platform.folders(env).some(folder => existsSync(folder))) {
-    await platform.removeDashboard(env)
+  if (!asks && !platform.dashboardInstalled(env) && !existsSync(dir) && !platform.folders(env).some(folder => existsSync(folder))) {
     io.out('◆ OpenAgent is not installed on this computer: there is nothing to take off.')
     return 0
   }

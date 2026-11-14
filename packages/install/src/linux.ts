@@ -289,6 +289,7 @@ export const linux: Platform = {
       await run('certutil', ['-D', '-d', `sql:${store}`, '-n', NSS_NICKNAME]).catch(() => {})
     }
   },
+  dashboardInstalled: env => existsSync(places(env).unit),
   adminInstalled: async () => (await hasHostsLine('/etc/hosts')) || existsSync(PORT_UNIT_FILE) || existsSync(SYSTEM_STORE.file),
   adminUninstall() {
     const store = systemStore()
