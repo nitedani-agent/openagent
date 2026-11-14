@@ -1578,7 +1578,7 @@ describe('the Edit panel of a row a person made', () => {
     expect(within(within(kept).getByRole('group', { name: 'Removing tidy' })).queryByRole('alert')).toBeNull()
     // Removed, while a tick that was under way still lists it for a moment: the question is closed, so the row does not come back asking.
     fireEvent.click(within(within(kept).getByRole('group', { name: 'Removing tidy' })).getByRole('button', { name: 'Remove' }))
-    expect((await screen.findByRole('status', { name: 'Removed' })).textContent).toContain('Removed tidy: .scheduler/automations/tidy.md is deleted. Nothing is to commit.')
+    expect((await screen.findByRole('status', { name: 'Removed' })).textContent).toContain('Removed tidy: .scheduler/automations/tidy.md is deleted. Nothing to commit.')
     expect(screen.queryByRole('group', { name: 'Removing tidy' })).toBeNull()
     expect(screen.queryByRole('group', { name: 'Editing tidy' })).toBeNull()
     expect(within(row('tidy')).queryByRole('alert')).toBeNull()

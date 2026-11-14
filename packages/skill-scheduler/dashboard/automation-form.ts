@@ -263,10 +263,10 @@ export function removedWords(title: string, output: unknown): string {
   const answer = record(output)
   const file = typeof answer['file'] === 'string' ? answer['file'] : 'its file'
   const startsFrom = typeof answer['startsFrom'] === 'string' ? answer['startsFrom'] : 'HEAD'
-  if (answer['onThisMachine'] === true) return `Removed ${title}: ${file} is deleted. Nothing is to commit.`
+  if (answer['onThisMachine'] === true) return `Removed ${title}: ${file} is deleted. Nothing to commit.`
   if (answer['git'] === 'committed') return `Removed ${title}: ${file} is deleted, and nothing was committed for you. ${startsFrom === 'HEAD' ? 'Commit the deletion.' : `Commit the deletion and bring it to ${startsFrom}: until then everyone else who has the project keeps the row.`}`
   if (answer['git'] === 'staged') return `Removed ${title}: ${file} is deleted. It was staged and never committed, so a commit made now would still add it: take it out of the next commit with "git rm --cached ${file}".`
-  if (answer['git'] === 'nothing') return `Removed ${title}: ${file} is deleted. Git never had the file, so nothing is to commit.`
+  if (answer['git'] === 'nothing') return `Removed ${title}: ${file} is deleted. Git never had the file, so there is nothing to commit.`
   return `Removed ${title}: ${file} is deleted. What git holds of it could not be read: look with "git status".`
 }
 

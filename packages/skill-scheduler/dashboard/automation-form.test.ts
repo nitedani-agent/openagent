@@ -199,8 +199,8 @@ describe('an automation opened from its row', () => {
     // Staged and never committed: "commit the deletion" would commit the file.
     expect(removedWords('/answer-comments', { ok: true, file: FILE, git: 'staged', startsFrom: 'origin/main' })).toBe(`Removed /answer-comments: ${FILE} is deleted. It was staged and never committed, so a commit made now would still add it: take it out of the next commit with "git rm --cached ${FILE}".`)
     // Git never had it.
-    expect(removedWords('/answer-comments', { ok: true, file: FILE, git: 'nothing', startsFrom: 'origin/main' })).toBe(`Removed /answer-comments: ${FILE} is deleted. Git never had the file, so nothing is to commit.`)
-    expect(removedWords('tidy', { ok: true, file: '.scheduler/automations/tidy.md', onThisMachine: true })).toBe('Removed tidy: .scheduler/automations/tidy.md is deleted. Nothing is to commit.')
+    expect(removedWords('/answer-comments', { ok: true, file: FILE, git: 'nothing', startsFrom: 'origin/main' })).toBe(`Removed /answer-comments: ${FILE} is deleted. Git never had the file, so there is nothing to commit.`)
+    expect(removedWords('tidy', { ok: true, file: '.scheduler/automations/tidy.md', onThisMachine: true })).toBe('Removed tidy: .scheduler/automations/tidy.md is deleted. Nothing to commit.')
     // Git could not be asked, or an answer that is not what the command promises: it is gone, and the person is sent to git to look.
     expect(removedWords('/answer-comments', { ok: true, file: FILE, git: 'unknown', startsFrom: 'origin/main' })).toBe(`Removed /answer-comments: ${FILE} is deleted. What git holds of it could not be read: look with "git status".`)
     expect(removedWords('tidy', null)).toBe('Removed tidy: its file is deleted. What git holds of it could not be read: look with "git status".')
