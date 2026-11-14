@@ -268,9 +268,9 @@ export function SettingsDialog({
           <ConfirmDialog
             open={leaving !== undefined}
             onOpenChange={open => !open && setLeaving(undefined)}
-            title="Leave without saving?"
+            title={`Discard your changes to ${current.title}?`}
             body={`What you changed in ${current.title} is not saved.`}
-            confirmLabel="Leave"
+            confirmLabel="Discard"
             onSuccess={() => {
               setHeld(false)
               leaving?.()
